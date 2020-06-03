@@ -33,7 +33,7 @@ import logging
 
 from django.core.cache import cache
 
-from eveuniverse.models import EveType, EveGroup
+from eveuniverse.models import EveType, EveGroup, EveRegion
 from eveuniverse.providers import esi
 
 
@@ -42,7 +42,9 @@ logger = logging.getLogger('__name__')
 
 
 def main():    
-    result = EveGroup.objects.update_or_create_esi(eve_id=30)
+    result = EveRegion.objects.update_or_create_esi(
+        eve_id=10000069, include_children=False
+    )
     print(result)
     
 if __name__ == '__main__':

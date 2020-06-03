@@ -1,8 +1,6 @@
-import concurrent.futures
-from functools import partial
 import logging
 
-from celery import shared_task, chain
+from celery import shared_task
 
 from allianceauth.services.hooks import get_extension_logger
 
@@ -15,8 +13,6 @@ from .utils import LoggerAddTag
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 logging.getLogger('esi').setLevel(logging.INFO)
 
-MAX_WORKER = 50
-
 
 def _get_model_class(model_name: str) -> object:
     if not hasattr(models, model_name):
@@ -26,37 +22,35 @@ def _get_model_class(model_name: str) -> object:
 
 
 @shared_task
-def load_eve_entity(model_name: str, eve_id: int) -> None:    
+def load_eve_entity(model_name: str, entity_id: int) -> None:    
     ModelClass = _get_model_class(model_name)
-    ModelClass.objects.update_or_create_esi(eve_id=eve_id)
-
-
-def load_all_entities(model_name: str, esi_method: str) -> None:
-    entity_ids = getattr(esi.client.Universe, esi_method)().results()
-    thread_func = partial(load_eve_entity, model_name)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKER) as executor:
-        executor.map(thread_func, entity_ids)
+    ModelClass.objects.update_or_create_esi(eve_id=entity_id)
 
 
 @shared_task
-def load_categories() -> None:
-    load_all_entities('EveCategory', 'get_universe_categories')
+def load_eve_entities_bulk(
+    model_name: str, esi_method: str, eve_ids: list = None
+) -> None:
+    all_ids = set(getattr(esi.client.Universe, esi_method)().results())
+    if eve_ids is not None:
+        requested_ids = all_ids.subset(set(eve_ids))
+    else:
+        requested_ids = all_ids
+    
+    for entity_id in requested_ids:
+        load_eve_entity.delay(model_name, entity_id)
+    
+
+@shared_task
+def load_categories(eve_ids: list = None) -> None:
+    load_eve_entities_bulk('EveCategory', 'get_universe_categories', eve_ids)
 
 
 @shared_task
-def load_groups() -> None:
-    load_all_entities('EveGroup', 'get_universe_groups')
+def load_groups(eve_ids: list = None) -> None:
+    load_eve_entities_bulk('EveGroup', 'get_universe_groups', eve_ids)
 
 
 @shared_task
-def load_types() -> None:
-    load_all_entities('EveType', 'get_universe_types')
-
-
-@shared_task
-def load_universe() -> None:
-    my_chain = list()
-    my_chain.append(load_categories.si())
-    my_chain.append(load_groups.si())
-    my_chain.append(load_types.si())
-    chain(my_chain).delay()
+def load_types(eve_ids: list = None) -> None:
+    load_eve_entities_bulk('EveType', 'get_universe_types', eve_ids)

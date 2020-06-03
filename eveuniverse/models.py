@@ -204,9 +204,14 @@ class EveType(EveUniverse):
 class EveRegion(EveUniverse):
     """region in Eve Online"""
     
+    description = models.TextField(default='')
+
     class EveUniverseMeta:
         esi_pk = 'region_id'
         esi_method = 'get_universe_regions_region_id'
+        children = {
+            'constellations': 'EveConstellation'
+        }
     
 
 class EveConstellation(EveUniverse):
@@ -217,6 +222,11 @@ class EveConstellation(EveUniverse):
     class EveUniverseMeta:
         esi_pk = 'constellation_id'
         esi_method = 'get_universe_constellations_constellation_id'
+        """
+        children = {
+            'systems': 'EveSolarSystem'
+        }
+        """
 
 
 class EveSolarSystem(EveUniverse):
@@ -232,11 +242,34 @@ class EveSolarSystem(EveUniverse):
         EveConstellation,
         on_delete=models.CASCADE
     )
+    position_x = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='x position in the solar system'
+    )
+    position_y = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='y position in the solar system'
+    )
+    position_z = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='z position in the solar system'
+    )
     security_status = models.FloatField()
 
     class EveUniverseMeta:
         esi_pk = 'system_id'
         esi_method = 'get_universe_systems_system_id'
+        field_mappings = {            
+            'position_x': ('position', 'x'),
+            'position_y': ('position', 'y'),
+            'position_z': ('position', 'z')
+        }
         children = {
             'planets': 'EvePlanet'
         }
