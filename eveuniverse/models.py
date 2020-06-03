@@ -52,6 +52,12 @@ class EveUniverse(models.Model):
         return cls._eve_universe_meta_attr('esi_method', is_mandatory=True)
 
     @classmethod
+    def child_mappings(cls) -> dict:
+        """returns the mapping of children for this class"""
+        mappings = cls._eve_universe_meta_attr('children')        
+        return mappings if mappings else dict()
+
+    @classmethod
     def map_esi_fields_to_model(cls, eve_data_obj: dict) -> dict:
         """maps ESi fields to model fields incl. translations if any
         returns the result as defaults dict
@@ -151,26 +157,202 @@ class EveUniverse(models.Model):
 class EveCategory(EveUniverse):
     """category in Eve Online"""
     
+    published = models.BooleanField()
+
     class EveUniverseMeta:
         esi_pk = 'category_id'
         esi_method = 'get_universe_categories_category_id'
+        children = {
+            'groups': 'EveGroup'
+        }
 
 
 class EveGroup(EveUniverse):
     """group in Eve Online"""
         
     eve_category = models.ForeignKey(EveCategory, on_delete=models.CASCADE)
-
+    published = models.BooleanField()
+    
     class EveUniverseMeta:
         esi_pk = 'group_id'
         esi_method = 'get_universe_groups_group_id'
+        children = {
+            'types': 'EveType'
+        }
 
 
 class EveType(EveUniverse):
     """type in Eve Online"""
     
+    capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey(EveGroup, on_delete=models.CASCADE)
+    graphic_id = models.PositiveIntegerField(default=None, null=True)
+    icon_id = models.PositiveIntegerField(default=None, null=True)
+    market_group_id = models.PositiveIntegerField(default=None, null=True)
+    mass = models.FloatField(default=None, null=True)
+    packaged_volume = models.FloatField(default=None, null=True)
+    portion_size = models.PositiveIntegerField(default=None, null=True)
+    radius = models.FloatField(default=None, null=True)
+    published = models.BooleanField()
+    volume = models.FloatField(default=None, null=True)
 
     class EveUniverseMeta:
         esi_pk = 'type_id'
         esi_method = 'get_universe_types_type_id'
+
+
+class EveRegion(EveUniverse):
+    """region in Eve Online"""
+    
+    class EveUniverseMeta:
+        esi_pk = 'region_id'
+        esi_method = 'get_universe_regions_region_id'
+    
+
+class EveConstellation(EveUniverse):
+    """constellation in Eve Online"""
+
+    eve_region = models.ForeignKey(EveRegion, on_delete=models.CASCADE)
+
+    class EveUniverseMeta:
+        esi_pk = 'constellation_id'
+        esi_method = 'get_universe_constellations_constellation_id'
+
+
+class EveSolarSystem(EveUniverse):
+    """solar system in Eve Online"""
+    
+    TYPE_HIGHSEC = 'highsec'
+    TYPE_LOWSEC = 'lowsec'
+    TYPE_NULLSEC = 'nullsec'
+    TYPE_W_SPACE = 'w-space'
+    TYPE_UNKNOWN = 'unknown'
+
+    eve_constellation = models.ForeignKey(
+        EveConstellation,
+        on_delete=models.CASCADE
+    )
+    security_status = models.FloatField()
+
+    class EveUniverseMeta:
+        esi_pk = 'system_id'
+        esi_method = 'get_universe_systems_system_id'
+        children = {
+            'planets': 'EvePlanet'
+        }
+    
+    @property
+    def is_high_sec(self):
+        return self.security_status > 0.5
+
+    @property
+    def is_low_sec(self):
+        return 0 < self.security_status <= 0.5
+
+    @property
+    def is_null_sec(self):
+        return self.security_status <= 0 and not self.is_w_space
+
+    @property
+    def is_w_space(self):
+        return 31000000 <= self.id < 32000000
+
+    @property
+    def space_type(self):
+        """returns the space type"""
+        if self.is_null_sec:
+            return self.TYPE_NULLSEC
+        elif self.is_low_sec:
+            return self.TYPE_LOWSEC
+        elif self.is_high_sec:
+            return self.TYPE_HIGHSEC
+        elif self.is_w_space:
+            return self.TYPE_W_SPACE
+        else:
+            return self.TYPE_UNKNOWN
+
+
+class EvePlanet(EveUniverse):
+    """"planet in Eve Online"""
+    
+    position_x = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='x position in the solar system'
+    )
+    position_y = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='y position in the solar system'
+    )
+    position_z = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='z position in the solar system'
+    )
+    eve_solar_system = models.ForeignKey(
+        EveSolarSystem,
+        on_delete=models.CASCADE
+    )
+    eve_type = models.ForeignKey(
+        EveType,
+        on_delete=models.CASCADE
+    )
+    
+    class EveUniverseMeta:
+        esi_pk = 'planet_id'
+        esi_method = 'get_universe_planets_planet_id'
+        fk_mappings = {
+            'eve_solar_system': 'system_id'
+        }
+        field_mappings = {            
+            'position_x': ('position', 'x'),
+            'position_y': ('position', 'y'),
+            'position_z': ('position', 'z')
+        }
+        has_esi_localization = False
+        generate_localization = True
+
+
+class EveMoon(EveUniverse):  
+    """"moon in Eve Online"""
+
+    position_x = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='x position in the solar system'
+    )
+    position_y = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='y position in the solar system'
+    )
+    position_z = models.FloatField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text='z position in the solar system'
+    )
+    eve_solar_system = models.ForeignKey(
+        EveSolarSystem,
+        on_delete=models.CASCADE
+    )
+    
+    class EveUniverseMeta:
+        esi_pk = 'moon_id'
+        esi_method = 'get_universe_moons_moon_id'
+        fk_mappings = {
+            'eve_solar_system': 'system_id'
+        }
+        field_mappings = {            
+            'position_x': ('position', 'x'),
+            'position_y': ('position', 'y'),
+            'position_z': ('position', 'z')
+        }
+        has_esi_localization = False
+        generate_localization = True
