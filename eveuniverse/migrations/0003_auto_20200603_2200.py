@@ -6,28 +6,43 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('eveuniverse', '0002_auto_20200603_2022'),
+        ("eveuniverse", "0002_auto_20200603_2022"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='everegion',
-            name='description',
-            field=models.TextField(default=''),
+            model_name="everegion",
+            name="description",
+            field=models.TextField(default=""),
         ),
         migrations.AddField(
-            model_name='evesolarsystem',
-            name='position_x',
-            field=models.FloatField(blank=True, default=None, help_text='x position in the solar system', null=True),
+            model_name="evesolarsystem",
+            name="position_x",
+            field=models.FloatField(
+                blank=True,
+                default=None,
+                help_text="x position in the solar system",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='evesolarsystem',
-            name='position_y',
-            field=models.FloatField(blank=True, default=None, help_text='y position in the solar system', null=True),
+            model_name="evesolarsystem",
+            name="position_y",
+            field=models.FloatField(
+                blank=True,
+                default=None,
+                help_text="y position in the solar system",
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='evesolarsystem',
-            name='position_z',
-            field=models.FloatField(blank=True, default=None, help_text='z position in the solar system', null=True),
+            model_name="evesolarsystem",
+            name="position_z",
+            field=models.FloatField(
+                blank=True,
+                default=None,
+                help_text="z position in the solar system",
+                null=True,
+            ),
         ),
     ]

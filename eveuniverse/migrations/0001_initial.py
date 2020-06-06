@@ -8,43 +8,90 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='EveCategory',
+            name="EveCategory",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='EveGroup',
+            name="EveGroup",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
-                ('eve_category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveuniverse.EveCategory')),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
+                (
+                    "eve_category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="eveuniverse.EveCategory",
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='EveType',
+            name="EveType",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
-                ('eve_group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveuniverse.EveGroup')),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
+                (
+                    "eve_group",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="eveuniverse.EveGroup",
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
     ]

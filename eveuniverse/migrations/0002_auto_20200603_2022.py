@@ -7,142 +7,276 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('eveuniverse', '0001_initial'),
+        ("eveuniverse", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EveConstellation',
+            name="EveConstellation",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='EveRegion',
+            name="EveRegion",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.AddField(
-            model_name='evecategory',
-            name='published',
+            model_name="evecategory",
+            name="published",
             field=models.BooleanField(default=True),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='evegroup',
-            name='published',
+            model_name="evegroup",
+            name="published",
             field=models.BooleanField(default=True),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='capacity',
+            model_name="evetype",
+            name="capacity",
             field=models.FloatField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='graphic_id',
+            model_name="evetype",
+            name="graphic_id",
             field=models.PositiveIntegerField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='icon_id',
+            model_name="evetype",
+            name="icon_id",
             field=models.PositiveIntegerField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='market_group_id',
+            model_name="evetype",
+            name="market_group_id",
             field=models.PositiveIntegerField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='mass',
+            model_name="evetype",
+            name="mass",
             field=models.FloatField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='packaged_volume',
+            model_name="evetype",
+            name="packaged_volume",
             field=models.FloatField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='portion_size',
+            model_name="evetype",
+            name="portion_size",
             field=models.PositiveIntegerField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='published',
+            model_name="evetype",
+            name="published",
             field=models.BooleanField(default=True),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='radius',
+            model_name="evetype",
+            name="radius",
             field=models.FloatField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='evetype',
-            name='volume',
+            model_name="evetype",
+            name="volume",
             field=models.FloatField(default=None, null=True),
         ),
         migrations.CreateModel(
-            name='EveSolarSystem',
+            name="EveSolarSystem",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
-                ('security_status', models.FloatField()),
-                ('eve_constellation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveuniverse.EveConstellation')),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
+                ("security_status", models.FloatField()),
+                (
+                    "eve_constellation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="eveuniverse.EveConstellation",
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='EvePlanet',
+            name="EvePlanet",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
-                ('position_x', models.FloatField(blank=True, default=None, help_text='x position in the solar system', null=True)),
-                ('position_y', models.FloatField(blank=True, default=None, help_text='y position in the solar system', null=True)),
-                ('position_z', models.FloatField(blank=True, default=None, help_text='z position in the solar system', null=True)),
-                ('eve_solar_system', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveuniverse.EveSolarSystem')),
-                ('eve_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveuniverse.EveType')),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
+                (
+                    "position_x",
+                    models.FloatField(
+                        blank=True,
+                        default=None,
+                        help_text="x position in the solar system",
+                        null=True,
+                    ),
+                ),
+                (
+                    "position_y",
+                    models.FloatField(
+                        blank=True,
+                        default=None,
+                        help_text="y position in the solar system",
+                        null=True,
+                    ),
+                ),
+                (
+                    "position_z",
+                    models.FloatField(
+                        blank=True,
+                        default=None,
+                        help_text="z position in the solar system",
+                        null=True,
+                    ),
+                ),
+                (
+                    "eve_solar_system",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="eveuniverse.EveSolarSystem",
+                    ),
+                ),
+                (
+                    "eve_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="eveuniverse.EveType",
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.CreateModel(
-            name='EveMoon',
+            name="EveMoon",
             fields=[
-                ('id', models.PositiveIntegerField(help_text='Eve Online ID', primary_key=True, serialize=False)),
-                ('name', models.CharField(help_text='Eve Online name', max_length=100)),
-                ('last_updated', models.DateTimeField(blank=True, db_index=True, default=None, help_text='When this object was last updated from ESI', null=True)),
-                ('position_x', models.FloatField(blank=True, default=None, help_text='x position in the solar system', null=True)),
-                ('position_y', models.FloatField(blank=True, default=None, help_text='y position in the solar system', null=True)),
-                ('position_z', models.FloatField(blank=True, default=None, help_text='z position in the solar system', null=True)),
-                ('eve_solar_system', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveuniverse.EveSolarSystem')),
+                (
+                    "id",
+                    models.PositiveIntegerField(
+                        help_text="Eve Online ID", primary_key=True, serialize=False
+                    ),
+                ),
+                ("name", models.CharField(help_text="Eve Online name", max_length=100)),
+                (
+                    "last_updated",
+                    models.DateTimeField(
+                        blank=True,
+                        db_index=True,
+                        default=None,
+                        help_text="When this object was last updated from ESI",
+                        null=True,
+                    ),
+                ),
+                (
+                    "position_x",
+                    models.FloatField(
+                        blank=True,
+                        default=None,
+                        help_text="x position in the solar system",
+                        null=True,
+                    ),
+                ),
+                (
+                    "position_y",
+                    models.FloatField(
+                        blank=True,
+                        default=None,
+                        help_text="y position in the solar system",
+                        null=True,
+                    ),
+                ),
+                (
+                    "position_z",
+                    models.FloatField(
+                        blank=True,
+                        default=None,
+                        help_text="z position in the solar system",
+                        null=True,
+                    ),
+                ),
+                (
+                    "eve_solar_system",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="eveuniverse.EveSolarSystem",
+                    ),
+                ),
             ],
-            options={
-                'abstract': False,
-            },
+            options={"abstract": False,},
         ),
         migrations.AddField(
-            model_name='eveconstellation',
-            name='eve_region',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='eveuniverse.EveRegion'),
+            model_name="eveconstellation",
+            name="eve_region",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="eveuniverse.EveRegion"
+            ),
         ),
     ]

@@ -16,16 +16,17 @@ export DJANGO_SETTINGS_MODULE="myauth.settings.local"
 import os
 import sys
 
-if not 'DJANGO_PROJECT_PATH' in os.environ:
-    print('DJANGO_PROJECT_PATH is not set')
+if not "DJANGO_PROJECT_PATH" in os.environ:
+    print("DJANGO_PROJECT_PATH is not set")
     exit(1)
 
-if not 'DJANGO_SETTINGS_MODULE' in os.environ:
-    print('DJANGO_SETTINGS_MODULE is not set')
+if not "DJANGO_SETTINGS_MODULE" in os.environ:
+    print("DJANGO_SETTINGS_MODULE is not set")
     exit(1)
 
-sys.path.insert(0, os.environ['DJANGO_PROJECT_PATH'])
+sys.path.insert(0, os.environ["DJANGO_PROJECT_PATH"])
 import django
+
 django.setup()
 
 # normal imports
@@ -33,21 +34,22 @@ import logging
 
 from django.core.cache import cache
 
-from eveuniverse.models import EveType, EveGroup, EveRegion
+from eveuniverse.models import *
 from eveuniverse.providers import esi
 
 
 cache.clear()
-logger = logging.getLogger('__name__')
+logger = logging.getLogger("__name__")
 
 
-def main():    
-    result = EveRegion.objects.update_or_create_esi(
-        eve_id=10000069, include_children=False
-    )
-    print(result)
-    
-if __name__ == '__main__':
-    print('Script started...')
+def main():
+
+    print(EveStation.objects.get_or_create_esi(eve_id=60003760))
+
+    # EveRace.objects.load_entities()
+
+
+if __name__ == "__main__":
+    print("Script started...")
     main()
-    print('DONE')
+    print("DONE")

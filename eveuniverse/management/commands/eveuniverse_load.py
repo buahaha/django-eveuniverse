@@ -16,32 +16,34 @@ def get_input(text):
 
 
 class Command(BaseCommand):
-    help = 'Updates Eve Online SDE data'
-    
+    help = "Updates Eve Online SDE data"
+
     def _load_models(self):
         # self._load_parent('EveCategory', 'get_universe_categories')
-        self._load_parent('EveRegion', 'get_universe_regions')
-    
+        self._load_parent("EveRegion", "get_universe_regions")
+
     def _load_parent(self, model_name, eve_method):
         all_ids = getattr(esi.client.Universe, eve_method)().results()
         counter = 0
         for eve_id in all_ids:
             progress = int(counter / len(all_ids) * 100)
             self.stdout.write(
-                f'Loading {model_name} with children '
-                f'for ID {eve_id} ({progress}% complete)'
+                f"Loading {model_name} with children "
+                f"for ID {eve_id} ({progress}% complete)"
             )
-            load_eve_entity.delay(model_name, eve_id)
-                
+            result = load_eve_entity.apply_async(args=[model_name, eve_id])
+            result.get()
+            counter += 1
+
     def handle(self, *args, **options):
         self.stdout.write(
-            'This command will load the complete Eve Universe from ESI and '
-            'store it locally. This process can take a long time to complete.'
+            "This command will load the complete Eve Universe from ESI and "
+            "store it locally. This process can take a long time to complete."
         )
-        user_input = get_input('Are you sure you want to proceed? (Y/n)?')
-        if user_input == 'Y':
-            self.stdout.write('Starting update. Please stand by.')
+        user_input = get_input("Are you sure you want to proceed? (Y/n)?")
+        if user_input == "Y":
+            self.stdout.write("Starting update. Please stand by.")
             self._load_models()
-            self.stdout.write('Update completed!')
+            self.stdout.write("Update completed!")
         else:
-            self.stdout.write('Aborted')
+            self.stdout.write("Aborted")
