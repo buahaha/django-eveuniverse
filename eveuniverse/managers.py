@@ -11,7 +11,7 @@ from .utils import LoggerAddTag, make_logger_prefix
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
-class EveUniverseManager(models.Manager):
+class EveUniverseModelManager(models.Manager):
     def get_or_create_esi(self, id: int) -> tuple:
         """gets or creates eve universe object fetched from ESI if needed. 
         Will always get/create parent objects.
@@ -46,6 +46,9 @@ class EveUniverseManager(models.Manager):
                 self.model.map_esi_fields_to_model(eve_data_obj)
             )
             obj, created = self.update_or_create(id=id, defaults=defaults)
+            inline_objects = self.model.inline_objects()
+            if inline_objects:
+                self._update_or_create_inline_objects(eve_data_obj, obj, inline_objects)
             if include_children:
                 self._update_or_create_children_async(eve_data_obj)
 
@@ -54,6 +57,30 @@ class EveUniverseManager(models.Manager):
             raise ex
 
         return obj, created
+
+    def _update_or_create_inline_objects(
+        self, primary_eve_data_obj, primary_obj, inline_objects
+    ) -> None:
+        from . import models as eveuniverse_models
+
+        for inline_field, model_name in inline_objects.items():
+            InlineModel = getattr(eveuniverse_models, model_name)
+            parent_pk = InlineModel.parent_fk()
+            esi_pk = InlineModel.esi_pk()
+            non_pk_fields = {
+                field_name
+                for field_name in InlineModel._field_names_not_pk()
+                if field_name not in {parent_pk, esi_pk}
+            }
+            for eve_data_obj in primary_eve_data_obj[inline_field]:
+                args = {
+                    parent_pk: primary_obj,
+                    esi_pk: eve_data_obj[InlineModel.esi_pk()],
+                }
+                args["defaults"] = {
+                    field_name: eve_data_obj[field_name] for field_name in non_pk_fields
+                }
+                InlineModel.objects.update_or_create(**args)
 
     def _update_or_create_children_async(self, eve_data_obj: dict) -> None:
         """updates or creates child objects specified in eve mapping"""

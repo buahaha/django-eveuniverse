@@ -4,37 +4,16 @@ from django.utils.timezone import now
 from allianceauth.services.hooks import get_extension_logger
 
 from . import __title__
-from .managers import EveUniverseManager, EveUniverseListManager
+from .managers import EveUniverseModelManager, EveUniverseListManager
 from .utils import LoggerAddTag
 
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
-class EveUniverse(models.Model):
-
-    id = models.PositiveIntegerField(primary_key=True, help_text="Eve Online ID")
-    name = models.CharField(max_length=100, help_text="Eve Online name")
-    last_updated = models.DateTimeField(
-        default=None,
-        null=True,
-        blank=True,
-        help_text="When this object was last updated from ESI",
-        db_index=True,
-    )
-
-    objects = EveUniverseManager()
-
+class EveUniverseBaseModel(models.Model):
     class Meta:
         abstract = True
-
-    def __repr__(self):
-        return "{}(id={}, name='{}')".format(
-            self.__class__.__name__, self.id, self.name
-        )
-
-    def __str__(self):
-        return self.name
 
     @classmethod
     def esi_pk(cls) -> str:
@@ -42,14 +21,8 @@ class EveUniverse(models.Model):
         return cls._eve_universe_meta_attr("esi_pk", is_mandatory=True)
 
     @classmethod
-    def esi_method(cls) -> str:
-        return cls._eve_universe_meta_attr("esi_method", is_mandatory=True)
-
-    @classmethod
-    def child_mappings(cls) -> dict:
-        """returns the mapping of children for this class"""
-        mappings = cls._eve_universe_meta_attr("children")
-        return mappings if mappings else dict()
+    def parent_fk(cls) -> str:
+        return cls._eve_universe_meta_attr("parent_fk", is_mandatory=True)
 
     @classmethod
     def map_esi_fields_to_model(cls, eve_data_obj: dict) -> dict:
@@ -119,15 +92,21 @@ class EveUniverse(models.Model):
 
     @classmethod
     def _field_names_not_pk(cls) -> set:
-        """returns field names excl. PK, localization and auto created fields"""
+        """returns field names excl. PK, FK to parent, and auto created fields"""
         return {
             x.name
             for x in cls._meta.get_fields()
             if not x.auto_created
             and (not hasattr(x, "primary_key") or x.primary_key is False)
-            and x.name not in {"language_code", "last_updated"}
+            and x.name not in {"last_updated"}
             and "name_" not in x.name
         }
+
+    @classmethod
+    def functional_pk(cls) -> set:
+        """returns the set of fields that form the function pk"""
+        functional_pk = cls._eve_universe_meta_attr("functional_pk")
+        return functional_pk if functional_pk else set()
 
     @classmethod
     def _eve_universe_meta_attr(cls, attr_name: str, is_mandatory: bool = False):
@@ -145,6 +124,48 @@ class EveUniverse(models.Model):
                     "for class %s" % (attr_name, cls.__name__)
                 )
         return value
+
+
+class EveUniverseModel(EveUniverseBaseModel):
+
+    id = models.PositiveIntegerField(primary_key=True, help_text="Eve Online ID")
+    name = models.CharField(max_length=100, help_text="Eve Online name")
+    last_updated = models.DateTimeField(
+        default=None,
+        null=True,
+        blank=True,
+        help_text="When this object was last updated from ESI",
+        db_index=True,
+    )
+
+    objects = EveUniverseModelManager()
+
+    class Meta:
+        abstract = True
+
+    def __repr__(self):
+        return "{}(id={}, name='{}')".format(
+            self.__class__.__name__, self.id, self.name
+        )
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def esi_method(cls) -> str:
+        return cls._eve_universe_meta_attr("esi_method", is_mandatory=True)
+
+    @classmethod
+    def child_mappings(cls) -> dict:
+        """returns the mapping of children for this class"""
+        mappings = cls._eve_universe_meta_attr("children")
+        return mappings if mappings else dict()
+
+    @classmethod
+    def inline_objects(cls) -> dict:
+        """returns the inline objects if any"""
+        inline_objects = cls._eve_universe_meta_attr("inline_objects")
+        return inline_objects if inline_objects else dict()
 
     @classmethod
     def convert_values(cls, data_object: dict) -> dict:
@@ -167,7 +188,7 @@ class EveUniverse(models.Model):
         }
 
 
-class EveAncestries(EveUniverse):
+class EveAncestries(EveUniverseModel):
     """"Ancestry in Eve Online"""
 
     eve_bloodline = models.ForeignKey("EveBloodline", on_delete=models.CASCADE)
@@ -183,7 +204,7 @@ class EveAncestries(EveUniverse):
         fk_mappings = {"eve_bloodline": "bloodline_id"}
 
 
-class EveAsteroidBelt(EveUniverse):
+class EveAsteroidBelt(EveUniverseModel):
     """"Asteroid belt in Eve Online"""
 
     position_x = models.FloatField(
@@ -208,7 +229,7 @@ class EveAsteroidBelt(EveUniverse):
         }
 
 
-class EveBloodline(EveUniverse):
+class EveBloodline(EveUniverseModel):
     """"Bloodline in Eve Online"""
 
     charisma = models.PositiveIntegerField()
@@ -231,7 +252,7 @@ class EveBloodline(EveUniverse):
         fk_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
 
 
-class EveCategory(EveUniverse):
+class EveCategory(EveUniverseModel):
     """category in Eve Online"""
 
     published = models.BooleanField()
@@ -242,7 +263,7 @@ class EveCategory(EveUniverse):
         children = {"groups": "EveGroup"}
 
 
-class EveConstellation(EveUniverse):
+class EveConstellation(EveUniverseModel):
     """constellation in Eve Online"""
 
     eve_region = models.ForeignKey("EveRegion", on_delete=models.CASCADE)
@@ -254,7 +275,7 @@ class EveConstellation(EveUniverse):
         children = {"systems": "EveSolarSystem"}
 
 
-class EveFaction(EveUniverse):
+class EveFaction(EveUniverseModel):
     """"faction in Eve Online"""
 
     corporation_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
@@ -278,7 +299,7 @@ class EveFaction(EveUniverse):
         fk_mappings = {"eve_solar_system": "solar_system_id"}
 
 
-class EveGroup(EveUniverse):
+class EveGroup(EveUniverseModel):
     """group in Eve Online"""
 
     eve_category = models.ForeignKey("EveCategory", on_delete=models.CASCADE)
@@ -290,7 +311,7 @@ class EveGroup(EveUniverse):
         children = {"types": "EveType"}
 
 
-class EveMoon(EveUniverse):
+class EveMoon(EveUniverseModel):
     """"moon in Eve Online"""
 
     position_x = models.FloatField(
@@ -315,7 +336,7 @@ class EveMoon(EveUniverse):
         }
 
 
-class EveRace(EveUniverse):
+class EveRace(EveUniverseModel):
     """"faction in Eve Online"""
 
     alliance_id = models.PositiveIntegerField(db_index=True)
@@ -328,7 +349,7 @@ class EveRace(EveUniverse):
         esi_method = "get_universe_races"
 
 
-class EvePlanet(EveUniverse):
+class EvePlanet(EveUniverseModel):
     """"planet in Eve Online"""
 
     position_x = models.FloatField(
@@ -354,7 +375,7 @@ class EvePlanet(EveUniverse):
         }
 
 
-class EveRegion(EveUniverse):
+class EveRegion(EveUniverseModel):
     """region in Eve Online"""
 
     description = models.TextField(default="")
@@ -365,7 +386,7 @@ class EveRegion(EveUniverse):
         children = {"constellations": "EveConstellation"}
 
 
-class EveSolarSystem(EveUniverse):
+class EveSolarSystem(EveUniverseModel):
     """solar system in Eve Online"""
 
     TYPE_HIGHSEC = "highsec"
@@ -427,7 +448,7 @@ class EveSolarSystem(EveUniverse):
             return self.TYPE_UNKNOWN
 
 
-class EveStar(EveUniverse):
+class EveStar(EveUniverseModel):
     """"star in Eve Online"""
 
     age = models.PositiveIntegerField()
@@ -444,7 +465,7 @@ class EveStar(EveUniverse):
         fk_mappings = {"eve_solar_system": "solar_system_id", "eve_type": "type_id"}
 
 
-class EveStargate(EveUniverse):
+class EveStargate(EveUniverseModel):
     """"Stargate in Eve Online"""
 
     position_x = models.FloatField(
@@ -470,7 +491,21 @@ class EveStargate(EveUniverse):
         }
 
 
-class EveStation(EveUniverse):
+class EveStargateDestination(models.Model):
+    """Destination of a stargate in Eve Online"""
+
+    eve_stargate = models.ForeignKey("EveStargate", on_delete=models.CASCADE)
+    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["eve_stargate", "eve_solar_system"], name="functional PK"
+            )
+        ]
+
+
+class EveStation(EveUniverseModel):
     """"station in Eve Online"""
 
     max_dockable_ship_volume = models.FloatField()
@@ -504,8 +539,8 @@ class EveStation(EveUniverse):
         }
 
 
-class EveType(EveUniverse):
-    """type in Eve Online"""
+class EveType(EveUniverseModel):
+    """Type in Eve Online"""
 
     capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey("EveGroup", on_delete=models.CASCADE)
@@ -524,3 +559,56 @@ class EveType(EveUniverse):
     class EveUniverseMeta:
         esi_pk = "type_id"
         esi_method = "get_universe_types_type_id"
+        inline_objects = {
+            "dogma_attributes": "EveTypeDogmaAttributes",
+            "dogma_effects": "EveTypeDogmaEffects",
+        }
+
+
+class DogmaAttributes(EveUniverseBaseModel):
+    """Dogma attribute in Eve Online"""
+
+    eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
+    attribute_id = models.PositiveIntegerField(db_index=True)
+    value = models.FloatField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["eve_type", "attribute_id"], name="functional PK"
+            )
+        ]
+
+    class EveUniverseMeta:
+        parent_fk = "eve_type"
+        esi_pk = "attribute_id"
+
+    def __repr__(self) -> str:
+        return (
+            f"DogmaAttributes(eve_type='{self.eve_type}', "
+            f"attribute_id={self.attribute_id})"
+        )
+
+
+class DogmaEffects(EveUniverseBaseModel):
+    """Dogma effect in Eve Online"""
+
+    eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
+    effect_id = models.PositiveIntegerField(db_index=True)
+    is_default = models.BooleanField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["eve_type", "effect_id"], name="functional PK"
+            )
+        ]
+
+    class EveUniverseMeta:
+        parent_fk = "eve_type"
+        esi_pk = "effect_id"
+
+    def __repr__(self) -> str:
+        return (
+            f"DogmaEffects(eve_type='{self.eve_type}', " f"effect_id={self.effect_id})"
+        )
