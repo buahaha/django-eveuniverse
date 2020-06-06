@@ -167,6 +167,70 @@ class EveUniverse(models.Model):
         }
 
 
+class EveAncestries(EveUniverse):
+    """"Ancestry in Eve Online"""
+
+    eve_bloodline = models.ForeignKey("EveBloodline", on_delete=models.CASCADE)
+    description = models.TextField()
+    icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
+    short_description = models.TextField(default="")
+
+    objects = EveUniverseListManager()
+
+    class EveUniverseMeta:
+        esi_pk = "id"
+        esi_method = "get_universe_ancestries"
+        fk_mappings = {"eve_bloodline": "bloodline_id"}
+
+
+class EveAsteroidBelt(EveUniverse):
+    """"Asteroid belt in Eve Online"""
+
+    position_x = models.FloatField(
+        null=True, default=None, blank=True, help_text="x position in the solar system"
+    )
+    position_y = models.FloatField(
+        null=True, default=None, blank=True, help_text="y position in the solar system"
+    )
+    position_z = models.FloatField(
+        null=True, default=None, blank=True, help_text="z position in the solar system"
+    )
+    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
+
+    class EveUniverseMeta:
+        esi_pk = "asteroid_belt_id"
+        esi_method = "get_universe_asteroid_belts_asteroid_belt_id"
+        fk_mappings = {"eve_solar_system": "system_id"}
+        field_mappings = {
+            "position_x": ("position", "x"),
+            "position_y": ("position", "y"),
+            "position_z": ("position", "z"),
+        }
+
+
+class EveBloodline(EveUniverse):
+    """"Bloodline in Eve Online"""
+
+    charisma = models.PositiveIntegerField()
+    corporation_id = models.PositiveIntegerField()
+    description = models.TextField()
+    intelligence = models.PositiveIntegerField()
+    memory = models.PositiveIntegerField()
+    perception = models.PositiveIntegerField()
+    eve_race = models.ForeignKey(
+        "EveRace", on_delete=models.SET_DEFAULT, default=None, null=True
+    )
+    eve_ship_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
+    willpower = models.PositiveIntegerField()
+
+    objects = EveUniverseListManager()
+
+    class EveUniverseMeta:
+        esi_pk = "bloodline_id"
+        esi_method = "get_universe_bloodlines"
+        fk_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
+
+
 class EveCategory(EveUniverse):
     """category in Eve Online"""
 
@@ -176,6 +240,42 @@ class EveCategory(EveUniverse):
         esi_pk = "category_id"
         esi_method = "get_universe_categories_category_id"
         children = {"groups": "EveGroup"}
+
+
+class EveConstellation(EveUniverse):
+    """constellation in Eve Online"""
+
+    eve_region = models.ForeignKey("EveRegion", on_delete=models.CASCADE)
+
+    class EveUniverseMeta:
+        esi_pk = "constellation_id"
+        esi_method = "get_universe_constellations_constellation_id"
+
+        children = {"systems": "EveSolarSystem"}
+
+
+class EveFaction(EveUniverse):
+    """"faction in Eve Online"""
+
+    corporation_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
+    description = models.TextField()
+    is_unique = models.BooleanField()
+    militia_corporation_id = models.PositiveIntegerField(
+        default=None, null=True, db_index=True
+    )
+    size_factor = models.FloatField()
+    eve_solar_system = models.ForeignKey(
+        "EveSolarSystem", on_delete=models.SET_DEFAULT, default=None, null=True
+    )
+    station_count = models.PositiveIntegerField()
+    station_system_count = models.PositiveIntegerField()
+
+    objects = EveUniverseListManager()
+
+    class EveUniverseMeta:
+        esi_pk = "faction_id"
+        esi_method = "get_universe_factions"
+        fk_mappings = {"eve_solar_system": "solar_system_id"}
 
 
 class EveGroup(EveUniverse):
@@ -190,24 +290,68 @@ class EveGroup(EveUniverse):
         children = {"types": "EveType"}
 
 
-class EveType(EveUniverse):
-    """type in Eve Online"""
+class EveMoon(EveUniverse):
+    """"moon in Eve Online"""
 
-    capacity = models.FloatField(default=None, null=True)
-    eve_group = models.ForeignKey("EveGroup", on_delete=models.CASCADE)
-    graphic_id = models.PositiveIntegerField(default=None, null=True)
-    icon_id = models.PositiveIntegerField(default=None, null=True)
-    market_group_id = models.PositiveIntegerField(default=None, null=True)
-    mass = models.FloatField(default=None, null=True)
-    packaged_volume = models.FloatField(default=None, null=True)
-    portion_size = models.PositiveIntegerField(default=None, null=True)
-    radius = models.FloatField(default=None, null=True)
-    published = models.BooleanField()
-    volume = models.FloatField(default=None, null=True)
+    position_x = models.FloatField(
+        null=True, default=None, blank=True, help_text="x position in the solar system"
+    )
+    position_y = models.FloatField(
+        null=True, default=None, blank=True, help_text="y position in the solar system"
+    )
+    position_z = models.FloatField(
+        null=True, default=None, blank=True, help_text="z position in the solar system"
+    )
+    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
 
     class EveUniverseMeta:
-        esi_pk = "type_id"
-        esi_method = "get_universe_types_type_id"
+        esi_pk = "moon_id"
+        esi_method = "get_universe_moons_moon_id"
+        fk_mappings = {"eve_solar_system": "system_id"}
+        field_mappings = {
+            "position_x": ("position", "x"),
+            "position_y": ("position", "y"),
+            "position_z": ("position", "z"),
+        }
+
+
+class EveRace(EveUniverse):
+    """"faction in Eve Online"""
+
+    alliance_id = models.PositiveIntegerField(db_index=True)
+    description = models.TextField()
+
+    objects = EveUniverseListManager()
+
+    class EveUniverseMeta:
+        esi_pk = "race_id"
+        esi_method = "get_universe_races"
+
+
+class EvePlanet(EveUniverse):
+    """"planet in Eve Online"""
+
+    position_x = models.FloatField(
+        null=True, default=None, blank=True, help_text="x position in the solar system"
+    )
+    position_y = models.FloatField(
+        null=True, default=None, blank=True, help_text="y position in the solar system"
+    )
+    position_z = models.FloatField(
+        null=True, default=None, blank=True, help_text="z position in the solar system"
+    )
+    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
+    eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
+
+    class EveUniverseMeta:
+        esi_pk = "planet_id"
+        esi_method = "get_universe_planets_planet_id"
+        fk_mappings = {"eve_solar_system": "system_id"}
+        field_mappings = {
+            "position_x": ("position", "x"),
+            "position_y": ("position", "y"),
+            "position_z": ("position", "z"),
+        }
 
 
 class EveRegion(EveUniverse):
@@ -219,21 +363,6 @@ class EveRegion(EveUniverse):
         esi_pk = "region_id"
         esi_method = "get_universe_regions_region_id"
         children = {"constellations": "EveConstellation"}
-
-
-class EveConstellation(EveUniverse):
-    """constellation in Eve Online"""
-
-    eve_region = models.ForeignKey("EveRegion", on_delete=models.CASCADE)
-
-    class EveUniverseMeta:
-        esi_pk = "constellation_id"
-        esi_method = "get_universe_constellations_constellation_id"
-        """
-        children = {
-            'systems': 'EveSolarSystem'
-        }
-        """
 
 
 class EveSolarSystem(EveUniverse):
@@ -298,96 +427,6 @@ class EveSolarSystem(EveUniverse):
             return self.TYPE_UNKNOWN
 
 
-class EvePlanet(EveUniverse):
-    """"planet in Eve Online"""
-
-    position_x = models.FloatField(
-        null=True, default=None, blank=True, help_text="x position in the solar system"
-    )
-    position_y = models.FloatField(
-        null=True, default=None, blank=True, help_text="y position in the solar system"
-    )
-    position_z = models.FloatField(
-        null=True, default=None, blank=True, help_text="z position in the solar system"
-    )
-    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
-    eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
-
-    class EveUniverseMeta:
-        esi_pk = "planet_id"
-        esi_method = "get_universe_planets_planet_id"
-        fk_mappings = {"eve_solar_system": "system_id"}
-        field_mappings = {
-            "position_x": ("position", "x"),
-            "position_y": ("position", "y"),
-            "position_z": ("position", "z"),
-        }
-        has_esi_localization = False
-        generate_localization = True
-
-
-class EveMoon(EveUniverse):
-    """"moon in Eve Online"""
-
-    position_x = models.FloatField(
-        null=True, default=None, blank=True, help_text="x position in the solar system"
-    )
-    position_y = models.FloatField(
-        null=True, default=None, blank=True, help_text="y position in the solar system"
-    )
-    position_z = models.FloatField(
-        null=True, default=None, blank=True, help_text="z position in the solar system"
-    )
-    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
-
-    class EveUniverseMeta:
-        esi_pk = "moon_id"
-        esi_method = "get_universe_moons_moon_id"
-        fk_mappings = {"eve_solar_system": "system_id"}
-        field_mappings = {
-            "position_x": ("position", "x"),
-            "position_y": ("position", "y"),
-            "position_z": ("position", "z"),
-        }
-        has_esi_localization = False
-        generate_localization = True
-
-
-class EveFaction(EveUniverse):
-    """"faction in Eve Online"""
-
-    corporation_id = models.PositiveIntegerField(default=None, null=True)
-    description = models.TextField()
-    is_unique = models.BooleanField()
-    militia_corporation_id = models.PositiveIntegerField(default=None, null=True)
-    size_factor = models.FloatField()
-    eve_solar_system = models.ForeignKey(
-        "EveSolarSystem", on_delete=models.SET_DEFAULT, default=None, null=True
-    )
-    station_count = models.PositiveIntegerField()
-    station_system_count = models.PositiveIntegerField()
-
-    objects = EveUniverseListManager()
-
-    class EveUniverseMeta:
-        esi_pk = "faction_id"
-        esi_method = "get_universe_factions"
-        fk_mappings = {"eve_solar_system": "solar_system_id"}
-
-
-class EveRace(EveUniverse):
-    """"faction in Eve Online"""
-
-    alliance_id = models.PositiveIntegerField()
-    description = models.TextField()
-
-    objects = EveUniverseListManager()
-
-    class EveUniverseMeta:
-        esi_pk = "race_id"
-        esi_method = "get_universe_races"
-
-
 class EveStar(EveUniverse):
     """"star in Eve Online"""
 
@@ -405,12 +444,38 @@ class EveStar(EveUniverse):
         fk_mappings = {"eve_solar_system": "solar_system_id", "eve_type": "type_id"}
 
 
+class EveStargate(EveUniverse):
+    """"Stargate in Eve Online"""
+
+    position_x = models.FloatField(
+        null=True, default=None, blank=True, help_text="x position in the solar system"
+    )
+    position_y = models.FloatField(
+        null=True, default=None, blank=True, help_text="y position in the solar system"
+    )
+    position_z = models.FloatField(
+        null=True, default=None, blank=True, help_text="z position in the solar system"
+    )
+    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
+    eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
+
+    class EveUniverseMeta:
+        esi_pk = "stargate_id"
+        esi_method = "get_universe_stargates_stargate_id"
+        fk_mappings = {"eve_solar_system": "system_id", "eve_type": "type_id"}
+        field_mappings = {
+            "position_x": ("position", "x"),
+            "position_y": ("position", "y"),
+            "position_z": ("position", "z"),
+        }
+
+
 class EveStation(EveUniverse):
     """"station in Eve Online"""
 
     max_dockable_ship_volume = models.FloatField()
     office_rental_cost = models.FloatField()
-    owner = models.PositiveIntegerField(default=None, null=True)
+    owner = models.PositiveIntegerField(default=None, null=True, db_index=True)
     position_x = models.FloatField(
         null=True, default=None, blank=True, help_text="x position in the solar system"
     )
@@ -437,3 +502,25 @@ class EveStation(EveUniverse):
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
         }
+
+
+class EveType(EveUniverse):
+    """type in Eve Online"""
+
+    capacity = models.FloatField(default=None, null=True)
+    eve_group = models.ForeignKey("EveGroup", on_delete=models.CASCADE)
+    graphic_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
+    icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
+    market_group_id = models.PositiveIntegerField(
+        default=None, null=True, db_index=True
+    )
+    mass = models.FloatField(default=None, null=True)
+    packaged_volume = models.FloatField(default=None, null=True)
+    portion_size = models.PositiveIntegerField(default=None, null=True)
+    radius = models.FloatField(default=None, null=True)
+    published = models.BooleanField()
+    volume = models.FloatField(default=None, null=True)
+
+    class EveUniverseMeta:
+        esi_pk = "type_id"
+        esi_method = "get_universe_types_type_id"

@@ -44,9 +44,9 @@ logger = logging.getLogger("__name__")
 
 def main():
 
-    print(EveStation.objects.get_or_create_esi(eve_id=60003760))
+    # print(EveStation.objects.get_or_create_esi(60003760))
 
-    # EveRace.objects.load_entities()
+    EveBloodline.objects.load_esi()
 
 
 if __name__ == "__main__":
