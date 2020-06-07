@@ -10,6 +10,8 @@ from .utils import LoggerAddTag
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
+NAMES_MAX_LENGTH = 100
+
 
 class EveUniverseBaseModel(models.Model):
     class Meta:
@@ -35,21 +37,24 @@ class EveUniverseBaseModel(models.Model):
         for key in cls._field_names_not_pk():
             if key in fk_mappings:
                 esi_key, ParentClass = fk_mappings[key]
-                try:
-                    value = ParentClass.objects.get(id=eve_data_obj[esi_key])
-                except ParentClass.DoesNotExist:
-                    if hasattr(ParentClass.objects, "update_or_create_esi"):
-                        value, _ = ParentClass.objects.update_or_create_esi(
-                            eve_data_obj[esi_key]
-                        )
-                    else:
-                        value = None
+                esi_id = eve_data_obj[esi_key]
+                if esi_id is None:
+                    value = None
+                else:
+                    try:
+                        value = ParentClass.objects.get(id=esi_id)
+                    except ParentClass.DoesNotExist:
+                        if hasattr(ParentClass.objects, "update_or_create_esi"):
+                            value, _ = ParentClass.objects.update_or_create_esi(esi_id)
+                        else:
+                            value = None
             else:
                 if key in field_mappings:
                     mapping = field_mappings[key]
                     if len(mapping) != 2:
                         raise ValueError(
-                            "Currently only supports mapping to 1-level " "nested dicts"
+                            "Currently only supports mapping to 1-level nested dicts"
+                            "bla bla"
                         )
                     value = eve_data_obj[mapping[0]][mapping[1]]
                 else:
@@ -129,7 +134,9 @@ class EveUniverseBaseModel(models.Model):
 class EveUniverseModel(EveUniverseBaseModel):
 
     id = models.PositiveIntegerField(primary_key=True, help_text="Eve Online ID")
-    name = models.CharField(max_length=100, help_text="Eve Online name")
+    name = models.CharField(
+        max_length=NAMES_MAX_LENGTH, default="", help_text="Eve Online name"
+    )
     last_updated = models.DateTimeField(
         default=None,
         null=True,
@@ -152,8 +159,11 @@ class EveUniverseModel(EveUniverseBaseModel):
         return self.name
 
     @classmethod
-    def esi_method(cls) -> str:
-        return cls._eve_universe_meta_attr("esi_method", is_mandatory=True)
+    def esi_path(cls) -> str:
+        path = cls._eve_universe_meta_attr("esi_path", is_mandatory=True)
+        if len(path.split(".")) != 2:
+            raise "esi_path not valid: %s" % path
+        return path
 
     @classmethod
     def child_mappings(cls) -> dict:
@@ -200,7 +210,7 @@ class EveAncestries(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "id"
-        esi_method = "get_universe_ancestries"
+        esi_path = "Universe.get_universe_ancestries"
         fk_mappings = {"eve_bloodline": "bloodline_id"}
 
 
@@ -220,7 +230,7 @@ class EveAsteroidBelt(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "asteroid_belt_id"
-        esi_method = "get_universe_asteroid_belts_asteroid_belt_id"
+        esi_path = "Universe.get_universe_asteroid_belts_asteroid_belt_id"
         fk_mappings = {"eve_solar_system": "system_id"}
         field_mappings = {
             "position_x": ("position", "x"),
@@ -248,7 +258,7 @@ class EveBloodline(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "bloodline_id"
-        esi_method = "get_universe_bloodlines"
+        esi_path = "Universe.get_universe_bloodlines"
         fk_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
 
 
@@ -259,7 +269,7 @@ class EveCategory(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "category_id"
-        esi_method = "get_universe_categories_category_id"
+        esi_path = "Universe.get_universe_categories_category_id"
         children = {"groups": "EveGroup"}
 
 
@@ -270,9 +280,126 @@ class EveConstellation(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "constellation_id"
-        esi_method = "get_universe_constellations_constellation_id"
+        esi_path = "Universe.get_universe_constellations_constellation_id"
 
         children = {"systems": "EveSolarSystem"}
+
+
+class EveDogmaAttribute(EveUniverseModel):
+    """"Dogma Attribute in Eve Online"""
+
+    default_value = models.FloatField(default=None, null=True)
+    description = models.TextField(default="")
+    display_name = models.CharField(max_length=NAMES_MAX_LENGTH, default="")
+    high_is_good = models.BooleanField(default=None, null=True)
+    icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
+    published = models.BooleanField(default=None, null=True)
+    stackable = models.BooleanField(default=None, null=True)
+    unit_id = models.PositiveIntegerField(default=None, null=True)
+
+    class EveUniverseMeta:
+        esi_pk = "attribute_id"
+        esi_path = "Dogma.get_dogma_attributes_attribute_id"
+
+
+class EveDogmaEffect(EveUniverseModel):
+    """"Dogma effect in Eve Online"""
+
+    description = models.TextField(default="")
+    disallow_auto_repeat = models.BooleanField(default=None, null=True)
+    discharge_attribute = models.ForeignKey(
+        "EveDogmaAttribute",
+        on_delete=models.SET_DEFAULT,
+        default=None,
+        null=True,
+        related_name="discharge_attribute",
+    )
+    display_name = models.CharField(max_length=NAMES_MAX_LENGTH, default="")
+    duration_attribute = models.ForeignKey(
+        "EveDogmaAttribute", on_delete=models.SET_DEFAULT, default=None, null=True
+    )
+    effect_category = models.PositiveIntegerField(default=None, null=True)
+    electronic_chance = models.BooleanField(default=None, null=True)
+    falloff_attribute = models.ForeignKey(
+        "EveDogmaAttribute",
+        on_delete=models.SET_DEFAULT,
+        default=None,
+        null=True,
+        related_name="falloff_attribute",
+    )
+    icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
+    is_assistance = models.BooleanField(default=None, null=True)
+    is_offensive = models.BooleanField(default=None, null=True)
+    is_warp_safe = models.BooleanField(default=None, null=True)
+    post_expression = models.PositiveIntegerField(default=None, null=True)
+    pre_expression = models.PositiveIntegerField(default=None, null=True)
+    published = models.BooleanField(default=None, null=True)
+    range_attribute = models.ForeignKey(
+        "EveDogmaAttribute",
+        on_delete=models.SET_DEFAULT,
+        default=None,
+        null=True,
+        related_name="range_attribute",
+    )
+    range_chance = models.BooleanField(default=None, null=True)
+    tracking_speed_attribute = models.ForeignKey(
+        "EveDogmaAttribute",
+        on_delete=models.SET_DEFAULT,
+        default=None,
+        null=True,
+        related_name="tracking_speed_attribute",
+    )
+
+    class EveUniverseMeta:
+        esi_pk = "effect_id"
+        esi_path = "Dogma.get_dogma_effects_effect_id"
+        fk_mappings = {
+            "discharge_attribute": "discharge_attribute_id",
+            "duration_attribute": "duration_attribute_id",
+            "falloff_attribute": "falloff_attribute_id",
+            "range_attribute": "range_attribute_id",
+            "tracking_speed_attribute": "tracking_speed_attribute_id",
+        }
+
+
+class EveDogmaEffectModifier(EveUniverseBaseModel):
+    """Modifier for a dogma effect in Eve Online"""
+
+    domain = models.CharField(max_length=NAMES_MAX_LENGTH, default="")
+    eve_dogma_effect = models.ForeignKey("EveDogmaEffect", on_delete=models.CASCADE)
+    func = models.CharField(max_length=NAMES_MAX_LENGTH)
+    modified_attribute = models.ForeignKey(
+        "EveDogmaAttribute",
+        on_delete=models.SET_DEFAULT,
+        default=None,
+        null=True,
+        related_name="modified_attribute",
+    )
+    modifying_attribute = models.ForeignKey(
+        "EveDogmaAttribute",
+        on_delete=models.SET_DEFAULT,
+        default=None,
+        null=True,
+        related_name="modifying_attribute",
+    )
+    operator = models.PositiveIntegerField(default=None, null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["eve_dogma_effect", "func"], name="functional PK"
+            )
+        ]
+
+    class EveUniverseMeta:
+        parent_fk = "eve_type"
+        esi_pk = "effect_id"
+
+    def __repr__(self) -> str:
+        return (
+            f"EveEffectModifier(eve_type='{self.eve_type}', "
+            f"effect_id={self.effect_id})"
+        )
 
 
 class EveFaction(EveUniverseModel):
@@ -295,7 +422,7 @@ class EveFaction(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "faction_id"
-        esi_method = "get_universe_factions"
+        esi_path = "Universe.get_universe_factions"
         fk_mappings = {"eve_solar_system": "solar_system_id"}
 
 
@@ -307,8 +434,23 @@ class EveGroup(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "group_id"
-        esi_method = "get_universe_groups_group_id"
+        esi_path = "Universe.get_universe_groups_group_id"
         children = {"types": "EveType"}
+
+
+class EveMarketGroup(EveUniverseModel):
+    """"Market Group in Eve Online"""
+
+    description = models.TextField()
+    parent_market_group = models.ForeignKey(
+        "self", on_delete=models.SET_DEFAULT, default=None, null=True
+    )
+
+    class EveUniverseMeta:
+        esi_pk = "market_group_id"
+        esi_path = "Market.get_markets_groups_market_group_id"
+        fk_mappings = {"parent_market_group": "parent_group_id"}
+        children = {"types": "EveTypes"}
 
 
 class EveMoon(EveUniverseModel):
@@ -327,7 +469,7 @@ class EveMoon(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "moon_id"
-        esi_method = "get_universe_moons_moon_id"
+        esi_path = "Universe.get_universe_moons_moon_id"
         fk_mappings = {"eve_solar_system": "system_id"}
         field_mappings = {
             "position_x": ("position", "x"),
@@ -346,7 +488,7 @@ class EveRace(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "race_id"
-        esi_method = "get_universe_races"
+        esi_path = "Universe.get_universe_races"
 
 
 class EvePlanet(EveUniverseModel):
@@ -366,7 +508,7 @@ class EvePlanet(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "planet_id"
-        esi_method = "get_universe_planets_planet_id"
+        esi_path = "Universe.get_universe_planets_planet_id"
         fk_mappings = {"eve_solar_system": "system_id"}
         field_mappings = {
             "position_x": ("position", "x"),
@@ -382,7 +524,7 @@ class EveRegion(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "region_id"
-        esi_method = "get_universe_regions_region_id"
+        esi_path = "Universe.get_universe_regions_region_id"
         children = {"constellations": "EveConstellation"}
 
 
@@ -409,7 +551,7 @@ class EveSolarSystem(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "system_id"
-        esi_method = "get_universe_systems_system_id"
+        esi_path = "Universe.get_universe_systems_system_id"
         field_mappings = {
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
@@ -449,7 +591,7 @@ class EveSolarSystem(EveUniverseModel):
 
 
 class EveStar(EveUniverseModel):
-    """"star in Eve Online"""
+    """"Star in Eve Online"""
 
     age = models.PositiveIntegerField()
     luminosity = models.FloatField()
@@ -461,7 +603,7 @@ class EveStar(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "star_id"
-        esi_method = "get_universe_stars_star_id"
+        esi_path = "Universe.get_universe_stars_star_id"
         fk_mappings = {"eve_solar_system": "solar_system_id", "eve_type": "type_id"}
 
 
@@ -482,7 +624,7 @@ class EveStargate(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "stargate_id"
-        esi_method = "get_universe_stargates_stargate_id"
+        esi_path = "Universe.get_universe_stargates_stargate_id"
         fk_mappings = {"eve_solar_system": "system_id", "eve_type": "type_id"}
         field_mappings = {
             "position_x": ("position", "x"),
@@ -530,7 +672,7 @@ class EveStation(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "station_id"
-        esi_method = "get_universe_stations_station_id"
+        esi_path = "Universe.get_universe_stations_station_id"
         fk_mappings = {"eve_solar_system": "system_id", "eve_race": "race_id"}
         field_mappings = {
             "position_x": ("position", "x"),
@@ -558,17 +700,19 @@ class EveType(EveUniverseModel):
 
     class EveUniverseMeta:
         esi_pk = "type_id"
-        esi_method = "get_universe_types_type_id"
+        esi_path = "Universe.get_universe_types_type_id"
         inline_objects = {
-            "dogma_attributes": "EveTypeDogmaAttributes",
-            "dogma_effects": "EveTypeDogmaEffects",
+            "dogma_attributes": "EveTypeDogmaAttribute",
+            "dogma_effects": "EveTypeDogmaEffect",
         }
 
 
-class DogmaAttributes(EveUniverseBaseModel):
+class EveTypeDogmaAttribute(EveUniverseBaseModel):
     """Dogma attribute in Eve Online"""
 
-    eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
+    eve_type = models.ForeignKey(
+        "EveType", on_delete=models.CASCADE, related_name="dogma_attributes"
+    )
     attribute_id = models.PositiveIntegerField(db_index=True)
     value = models.FloatField()
 
@@ -585,15 +729,17 @@ class DogmaAttributes(EveUniverseBaseModel):
 
     def __repr__(self) -> str:
         return (
-            f"DogmaAttributes(eve_type='{self.eve_type}', "
+            f"EveTypeDogmaAttributes(eve_type='{self.eve_type}', "
             f"attribute_id={self.attribute_id})"
         )
 
 
-class DogmaEffects(EveUniverseBaseModel):
+class EveTypeDogmaEffect(EveUniverseBaseModel):
     """Dogma effect in Eve Online"""
 
-    eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
+    eve_type = models.ForeignKey(
+        "EveType", on_delete=models.CASCADE, related_name="dogma_effects"
+    )
     effect_id = models.PositiveIntegerField(db_index=True)
     is_default = models.BooleanField()
 
@@ -610,5 +756,6 @@ class DogmaEffects(EveUniverseBaseModel):
 
     def __repr__(self) -> str:
         return (
-            f"DogmaEffects(eve_type='{self.eve_type}', " f"effect_id={self.effect_id})"
+            f"EveTypeDogmaEffect(eve_type='{self.eve_type}', "
+            f"effect_id={self.effect_id})"
         )

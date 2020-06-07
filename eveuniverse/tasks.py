@@ -29,9 +29,9 @@ def load_eve_entity(model_name: str, entity_id: int) -> None:
 
 @shared_task(ignore_result=False)
 def load_eve_entities_bulk(
-    model_name: str, esi_method: str, eve_ids: list = None
+    model_name: str, esi_path: str, eve_ids: list = None
 ) -> None:
-    all_ids = set(getattr(esi.client.Universe, esi_method)().results())
+    all_ids = set(getattr(esi.client.Universe, esi_path)().results())
     if eve_ids is not None:
         requested_ids = all_ids.subset(set(eve_ids))
     else:

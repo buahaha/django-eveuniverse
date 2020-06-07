@@ -44,7 +44,7 @@ logger = logging.getLogger("__name__")
 
 def main():
 
-    EveType.objects.update_or_create_esi(34562)
+    EveMarketGroup.objects.update_or_create_esi(2)
 
     # EveBloodline.objects.load_esi()
 

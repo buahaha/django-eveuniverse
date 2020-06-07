@@ -39,7 +39,8 @@ class EveUniverseModelManager(models.Manager):
         add_prefix = make_logger_prefix("%s(id=%d)" % (self.model.__name__, id))
         try:
             args = {self.model.esi_pk(): id}
-            eve_data_obj = getattr(esi.client.Universe, self.model.esi_method())(
+            esi_category, esi_method = self.model.esi_path().split(".")
+            eve_data_obj = getattr(getattr(esi.client, esi_category), esi_method)(
                 **args
             ).results()
             defaults = self.model.convert_values(
@@ -99,7 +100,7 @@ class EveUniverseListManager(models.Manager):
         add_prefix = make_logger_prefix(f"{self.model.__name__}")
         try:
             eve_data_objects = getattr(
-                esi.client.Universe, self.model.esi_method()
+                esi.client.Universe, self.model.esi_path()
             )().results()
 
             for eve_data_obj in eve_data_objects:
