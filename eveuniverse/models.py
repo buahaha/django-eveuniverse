@@ -688,8 +688,8 @@ class EveType(EveUniverseModel):
     eve_group = models.ForeignKey("EveGroup", on_delete=models.CASCADE)
     graphic_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
     icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
-    market_group_id = models.PositiveIntegerField(
-        default=None, null=True, db_index=True
+    eve_market_group = models.ForeignKey(
+        "EveMarketGroup", on_delete=models.SET_DEFAULT, default=None, null=True
     )
     mass = models.FloatField(default=None, null=True)
     packaged_volume = models.FloatField(default=None, null=True)
@@ -713,13 +713,15 @@ class EveTypeDogmaAttribute(EveUniverseBaseModel):
     eve_type = models.ForeignKey(
         "EveType", on_delete=models.CASCADE, related_name="dogma_attributes"
     )
-    attribute_id = models.PositiveIntegerField(db_index=True)
+    eve_dogma_attribute = models.ForeignKey(
+        "EveDogmaAttribute", on_delete=models.CASCADE
+    )
     value = models.FloatField()
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["eve_type", "attribute_id"], name="functional PK"
+                fields=["eve_type", "eve_dogma_attribute"], name="functional PK"
             )
         ]
 
@@ -740,13 +742,13 @@ class EveTypeDogmaEffect(EveUniverseBaseModel):
     eve_type = models.ForeignKey(
         "EveType", on_delete=models.CASCADE, related_name="dogma_effects"
     )
-    effect_id = models.PositiveIntegerField(db_index=True)
+    eve_dogma_effect = models.ForeignKey("EveDogmaEffect", on_delete=models.CASCADE)
     is_default = models.BooleanField()
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["eve_type", "effect_id"], name="functional PK"
+                fields=["eve_type", "eve_dogma_effect"], name="functional PK"
             )
         ]
 
