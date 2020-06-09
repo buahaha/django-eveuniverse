@@ -1,4 +1,4 @@
-import logging
+# import logging
 
 from celery import shared_task
 
@@ -11,7 +11,7 @@ from .utils import LoggerAddTag
 
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
-logging.getLogger("esi").setLevel(logging.INFO)
+# logging.getLogger("esi").setLevel(logging.INFO)
 
 
 def _get_model_class(model_name: str) -> object:

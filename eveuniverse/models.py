@@ -14,24 +14,17 @@ NAMES_MAX_LENGTH = 100
 
 
 class EveUniverseBaseModel(models.Model):
+    """Base properties and features"""
+
     class Meta:
         abstract = True
-
-    @classmethod
-    def esi_pk(cls) -> str:
-        """returns the name of the pk column on ESI that must exist"""
-        return cls._eve_universe_meta_attr("esi_pk", is_mandatory=True)
-
-    @classmethod
-    def parent_fk(cls) -> str:
-        return cls._eve_universe_meta_attr("parent_fk", is_mandatory=True)
 
     @classmethod
     def map_esi_fields_to_model(cls, eve_data_obj: dict) -> dict:
         """maps ESi fields to model fields incl. translations if any
         returns the result as defaults dict
         """
-        fk_mappings = cls._fk_mappings()
+        fk_mappings = cls.fk_mappings()
         field_mappings = cls._field_mappings()
         defaults = {"last_updated": now()}
         for key in cls._field_names_not_pk():
@@ -71,7 +64,7 @@ class EveUniverseBaseModel(models.Model):
         return mappings if mappings else dict()
 
     @classmethod
-    def _fk_mappings(cls) -> dict:
+    def fk_mappings(cls) -> dict:
         """returns the foreign key mappings for this class
         
         'model field name': ('Foreign Key name on ESI', 'related model class')
@@ -108,12 +101,6 @@ class EveUniverseBaseModel(models.Model):
         }
 
     @classmethod
-    def functional_pk(cls) -> set:
-        """returns the set of fields that form the function pk"""
-        functional_pk = cls._eve_universe_meta_attr("functional_pk")
-        return functional_pk if functional_pk else set()
-
-    @classmethod
     def _eve_universe_meta_attr(cls, attr_name: str, is_mandatory: bool = False):
         """returns value of an attribute from EveUniverseMeta or None"""
         if not hasattr(cls, "EveUniverseMeta"):
@@ -131,7 +118,11 @@ class EveUniverseBaseModel(models.Model):
         return value
 
 
-class EveUniverseModel(EveUniverseBaseModel):
+class EveUniverseEntityModel(EveUniverseBaseModel):
+    """Eve Universe Entity model
+    
+    Entity models are normal Eve entities that have a dedicated ESI endpoint
+    """
 
     id = models.PositiveIntegerField(primary_key=True, help_text="Eve Online ID")
     name = models.CharField(
@@ -157,6 +148,11 @@ class EveUniverseModel(EveUniverseBaseModel):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def esi_pk(cls) -> str:
+        """returns the name of the pk column on ESI that must exist"""
+        return cls._eve_universe_meta_attr("esi_pk", is_mandatory=True)
 
     @classmethod
     def esi_path(cls) -> str:
@@ -198,7 +194,26 @@ class EveUniverseModel(EveUniverseBaseModel):
         }
 
 
-class EveAncestries(EveUniverseModel):
+class EveUniverseInlineModel(EveUniverseBaseModel):
+    """Eve Universe Inline model
+    
+    Inline models are objects within entities and do not have a dedicated ESI endpoint
+    """
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def parent_fk(cls) -> str:
+        return cls._eve_universe_meta_attr("parent_fk", is_mandatory=True)
+
+    @classmethod
+    def functional_pk_mapping(cls) -> str:
+        """returns the list of field names that form the functional PK"""
+        return cls._eve_universe_meta_attr("functional_pk_mapping", is_mandatory=True)
+
+
+class EveAncestries(EveUniverseEntityModel):
     """"Ancestry in Eve Online"""
 
     eve_bloodline = models.ForeignKey("EveBloodline", on_delete=models.CASCADE)
@@ -214,7 +229,7 @@ class EveAncestries(EveUniverseModel):
         fk_mappings = {"eve_bloodline": "bloodline_id"}
 
 
-class EveAsteroidBelt(EveUniverseModel):
+class EveAsteroidBelt(EveUniverseEntityModel):
     """"Asteroid belt in Eve Online"""
 
     position_x = models.FloatField(
@@ -239,7 +254,7 @@ class EveAsteroidBelt(EveUniverseModel):
         }
 
 
-class EveBloodline(EveUniverseModel):
+class EveBloodline(EveUniverseEntityModel):
     """"Bloodline in Eve Online"""
 
     charisma = models.PositiveIntegerField()
@@ -262,7 +277,7 @@ class EveBloodline(EveUniverseModel):
         fk_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
 
 
-class EveCategory(EveUniverseModel):
+class EveCategory(EveUniverseEntityModel):
     """category in Eve Online"""
 
     published = models.BooleanField()
@@ -273,7 +288,7 @@ class EveCategory(EveUniverseModel):
         children = {"groups": "EveGroup"}
 
 
-class EveConstellation(EveUniverseModel):
+class EveConstellation(EveUniverseEntityModel):
     """constellation in Eve Online"""
 
     eve_region = models.ForeignKey("EveRegion", on_delete=models.CASCADE)
@@ -285,7 +300,7 @@ class EveConstellation(EveUniverseModel):
         children = {"systems": "EveSolarSystem"}
 
 
-class EveDogmaAttribute(EveUniverseModel):
+class EveDogmaAttribute(EveUniverseEntityModel):
     """"Dogma Attribute in Eve Online"""
 
     default_value = models.FloatField(default=None, null=True)
@@ -302,7 +317,7 @@ class EveDogmaAttribute(EveUniverseModel):
         esi_path = "Dogma.get_dogma_attributes_attribute_id"
 
 
-class EveDogmaEffect(EveUniverseModel):
+class EveDogmaEffect(EveUniverseEntityModel):
     """"Dogma effect in Eve Online"""
 
     description = models.TextField(default="")
@@ -362,7 +377,7 @@ class EveDogmaEffect(EveUniverseModel):
         }
 
 
-class EveDogmaEffectModifier(EveUniverseBaseModel):
+class EveDogmaEffectModifier(EveUniverseInlineModel):
     """Modifier for a dogma effect in Eve Online"""
 
     domain = models.CharField(max_length=NAMES_MAX_LENGTH, default="")
@@ -392,8 +407,8 @@ class EveDogmaEffectModifier(EveUniverseBaseModel):
         ]
 
     class EveUniverseMeta:
-        parent_fk = "eve_type"
-        esi_pk = "effect_id"
+        parent_fk = "eve_dogma_effect"
+        functional_pk_mapping = ["eve_dogma_effect", "func"]
 
     def __repr__(self) -> str:
         return (
@@ -402,7 +417,7 @@ class EveDogmaEffectModifier(EveUniverseBaseModel):
         )
 
 
-class EveFaction(EveUniverseModel):
+class EveFaction(EveUniverseEntityModel):
     """"faction in Eve Online"""
 
     corporation_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
@@ -426,7 +441,7 @@ class EveFaction(EveUniverseModel):
         fk_mappings = {"eve_solar_system": "solar_system_id"}
 
 
-class EveGroup(EveUniverseModel):
+class EveGroup(EveUniverseEntityModel):
     """group in Eve Online"""
 
     eve_category = models.ForeignKey("EveCategory", on_delete=models.CASCADE)
@@ -438,7 +453,7 @@ class EveGroup(EveUniverseModel):
         children = {"types": "EveType"}
 
 
-class EveMarketGroup(EveUniverseModel):
+class EveMarketGroup(EveUniverseEntityModel):
     """"Market Group in Eve Online"""
 
     description = models.TextField()
@@ -453,7 +468,7 @@ class EveMarketGroup(EveUniverseModel):
         children = {"types": "EveTypes"}
 
 
-class EveMoon(EveUniverseModel):
+class EveMoon(EveUniverseEntityModel):
     """"moon in Eve Online"""
 
     position_x = models.FloatField(
@@ -478,7 +493,7 @@ class EveMoon(EveUniverseModel):
         }
 
 
-class EveRace(EveUniverseModel):
+class EveRace(EveUniverseEntityModel):
     """"faction in Eve Online"""
 
     alliance_id = models.PositiveIntegerField(db_index=True)
@@ -491,7 +506,7 @@ class EveRace(EveUniverseModel):
         esi_path = "Universe.get_universe_races"
 
 
-class EvePlanet(EveUniverseModel):
+class EvePlanet(EveUniverseEntityModel):
     """"planet in Eve Online"""
 
     position_x = models.FloatField(
@@ -517,7 +532,7 @@ class EvePlanet(EveUniverseModel):
         }
 
 
-class EveRegion(EveUniverseModel):
+class EveRegion(EveUniverseEntityModel):
     """region in Eve Online"""
 
     description = models.TextField(default="")
@@ -528,7 +543,7 @@ class EveRegion(EveUniverseModel):
         children = {"constellations": "EveConstellation"}
 
 
-class EveSolarSystem(EveUniverseModel):
+class EveSolarSystem(EveUniverseEntityModel):
     """solar system in Eve Online"""
 
     TYPE_HIGHSEC = "highsec"
@@ -590,7 +605,7 @@ class EveSolarSystem(EveUniverseModel):
             return self.TYPE_UNKNOWN
 
 
-class EveStar(EveUniverseModel):
+class EveStar(EveUniverseEntityModel):
     """"Star in Eve Online"""
 
     age = models.PositiveIntegerField()
@@ -607,7 +622,7 @@ class EveStar(EveUniverseModel):
         fk_mappings = {"eve_solar_system": "solar_system_id", "eve_type": "type_id"}
 
 
-class EveStargate(EveUniverseModel):
+class EveStargate(EveUniverseEntityModel):
     """"Stargate in Eve Online"""
 
     position_x = models.FloatField(
@@ -647,7 +662,7 @@ class EveStargateDestination(models.Model):
         ]
 
 
-class EveStation(EveUniverseModel):
+class EveStation(EveUniverseEntityModel):
     """"station in Eve Online"""
 
     max_dockable_ship_volume = models.FloatField()
@@ -681,7 +696,7 @@ class EveStation(EveUniverseModel):
         }
 
 
-class EveType(EveUniverseModel):
+class EveType(EveUniverseEntityModel):
     """Type in Eve Online"""
 
     capacity = models.FloatField(default=None, null=True)
@@ -707,7 +722,7 @@ class EveType(EveUniverseModel):
         }
 
 
-class EveTypeDogmaAttribute(EveUniverseBaseModel):
+class EveTypeDogmaAttribute(EveUniverseInlineModel):
     """Dogma attribute in Eve Online"""
 
     eve_type = models.ForeignKey(
@@ -727,7 +742,10 @@ class EveTypeDogmaAttribute(EveUniverseBaseModel):
 
     class EveUniverseMeta:
         parent_fk = "eve_type"
-        esi_pk = "attribute_id"
+        functional_pk_mapping = (
+            "eve_dogma_attribute",
+            "attribute_id",
+        )
 
     def __repr__(self) -> str:
         return (
@@ -736,7 +754,7 @@ class EveTypeDogmaAttribute(EveUniverseBaseModel):
         )
 
 
-class EveTypeDogmaEffect(EveUniverseBaseModel):
+class EveTypeDogmaEffect(EveUniverseInlineModel):
     """Dogma effect in Eve Online"""
 
     eve_type = models.ForeignKey(
@@ -754,7 +772,11 @@ class EveTypeDogmaEffect(EveUniverseBaseModel):
 
     class EveUniverseMeta:
         parent_fk = "eve_type"
-        esi_pk = "effect_id"
+        functional_pk_mapping = (
+            "eve_dogma_effect",
+            "effect_id",
+        )
+        fk_mappings = {"eve_dogma_effect": "effect_id"}
 
     def __repr__(self) -> str:
         return (

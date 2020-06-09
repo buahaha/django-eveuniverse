@@ -36,7 +36,7 @@ class EveUniverseModelManager(models.Manager):
 
         Returns: object, created
         """
-        add_prefix = make_logger_prefix("%s(id=%d)" % (self.model.__name__, id))
+        add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
         try:
             args = {self.model.esi_pk(): id}
             esi_category, esi_method = self.model.esi_path().split(".")
@@ -54,7 +54,9 @@ class EveUniverseModelManager(models.Manager):
                 self._update_or_create_children_async(eve_data_obj)
 
         except Exception as ex:
-            logger.warn(add_prefix("Failed to update or create: %s" % ex))
+            logger.warn(
+                add_prefix("Failed to update or create: %s" % ex), exc_info=True
+            )
             raise ex
 
         return obj, created
@@ -65,23 +67,30 @@ class EveUniverseModelManager(models.Manager):
         from . import models as eveuniverse_models
 
         for inline_field, model_name in inline_objects.items():
-            InlineModel = getattr(eveuniverse_models, model_name)
-            parent_pk = InlineModel.parent_fk()
-            esi_pk = InlineModel.esi_pk()
-            non_pk_fields = {
-                field_name
-                for field_name in InlineModel._field_names_not_pk()
-                if field_name not in {parent_pk, esi_pk}
-            }
-            for eve_data_obj in primary_eve_data_obj[inline_field]:
-                args = {
-                    parent_pk: primary_obj,
-                    esi_pk: eve_data_obj[InlineModel.esi_pk()],
+            if (
+                inline_field in primary_eve_data_obj
+                and primary_eve_data_obj[inline_field]
+            ):
+                InlineModel = getattr(eveuniverse_models, model_name)
+                # parent_fk = InlineModel.parent_fk()
+                # functional_pk_mapping = InlineModel.functional_pk_mapping()
+                fk_mappings = InlineModel.fk_mappings()
+                non_pk_fields = {
+                    field_name
+                    for field_name in InlineModel._field_names_not_pk()
+                    if field_name not in fk_mappings.keys()
                 }
-                args["defaults"] = {
-                    field_name: eve_data_obj[field_name] for field_name in non_pk_fields
-                }
-                InlineModel.objects.update_or_create(**args)
+
+                for eve_data_obj in primary_eve_data_obj[inline_field]:
+                    args = {
+                        field_name: eve_data_obj[mapping[0]]
+                        for field_name, mapping in fk_mappings.items()
+                    }
+                    args["defaults"] = {
+                        field_name: eve_data_obj[field_name]
+                        for field_name in non_pk_fields
+                    }
+                    InlineModel.objects.update_or_create(**args)
 
     def _update_or_create_children_async(self, eve_data_obj: dict) -> None:
         """updates or creates child objects specified in eve mapping"""

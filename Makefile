@@ -50,4 +50,4 @@ flake8:
 	flake8 $(package) --count
 
 graph:
-	python ../myauth/manage.py graph_models $(appname) --arrow-shape normal -X EveUniverseBaseModel,EveUniverseModel -R -o $(appname)_model.png
+	python ../myauth/manage.py graph_models $(appname) --arrow-shape normal -X EveUniverseBaseModel,EveUniverseEntityModel -R -o $(appname)_model.png
