@@ -47,7 +47,6 @@ class EveUniverseBaseModel(models.Model):
                     if len(mapping) != 2:
                         raise ValueError(
                             "Currently only supports mapping to 1-level nested dicts"
-                            "bla bla"
                         )
                     value = eve_data_obj[mapping[0]][mapping[1]]
                 else:
@@ -375,6 +374,9 @@ class EveDogmaEffect(EveUniverseEntityModel):
             "range_attribute": "range_attribute_id",
             "tracking_speed_attribute": "tracking_speed_attribute_id",
         }
+        inline_objects = {
+            "modifiers": "EveDogmaEffectModifier",
+        }
 
 
 class EveDogmaEffectModifier(EveUniverseInlineModel):
@@ -409,6 +411,7 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
     class EveUniverseMeta:
         parent_fk = "eve_dogma_effect"
         functional_pk_mapping = ["eve_dogma_effect", "func"]
+        # fk_mappings = {"eve_dogma_effect": "effect_id"}
 
     def __repr__(self) -> str:
         return (
@@ -625,6 +628,22 @@ class EveStar(EveUniverseEntityModel):
 class EveStargate(EveUniverseEntityModel):
     """"Stargate in Eve Online"""
 
+    destination_eve_stargate = models.ForeignKey(
+        "EveStargate",
+        on_delete=models.SET_DEFAULT,
+        null=True,
+        default=None,
+        blank=True,
+        related_name="destination_eve_stargate_set",
+    )
+    destination_eve_solar_system = models.ForeignKey(
+        "EveSolarSystem",
+        on_delete=models.SET_DEFAULT,
+        null=True,
+        default=None,
+        blank=True,
+        related_name="destination_eve_solar_system_set",
+    )
     position_x = models.FloatField(
         null=True, default=None, blank=True, help_text="x position in the solar system"
     )
@@ -640,26 +659,19 @@ class EveStargate(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "stargate_id"
         esi_path = "Universe.get_universe_stargates_stargate_id"
-        fk_mappings = {"eve_solar_system": "system_id", "eve_type": "type_id"}
+        fk_mappings = {
+            "destination_eve_stargate": "destination_stagate_id",
+            "destination_eve_solar_system": "destination_system_id",
+            "eve_solar_system": "system_id",
+            "eve_type": "type_id",
+        }
         field_mappings = {
+            "destination_stagate_id": ("destination", "stargate_id"),
+            "destination_system_id": ("destination", "system_id"),
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
         }
-
-
-class EveStargateDestination(models.Model):
-    """Destination of a stargate in Eve Online"""
-
-    eve_stargate = models.ForeignKey("EveStargate", on_delete=models.CASCADE)
-    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["eve_stargate", "eve_solar_system"], name="functional PK"
-            )
-        ]
 
 
 class EveStation(EveUniverseEntityModel):
@@ -776,7 +788,6 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
             "eve_dogma_effect",
             "effect_id",
         )
-        fk_mappings = {"eve_dogma_effect": "effect_id"}
 
     def __repr__(self) -> str:
         return (

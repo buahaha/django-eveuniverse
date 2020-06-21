@@ -72,19 +72,29 @@ class EveUniverseModelManager(models.Manager):
                 and primary_eve_data_obj[inline_field]
             ):
                 InlineModel = getattr(eveuniverse_models, model_name)
-                # parent_fk = InlineModel.parent_fk()
-                # functional_pk_mapping = InlineModel.functional_pk_mapping()
+                parent_fk = InlineModel.parent_fk()
+                functional_pk_mapping = InlineModel.functional_pk_mapping()
                 fk_mappings = InlineModel.fk_mappings()
                 non_pk_fields = {
                     field_name
                     for field_name in InlineModel._field_names_not_pk()
                     if field_name not in fk_mappings.keys()
                 }
-
+                ParentClass2 = fk_mappings[functional_pk_mapping[0]][1]
                 for eve_data_obj in primary_eve_data_obj[inline_field]:
+                    fk_2_id = eve_data_obj[functional_pk_mapping[1]]
+                    try:
+                        value_fk_2 = ParentClass2.objects.get(id=fk_2_id)
+                    except ParentClass2.DoesNotExist:
+                        if hasattr(ParentClass2.objects, "update_or_create_esi"):
+                            value_fk_2, _ = ParentClass2.objects.update_or_create_esi(
+                                fk_2_id
+                            )
+                        else:
+                            value_fk_2 = None
                     args = {
-                        field_name: eve_data_obj[mapping[0]]
-                        for field_name, mapping in fk_mappings.items()
+                        parent_fk: primary_obj,
+                        functional_pk_mapping[0]: value_fk_2,
                     }
                     args["defaults"] = {
                         field_name: eve_data_obj[field_name]
