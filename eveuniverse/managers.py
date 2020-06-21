@@ -12,7 +12,9 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 
 class EveUniverseModelManager(models.Manager):
-    def get_or_create_esi(self, id: int) -> tuple:
+    def get_or_create_esi(
+        self, id: int, include_children: bool = True, wait_for_children: bool = True,
+    ) -> tuple:
         """gets or creates eve universe object fetched from ESI if needed. 
         Will always get/create parent objects.
         
@@ -24,11 +26,17 @@ class EveUniverseModelManager(models.Manager):
             obj = self.get(id=id)
             created = False
         except self.model.DoesNotExist:
-            obj, created = self.update_or_create_esi(id)
+            obj, created = self.update_or_create_esi(
+                id=id,
+                include_children=include_children,
+                wait_for_children=wait_for_children,
+            )
 
         return obj, created
 
-    def update_or_create_esi(self, id: int, include_children: bool = True) -> tuple:
+    def update_or_create_esi(
+        self, id: int, include_children: bool = True, wait_for_children: bool = True,
+    ) -> tuple:
         """updates or creates Eve Universe object with data fetched from ESI. 
         Will always update/create children and get/create parent objects.
 
@@ -51,7 +59,11 @@ class EveUniverseModelManager(models.Manager):
             if inline_objects:
                 self._update_or_create_inline_objects(eve_data_obj, obj, inline_objects)
             if include_children:
-                self._update_or_create_children_async(eve_data_obj)
+                self._update_or_create_children_async(
+                    eve_data_obj=eve_data_obj,
+                    include_children=include_children,
+                    wait_for_children=wait_for_children,
+                )
 
         except Exception as ex:
             logger.warn(
@@ -102,11 +114,23 @@ class EveUniverseModelManager(models.Manager):
                     }
                     InlineModel.objects.update_or_create(**args)
 
-    def _update_or_create_children_async(self, eve_data_obj: dict) -> None:
+    def _update_or_create_children_async(
+        self, eve_data_obj: dict, include_children: bool, wait_for_children: bool
+    ) -> None:
         """updates or creates child objects specified in eve mapping"""
+        from . import models as eveuniverse_models
+
         for key, child_class in self.model.child_mappings().items():
             for id in eve_data_obj[key]:
-                load_eve_entity.delay(child_class, id)
+                if wait_for_children:
+                    ChildClass = getattr(eveuniverse_models, child_class)
+                    ChildClass.objects.update_or_create_esi(
+                        id=id,
+                        include_children=include_children,
+                        wait_for_children=wait_for_children,
+                    )
+                else:
+                    load_eve_entity.delay(child_class, id)
 
 
 class EveUniverseListManager(models.Manager):

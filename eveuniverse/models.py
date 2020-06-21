@@ -30,17 +30,22 @@ class EveUniverseBaseModel(models.Model):
         for key in cls._field_names_not_pk():
             if key in fk_mappings:
                 esi_key, ParentClass = fk_mappings[key]
-                esi_id = eve_data_obj[esi_key]
-                if esi_id is None:
-                    value = None
+                if esi_key in eve_data_obj:
+                    esi_id = eve_data_obj[esi_key]
+                    if esi_id is None:
+                        value = None
+                    else:
+                        try:
+                            value = ParentClass.objects.get(id=esi_id)
+                        except ParentClass.DoesNotExist:
+                            if hasattr(ParentClass.objects, "update_or_create_esi"):
+                                value, _ = ParentClass.objects.update_or_create_esi(
+                                    esi_id
+                                )
+                            else:
+                                value = None
                 else:
-                    try:
-                        value = ParentClass.objects.get(id=esi_id)
-                    except ParentClass.DoesNotExist:
-                        if hasattr(ParentClass.objects, "update_or_create_esi"):
-                            value, _ = ParentClass.objects.update_or_create_esi(esi_id)
-                        else:
-                            value = None
+                    key = None
             else:
                 if key in field_mappings:
                     mapping = field_mappings[key]
@@ -48,11 +53,18 @@ class EveUniverseBaseModel(models.Model):
                         raise ValueError(
                             "Currently only supports mapping to 1-level nested dicts"
                         )
-                    value = eve_data_obj[mapping[0]][mapping[1]]
+                    try:
+                        value = eve_data_obj[mapping[0]][mapping[1]]
+                    except AttributeError:
+                        key = None
                 else:
-                    value = eve_data_obj[key]
+                    if key in eve_data_obj:
+                        value = eve_data_obj[key]
+                    else:
+                        key = None
 
-            defaults[key] = value
+            if key:
+                defaults[key] = value
 
         return defaults
 
@@ -410,7 +422,7 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
 
     class EveUniverseMeta:
         parent_fk = "eve_dogma_effect"
-        functional_pk_mapping = ["eve_dogma_effect", "func"]
+        functional_pk_mapping = ("func", "func")
         # fk_mappings = {"eve_dogma_effect": "effect_id"}
 
     def __repr__(self) -> str:
@@ -468,7 +480,7 @@ class EveMarketGroup(EveUniverseEntityModel):
         esi_pk = "market_group_id"
         esi_path = "Market.get_markets_groups_market_group_id"
         fk_mappings = {"parent_market_group": "parent_group_id"}
-        children = {"types": "EveTypes"}
+        children = {"types": "EveType"}
 
 
 class EveMoon(EveUniverseEntityModel):

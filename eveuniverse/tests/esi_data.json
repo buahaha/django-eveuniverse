@@ -1,0 +1,302 @@
+{
+    "Dogma": {
+        "get_dogma_attributes_attribute_id": {
+            "129": {
+                "attribute_id": 129,
+                "default_value": 0,
+                "description": "Specifies the maximum numbers of passengers that the ship can have",
+                "display_name": "",
+                "high_is_good": true,
+                "icon_id": 413,
+                "name": "maxPassengers",
+                "stackable": true
+            },
+            "271": {
+                "attribute_id": 271,
+                "default_value": 1,
+                "description": "Multiplies EM damage taken by shield",
+                "display_name": "Shield EM Damage Resistance",
+                "icon_id": 1396,
+                "name": "shieldEmDamageResonance",
+                "published": true,
+                "unit_id": 108
+            },
+            "274": {
+                "attribute_id": 274,
+                "default_value": 1,
+                "description": "Multiplies THERMAL damage taken by Shield. ",
+                "display_name": "Shield Thermal Damage Resistance",
+                "icon_id": 1394,
+                "name": "shieldThermalDamageResonance",
+                "published": true,
+                "unit_id": 108
+            },
+            "463": {
+                "attribute_id": 463,
+                "default_value": 0,
+                "description": "",
+                "display_name": "",
+                "high_is_good": true,
+                "icon_id": 0,
+                "name": "shipBonusCF",
+                "stackable": true
+            },
+            "588": {
+                "attribute_id": 588,
+                "default_value": 0,
+                "description": "",
+                "display_name": "",
+                "high_is_good": true,
+                "icon_id": 0,
+                "name": "shipBonusCF2",
+                "stackable": true
+            }
+        },
+        "get_dogma_effects_effect_id": {
+            "1816": {
+                "description": "",
+                "display_name": "",
+                "effect_category": 0,
+                "effect_id": 1816,
+                "icon_id": 0,
+                "modifiers": [
+                    {
+                        "domain": "shipID",
+                        "func": "ItemModifier",
+                        "modified_attribute_id": 271,
+                        "modifying_attribute_id": 463,
+                        "operator": 6
+                    }
+                ],
+                "name": "shipShieldEMResistanceCF2"
+            },
+            "1817": {
+                "description": "",
+                "display_name": "",
+                "effect_category": 0,
+                "effect_id": 1817,
+                "icon_id": 0,
+                "modifiers": [
+                    {
+                        "domain": "shipID",
+                        "func": "ItemModifier",
+                        "modified_attribute_id": 274,
+                        "modifying_attribute_id": 463,
+                        "operator": 6
+                    }
+                ],
+                "name": "shipShieldThermalResistanceCF2"
+            }
+        }
+    },
+    "Market": {
+        "get_markets_groups_market_group_id": {
+            "4": {
+                "description": "Capsuleer spaceships of all sizes and roles, including advanced and faction variants of many hull types",
+                "market_group_id": 4,
+                "name": "Ships",
+                "types": []
+            },
+            "5": {
+                "description": "Small, fast vessels suited to a variety of purposes.",
+                "market_group_id": 5,
+                "name": "Standard Frigates",
+                "parent_group_id": 1361,
+                "types": []
+            },
+            "61": {
+                "description": "Caldari frigate designs.",
+                "market_group_id": 61,
+                "name": "Caldari",
+                "parent_group_id": 5,
+                "types": [
+                    603
+                ]
+            },
+            "1361": {
+                "description": "Small spaceships that excel in any role involving speed and agility",
+                "market_group_id": 1361,
+                "name": "Frigates",
+                "parent_group_id": 4,
+                "types": []
+            }
+        }
+    },
+    "Universe": {
+        "get_universe_categories_category_id": {
+            "6": {
+                "category_id": 6,
+                "groups": [
+                    25,
+                    26
+                ],
+                "name": "Ship",
+                "published": true
+            }
+        },
+        "get_universe_groups_group_id": {
+            "25": {
+                "category_id": 6,
+                "group_id": 25,
+                "name": "Frigate",
+                "published": true,
+                "types": [
+                    603,
+                    608
+                ]
+            },
+            "26": {
+                "category_id": 6,
+                "group_id": 26,
+                "name": "Cruiser",
+                "published": true,
+                "types": [
+                    621,
+                    626
+                ]
+            }
+        },
+        "get_universe_types_type_id": {
+            "603": {
+                "capacity": 150,
+                "description": "The Merlin is the most powerful combat frigate of the Caldari. Its role has evolved through the years, and while its defenses have always remained exceptionally strong for a Caldari vessel, its offensive capabilities have evolved from versatile, jack-of-all-trades attack patterns into focused and deadly gunfire tactics. The Merlin's primary aim is to have its turrets punch holes in opponents' hulls.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 588,
+                        "value": 5
+                    },
+                    {
+                        "attribute_id": 129,
+                        "value": 5
+                    }
+                ],
+                "dogma_effects": [
+                    {
+                        "effect_id": 1816,
+                        "is_default": false
+                    },
+                    {
+                        "effect_id": 1817,
+                        "is_default": false
+                    }
+                ],
+                "graphic_id": 314,
+                "group_id": 25,
+                "market_group_id": 61,
+                "mass": 997000,
+                "name": "Merlin",
+                "packaged_volume": 2500,
+                "portion_size": 1,
+                "published": true,
+                "radius": 39,
+                "type_id": 603,
+                "volume": 16500
+            },
+            "608": {
+                "capacity": 145,
+                "description": "The Atron is a hard nugget with an advanced power conduit system, but little space for cargo. Although it is a good harvester when it comes to mining, its main ability is as a combat vessel.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 588,
+                        "value": 5
+                    },
+                    {
+                        "attribute_id": 129,
+                        "value": 5
+                    }
+                ],
+                "dogma_effects": [
+                    {
+                        "effect_id": 1816,
+                        "is_default": false
+                    },
+                    {
+                        "effect_id": 1817,
+                        "is_default": false
+                    }
+                ],
+                "graphic_id": 323,
+                "group_id": 25,
+                "market_group_id": 77,
+                "mass": 1050000,
+                "name": "Atron",
+                "packaged_volume": 2500,
+                "portion_size": 1,
+                "published": true,
+                "radius": 24,
+                "type_id": 608,
+                "volume": 22500
+            }
+        },
+        "621": {
+            "capacity": 450,
+            "description": "The Caracal is a powerful vessel that specializes in missile deployment. It has excellent shield defenses, but poor armor plating. Its missile arsenal, when fully stocked, is capable of making mincemeat of almost anyone.",
+            "dogma_attributes": [
+                {
+                    "attribute_id": 588,
+                    "value": 5
+                },
+                {
+                    "attribute_id": 129,
+                    "value": 5
+                }
+            ],
+            "dogma_effects": [
+                {
+                    "effect_id": 1816,
+                    "is_default": false
+                },
+                {
+                    "effect_id": 1817,
+                    "is_default": false
+                }
+            ],
+            "graphic_id": 42,
+            "group_id": 26,
+            "market_group_id": 75,
+            "mass": 11910000,
+            "name": "Caracal",
+            "packaged_volume": 10000,
+            "portion_size": 1,
+            "published": true,
+            "radius": 202,
+            "type_id": 621,
+            "volume": 92000
+        },
+        "626:": {
+            "capacity": 480,
+            "description": "The Vexor is a strong combat ship that is also geared to operate in a variety of other roles. The Vexor is especially useful for surveying in potentially hostile sectors as it can stay on duty for a very long time before having to return to base. Furthermore, it is well capable of defending itself against even concentrated attacks.",
+            "dogma_attributes": [
+                {
+                    "attribute_id": 588,
+                    "value": 5
+                },
+                {
+                    "attribute_id": 129,
+                    "value": 5
+                }
+            ],
+            "dogma_effects": [
+                {
+                    "effect_id": 1816,
+                    "is_default": false
+                },
+                {
+                    "effect_id": 1817,
+                    "is_default": false
+                }
+            ],
+            "graphic_id": 62,
+            "group_id": 26,
+            "market_group_id": 76,
+            "mass": 11100000,
+            "name": "Vexor",
+            "packaged_volume": 10000,
+            "portion_size": 1,
+            "published": true,
+            "radius": 110,
+            "type_id": 626,
+            "volume": 115000
+        }
+    }
+}
