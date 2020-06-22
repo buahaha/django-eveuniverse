@@ -51,15 +51,15 @@ class EveUniverseModelManager(models.Manager):
             eve_data_obj = getattr(getattr(esi.client, esi_category), esi_method)(
                 **args
             ).results()
-            defaults = self.model.convert_values(
-                self.model.map_esi_fields_to_model(eve_data_obj)
+            defaults = self.model.defaults_from_esi_obj(
+                eve_data_obj, include_children=include_children
             )
             obj, created = self.update_or_create(id=id, defaults=defaults)
             inline_objects = self.model.inline_objects()
             if inline_objects:
                 self._update_or_create_inline_objects(eve_data_obj, obj, inline_objects)
             if include_children:
-                self._update_or_create_children_async(
+                self._update_or_create_children(
                     eve_data_obj=eve_data_obj,
                     include_children=include_children,
                     wait_for_children=wait_for_children,
@@ -84,37 +84,36 @@ class EveUniverseModelManager(models.Manager):
                 and primary_eve_data_obj[inline_field]
             ):
                 InlineModel = getattr(eveuniverse_models, model_name)
-                parent_fk = InlineModel.parent_fk()
-                functional_pk_mapping = InlineModel.functional_pk_mapping()
-                fk_mappings = InlineModel.fk_mappings()
-                non_pk_fields = {
-                    field_name
-                    for field_name in InlineModel._field_names_not_pk()
-                    if field_name not in fk_mappings.keys()
-                }
-                ParentClass2 = fk_mappings[functional_pk_mapping[0]][1]
-                for eve_data_obj in primary_eve_data_obj[inline_field]:
-                    fk_2_id = eve_data_obj[functional_pk_mapping[1]]
-                    try:
-                        value_fk_2 = ParentClass2.objects.get(id=fk_2_id)
-                    except ParentClass2.DoesNotExist:
-                        if hasattr(ParentClass2.objects, "update_or_create_esi"):
-                            value_fk_2, _ = ParentClass2.objects.update_or_create_esi(
-                                fk_2_id
-                            )
+                esi_mapping = InlineModel.esi_mapping()
+                for field_name, mapping in esi_mapping.items():
+                    if mapping.is_pk:
+                        if mapping.is_parent_fk:
+                            parent_fk = field_name
                         else:
-                            value_fk_2 = None
-                    args = {
-                        parent_fk: primary_obj,
-                        functional_pk_mapping[0]: value_fk_2,
-                    }
-                    args["defaults"] = {
-                        field_name: eve_data_obj[field_name]
-                        for field_name in non_pk_fields
-                    }
+                            other_pk = (field_name, mapping)
+                            ParentClass2 = mapping.related_model
+
+                for eve_data_obj in primary_eve_data_obj[inline_field]:
+                    args = {parent_fk: primary_obj}
+                    esi_value = eve_data_obj[other_pk[1].esi_name]
+                    if other_pk[1].is_fk:
+                        try:
+                            value = ParentClass2.objects.get(id=esi_value)
+                        except ParentClass2.DoesNotExist:
+                            if hasattr(ParentClass2.objects, "update_or_create_esi"):
+                                (value, _,) = ParentClass2.objects.update_or_create_esi(
+                                    esi_value
+                                )
+                            else:
+                                value = None
+                    else:
+                        value = esi_value
+
+                    args[other_pk[0]] = value
+                    args["defaults"] = InlineModel.defaults_from_esi_obj(eve_data_obj)
                     InlineModel.objects.update_or_create(**args)
 
-    def _update_or_create_children_async(
+    def _update_or_create_children(
         self, eve_data_obj: dict, include_children: bool, wait_for_children: bool
     ) -> None:
         """updates or creates child objects specified in eve mapping"""
@@ -149,7 +148,7 @@ class EveUniverseListManager(models.Manager):
             for eve_data_obj in eve_data_objects:
                 id = eve_data_obj[self.model.esi_pk()]
                 defaults = self.model.convert_values(
-                    self.model.map_esi_fields_to_model(eve_data_obj)
+                    self.model.defaults_from_esi_obj(eve_data_obj)
                 )
                 obj, _ = self.update_or_create(id=id, defaults=defaults)
 

@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from django.db import models
 from django.utils.timezone import now
 
@@ -13,6 +15,20 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 NAMES_MAX_LENGTH = 100
 
 
+EsiMapping = namedtuple(
+    "EsiMapping",
+    [
+        "esi_name",
+        "is_optional",
+        "is_pk",
+        "is_fk",
+        "related_model",
+        "is_parent_fk",
+        "is_charfield",
+    ],
+)
+
+
 class EveUniverseBaseModel(models.Model):
     """Base properties and features"""
 
@@ -20,16 +36,110 @@ class EveUniverseBaseModel(models.Model):
         abstract = True
 
     @classmethod
-    def map_esi_fields_to_model(cls, eve_data_obj: dict) -> dict:
+    def esi_mapping(cls) -> dict:
+        field_mappings = cls._field_mappings()
+        functional_pk = cls._eve_universe_meta_attr("functional_pk")
+        parent_fk = cls._eve_universe_meta_attr("parent_fk")
+        mapping = dict()
+        for field in [
+            field
+            for field in cls._meta.get_fields()
+            if not field.auto_created and field.name != "last_updated"
+        ]:
+            if field.name in field_mappings:
+                esi_name = field_mappings[field.name]
+            else:
+                esi_name = field.name
+
+            if field.primary_key is True:
+                is_pk = True
+                esi_name = cls.esi_pk()
+            elif functional_pk and field.name in functional_pk:
+                is_pk = True
+            else:
+                is_pk = False
+
+            if parent_fk and is_pk and field.name in parent_fk:
+                is_parent_fk = True
+            else:
+                is_parent_fk = False
+
+            if isinstance(field, models.ForeignKey):
+                is_fk = True
+                related_model = field.related_model
+            else:
+                is_fk = False
+                related_model = None
+
+            mapping[field.name] = EsiMapping(
+                esi_name=esi_name,
+                is_optional=field.has_default(),
+                is_pk=is_pk,
+                is_fk=is_fk,
+                related_model=related_model,
+                is_parent_fk=is_parent_fk,
+                is_charfield=isinstance(field, (models.CharField, models.TextField)),
+            )
+
+        return mapping
+
+    @classmethod
+    def defaults_from_esi_obj(
+        cls, eve_data_obj: dict, include_children: bool = True
+    ) -> dict:
+        defaults = dict()
+        for field_name, mapping in cls.esi_mapping().items():
+            if not mapping.is_pk:
+                if not isinstance(mapping.esi_name, tuple):
+                    if mapping.esi_name in eve_data_obj:
+                        esi_value = eve_data_obj[mapping.esi_name]
+                    else:
+                        esi_value = None
+                else:
+                    if (
+                        mapping.esi_name[0] in eve_data_obj
+                        and mapping.esi_name[1] in eve_data_obj[mapping.esi_name[0]]
+                    ):
+                        esi_value = eve_data_obj[mapping.esi_name[0]][
+                            mapping.esi_name[1]
+                        ]
+                    else:
+                        esi_value = None
+
+                if esi_value is not None:
+                    if mapping.is_fk:
+                        ParentClass = mapping.related_model
+                        try:
+                            value = ParentClass.objects.get(id=esi_value)
+                        except ParentClass.DoesNotExist:
+                            if hasattr(ParentClass.objects, "update_or_create_esi"):
+                                value, _ = ParentClass.objects.update_or_create_esi(
+                                    esi_value, include_children=include_children
+                                )
+                            else:
+                                value = None
+
+                    else:
+                        if mapping.is_charfield and esi_value is None:
+                            value = ""
+                        else:
+                            value = esi_value
+
+                    defaults[field_name] = value
+
+        return defaults
+
+    @classmethod
+    def map_esi_names_to_model_old(cls, eve_data_obj: dict) -> dict:
         """maps ESi fields to model fields incl. translations if any
         returns the result as defaults dict
         """
-        fk_mappings = cls.fk_mappings()
+        field_mappings = cls.field_mappings()
         field_mappings = cls._field_mappings()
         defaults = {"last_updated": now()}
         for key in cls._field_names_not_pk():
-            if key in fk_mappings:
-                esi_key, ParentClass = fk_mappings[key]
+            if key in field_mappings:
+                esi_key, ParentClass = field_mappings[key]
                 if esi_key in eve_data_obj:
                     esi_id = eve_data_obj[esi_key]
                     if esi_id is None:
@@ -75,32 +185,32 @@ class EveUniverseBaseModel(models.Model):
         return mappings if mappings else dict()
 
     @classmethod
-    def fk_mappings(cls) -> dict:
+    def field_mappings_OLD(cls) -> dict:
         """returns the foreign key mappings for this class
         
         'model field name': ('Foreign Key name on ESI', 'related model class')
         """
 
-        def convert_to_esi_name(name: str, extra_fk_mappings: dict) -> str:
-            if name in extra_fk_mappings:
-                esi_name = extra_fk_mappings[name]
+        def convert_to_esi_name(name: str, extra_field_mappings: dict) -> str:
+            if name in extra_field_mappings:
+                esi_name = extra_field_mappings[name]
             else:
                 esi_name = name.replace("eve_", "") + "_id"
             return esi_name
 
-        extra_fk_mappings = cls._eve_universe_meta_attr("fk_mappings")
-        if not extra_fk_mappings:
-            extra_fk_mappings = {}
+        extra_field_mappings = cls._eve_universe_meta_attr("field_mappings")
+        if not extra_field_mappings:
+            extra_field_mappings = {}
 
         mappings = {
-            x.name: (convert_to_esi_name(x.name, extra_fk_mappings), x.related_model)
+            x.name: (convert_to_esi_name(x.name, extra_field_mappings), x.related_model)
             for x in cls._meta.get_fields()
             if isinstance(x, models.ForeignKey)
         }
         return mappings
 
     @classmethod
-    def _field_names_not_pk(cls) -> set:
+    def _field_names_not_pk_OLD(cls) -> set:
         """returns field names excl. PK, FK to parent, and auto created fields"""
         return {
             x.name
@@ -140,9 +250,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         max_length=NAMES_MAX_LENGTH, default="", help_text="Eve Online name"
     )
     last_updated = models.DateTimeField(
-        default=None,
-        null=True,
-        blank=True,
+        auto_now=True,
         help_text="When this object was last updated from ESI",
         db_index=True,
     )
@@ -185,7 +293,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return inline_objects if inline_objects else dict()
 
     @classmethod
-    def convert_values(cls, data_object: dict) -> dict:
+    def convert_values_OLD(cls, data_object: dict) -> dict:
         """ convert values of eve data objects"""
         # replace None with "" for CharFields
         char_fields = cls._char_fields()
@@ -219,9 +327,9 @@ class EveUniverseInlineModel(EveUniverseBaseModel):
         return cls._eve_universe_meta_attr("parent_fk", is_mandatory=True)
 
     @classmethod
-    def functional_pk_mapping(cls) -> str:
+    def functional_pk(cls) -> str:
         """returns the list of field names that form the functional PK"""
-        return cls._eve_universe_meta_attr("functional_pk_mapping", is_mandatory=True)
+        return cls._eve_universe_meta_attr("functional_pk", is_mandatory=True)
 
 
 class EveAncestries(EveUniverseEntityModel):
@@ -237,7 +345,7 @@ class EveAncestries(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "id"
         esi_path = "Universe.get_universe_ancestries"
-        fk_mappings = {"eve_bloodline": "bloodline_id"}
+        field_mappings = {"eve_bloodline": "bloodline_id"}
 
 
 class EveAsteroidBelt(EveUniverseEntityModel):
@@ -257,8 +365,8 @@ class EveAsteroidBelt(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "asteroid_belt_id"
         esi_path = "Universe.get_universe_asteroid_belts_asteroid_belt_id"
-        fk_mappings = {"eve_solar_system": "system_id"}
         field_mappings = {
+            "eve_solar_system": "system_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -285,7 +393,7 @@ class EveBloodline(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "bloodline_id"
         esi_path = "Universe.get_universe_bloodlines"
-        fk_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
+        field_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
 
 
 class EveCategory(EveUniverseEntityModel):
@@ -307,7 +415,7 @@ class EveConstellation(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "constellation_id"
         esi_path = "Universe.get_universe_constellations_constellation_id"
-
+        field_mappings = {"eve_region": "region_id"}
         children = {"systems": "EveSolarSystem"}
 
 
@@ -379,7 +487,7 @@ class EveDogmaEffect(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "effect_id"
         esi_path = "Dogma.get_dogma_effects_effect_id"
-        fk_mappings = {
+        field_mappings = {
             "discharge_attribute": "discharge_attribute_id",
             "duration_attribute": "duration_attribute_id",
             "falloff_attribute": "falloff_attribute_id",
@@ -402,14 +510,22 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
         on_delete=models.SET_DEFAULT,
         default=None,
         null=True,
-        related_name="modified_attribute",
+        related_name="modified_attributes",
     )
     modifying_attribute = models.ForeignKey(
         "EveDogmaAttribute",
         on_delete=models.SET_DEFAULT,
         default=None,
         null=True,
-        related_name="modifying_attribute",
+        related_name="modifying_attributes",
+    )
+    modifying_effect = models.ForeignKey(
+        "EveDogmaEffect",
+        on_delete=models.SET_DEFAULT,
+        null=True,
+        default=None,
+        blank=True,
+        related_name="modifying_effects",
     )
     operator = models.PositiveIntegerField(default=None, null=True)
 
@@ -422,8 +538,15 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
 
     class EveUniverseMeta:
         parent_fk = "eve_dogma_effect"
-        functional_pk_mapping = ("func", "func")
-        # fk_mappings = {"eve_dogma_effect": "effect_id"}
+        functional_pk = [
+            "eve_dogma_effect",
+            "func",
+        ]
+        field_mappings = {
+            "modified_attribute": "modified_attribute_id",
+            "modifying_attribute": "modifying_attribute_id",
+            "modifying_effect": "effect_id",
+        }
 
     def __repr__(self) -> str:
         return (
@@ -453,7 +576,7 @@ class EveFaction(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "faction_id"
         esi_path = "Universe.get_universe_factions"
-        fk_mappings = {"eve_solar_system": "solar_system_id"}
+        field_mappings = {"eve_solar_system": "solar_system_id"}
 
 
 class EveGroup(EveUniverseEntityModel):
@@ -465,6 +588,7 @@ class EveGroup(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "group_id"
         esi_path = "Universe.get_universe_groups_group_id"
+        field_mappings = {"eve_category": "category_id"}
         children = {"types": "EveType"}
 
 
@@ -479,7 +603,7 @@ class EveMarketGroup(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "market_group_id"
         esi_path = "Market.get_markets_groups_market_group_id"
-        fk_mappings = {"parent_market_group": "parent_group_id"}
+        field_mappings = {"parent_market_group": "parent_group_id"}
         children = {"types": "EveType"}
 
 
@@ -500,8 +624,8 @@ class EveMoon(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "moon_id"
         esi_path = "Universe.get_universe_moons_moon_id"
-        fk_mappings = {"eve_solar_system": "system_id"}
         field_mappings = {
+            "eve_solar_system": "system_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -539,8 +663,8 @@ class EvePlanet(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "planet_id"
         esi_path = "Universe.get_universe_planets_planet_id"
-        fk_mappings = {"eve_solar_system": "system_id"}
         field_mappings = {
+            "eve_solar_system": "system_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -634,7 +758,7 @@ class EveStar(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "star_id"
         esi_path = "Universe.get_universe_stars_star_id"
-        fk_mappings = {"eve_solar_system": "solar_system_id", "eve_type": "type_id"}
+        field_mappings = {"eve_solar_system": "solar_system_id", "eve_type": "type_id"}
 
 
 class EveStargate(EveUniverseEntityModel):
@@ -671,15 +795,11 @@ class EveStargate(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "stargate_id"
         esi_path = "Universe.get_universe_stargates_stargate_id"
-        fk_mappings = {
-            "destination_eve_stargate": "destination_stagate_id",
-            "destination_eve_solar_system": "destination_system_id",
+        field_mappings = {
+            "destination_eve_stargate": ("destination", "stargate_id"),
+            "destination_eve_solar_system": ("destination", "system_id"),
             "eve_solar_system": "system_id",
             "eve_type": "type_id",
-        }
-        field_mappings = {
-            "destination_stagate_id": ("destination", "stargate_id"),
-            "destination_system_id": ("destination", "system_id"),
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -712,8 +832,9 @@ class EveStation(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "station_id"
         esi_path = "Universe.get_universe_stations_station_id"
-        fk_mappings = {"eve_solar_system": "system_id", "eve_race": "race_id"}
         field_mappings = {
+            "eve_solar_system": "system_id",
+            "eve_race": "race_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -740,6 +861,10 @@ class EveType(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "type_id"
         esi_path = "Universe.get_universe_types_type_id"
+        field_mappings = {
+            "eve_group": "group_id",
+            "eve_market_group": "market_group_id",
+        }
         inline_objects = {
             "dogma_attributes": "EveTypeDogmaAttribute",
             "dogma_effects": "EveTypeDogmaEffect",
@@ -766,10 +891,11 @@ class EveTypeDogmaAttribute(EveUniverseInlineModel):
 
     class EveUniverseMeta:
         parent_fk = "eve_type"
-        functional_pk_mapping = (
+        functional_pk = [
+            "eve_type",
             "eve_dogma_attribute",
-            "attribute_id",
-        )
+        ]
+        field_mappings = {"eve_dogma_attribute": "attribute_id"}
 
     def __repr__(self) -> str:
         return (
@@ -796,10 +922,11 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
 
     class EveUniverseMeta:
         parent_fk = "eve_type"
-        functional_pk_mapping = (
+        functional_pk = [
+            "eve_type",
             "eve_dogma_effect",
-            "effect_id",
-        )
+        ]
+        field_mappings = {"eve_dogma_effect": "effect_id"}
 
     def __repr__(self) -> str:
         return (
