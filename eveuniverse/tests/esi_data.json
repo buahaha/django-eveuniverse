@@ -193,7 +193,7 @@
                 "name": "Civire",
                 "perception": 9,
                 "race_id": 1,
-                "ship_type_id": 601,
+                "ship_type_id": 603,
                 "willpower": 6
             },
             {
@@ -206,7 +206,7 @@
                 "name": "Gallente",
                 "perception": 8,
                 "race_id": 8,
-                "ship_type_id": 606,
+                "ship_type_id": 608,
                 "willpower": 4
             }
         ],

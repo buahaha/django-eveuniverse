@@ -183,7 +183,10 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 class EveUniverseInlineModel(EveUniverseBaseModel):
     """Eve Universe Inline model
     
-    Inline models are objects within entities and do not have a dedicated ESI endpoint
+    Inline models are objects which do not have a dedicated ESI endpoint and are 
+    provided through the endpoint of another entity
+
+    This class is also used for static Eve data
     """
 
     class Meta:
@@ -285,11 +288,14 @@ class EveDogmaAttribute(EveUniverseEntityModel):
     icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
     published = models.BooleanField(default=None, null=True)
     stackable = models.BooleanField(default=None, null=True)
-    unit_id = models.PositiveIntegerField(default=None, null=True)
+    eve_unit = models.ForeignKey(
+        "EveUnit", on_delete=models.SET_DEFAULT, default=None, null=True
+    )
 
     class EveUniverseMeta:
         esi_pk = "attribute_id"
         esi_path = "Dogma.get_dogma_attributes_attribute_id"
+        field_mappings = {"eve_unit": "unit_id"}
 
 
 class EveDogmaEffect(EveUniverseEntityModel):
@@ -798,3 +804,20 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
             f"EveTypeDogmaEffect(eve_type='{self.eve_type}', "
             f"effect_id={self.effect_id})"
         )
+
+
+class EveUnit(EveUniverseEntityModel):
+    """Units in Eve Online"""
+
+    display_name = models.CharField(max_length=50, default="")
+    description = models.TextField(default="")
+
+    objects = models.Manager()
+
+    class EveUniverseMeta:
+        esi_pk = "unit_id"
+        esi_path = None
+        field_mappings = {
+            "unit_id": "id",
+            "unit_name": "name",
+        }

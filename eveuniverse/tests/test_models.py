@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import patch
 
+from bravado.exception import HTTPNotFound
+
 from .my_test_data import esi_mock_client
 from ..models import (
     EsiMapping,
@@ -39,7 +41,7 @@ class TestEveDogmaAttribute(NoSocketsTestCase):
         self.assertEqual(obj.display_name, "Shield EM Damage Resistance")
         self.assertEqual(obj.icon_id, 1396)
         self.assertTrue(obj.published)
-        self.assertEqual(obj.unit_id, 108)
+        self.assertEqual(obj.eve_unit_id, 108)
 
 
 @patch("eveuniverse.managers.esi")
@@ -47,11 +49,21 @@ class TestEveAncestry(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        obj, created = EveAncestry.objects.update_or_create_esi(id=1)
+        obj, created = EveAncestry.objects.update_or_create_esi(id=8)
         self.assertTrue(created)
         self.assertEqual(obj.id, 8)
         self.assertEqual(obj.name, "Mercs")
-        self.assertEqual(obj.icon_id, 8)
+        self.assertEqual(obj.icon_id, 1648)
+
+        self.assertTrue(EveBloodline.objects.filter(id=2).exists())
+        self.assertTrue(EveType.objects.filter(id=603).exists())
+        self.assertTrue(EveRace.objects.filter(id=1).exists())
+
+    def test_raise_404_exception_when_object_not_found(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        with self.assertRaises(HTTPNotFound):
+            EveAncestry.objects.update_or_create_esi(id=1)
 
 
 @patch("eveuniverse.managers.esi")

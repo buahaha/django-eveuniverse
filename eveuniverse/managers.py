@@ -1,4 +1,7 @@
+from collections import namedtuple
 from django.db import models
+
+from bravado.exception import HTTPNotFound
 
 from allianceauth.services.hooks import get_extension_logger
 
@@ -9,6 +12,8 @@ from .utils import LoggerAddTag, make_logger_prefix
 
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+
+FakeResponse = namedtuple("FakeResponse", ["status_code"])
 
 
 class EveUniverseBaseModelManager(models.Manager):
@@ -123,6 +128,13 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 for row in esi_data:
                     if esi_pk in row and row[esi_pk] == id:
                         eve_data_obj = row
+
+                if not eve_data_obj:
+                    raise HTTPNotFound(
+                        FakeResponse(status_code=404),
+                        message=f"{self.model.__name__} object with id {id} not found",
+                    )
+
             else:
                 eve_data_obj = esi_data
 
