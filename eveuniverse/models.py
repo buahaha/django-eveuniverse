@@ -1,8 +1,7 @@
 from collections import namedtuple
+import logging
 
 from django.db import models
-
-from allianceauth.services.hooks import get_extension_logger
 
 from . import __title__
 from .app_settings import EVEUNIVERSE_LOAD_DOGMAS, EVEUNIVERSE_LOAD_MARKET_GROUPS
@@ -13,7 +12,7 @@ from .managers import (
 from .utils import LoggerAddTag
 
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 NAMES_MAX_LENGTH = 100
 

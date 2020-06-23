@@ -1,5 +1,5 @@
+import logging
 from django.core.management.base import BaseCommand
-from allianceauth.services.hooks import get_extension_logger
 
 from ... import __title__
 from ...providers import esi
@@ -7,7 +7,7 @@ from ...tasks import load_eve_entity
 from ...utils import LoggerAddTag
 
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 
 def get_input(text):

@@ -1,9 +1,9 @@
 from collections import namedtuple
+import logging
+
 from django.db import models
 
 from bravado.exception import HTTPNotFound
-
-from allianceauth.services.hooks import get_extension_logger
 
 from . import __title__
 from .providers import esi
@@ -11,7 +11,7 @@ from .tasks import load_eve_entity
 from .utils import LoggerAddTag, make_logger_prefix
 
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 FakeResponse = namedtuple("FakeResponse", ["status_code"])
 
