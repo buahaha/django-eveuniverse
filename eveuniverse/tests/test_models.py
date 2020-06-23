@@ -17,6 +17,9 @@ from ..models import (
     EveDogmaEffect,
     EveRace,
     EveRegion,
+    EveSolarSystem,
+    EveStation,
+    EveStar,
     EveTypeDogmaEffect,
     EveTypeDogmaAttribute,
 )
@@ -24,24 +27,6 @@ from ..utils import NoSocketsTestCase
 
 unittest.util._MAX_LENGTH = 1000
 MODULE_PATH = "eveuniverse.models"
-
-
-@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
-@patch("eveuniverse.managers.esi")
-class TestEveDogmaAttribute(NoSocketsTestCase):
-    def test_can_create_from_esi(self, mock_esi):
-        mock_esi.client = esi_mock_client()
-
-        obj, created = EveDogmaAttribute.objects.update_or_create_esi(id=271)
-        self.assertTrue(created)
-        self.assertEqual(obj.id, 271)
-        self.assertEqual(obj.name, "shieldEmDamageResonance")
-        self.assertEqual(obj.default_value, 1)
-        self.assertEqual(obj.description, "Multiplies EM damage taken by shield")
-        self.assertEqual(obj.display_name, "Shield EM Damage Resistance")
-        self.assertEqual(obj.icon_id, 1396)
-        self.assertTrue(obj.published)
-        self.assertEqual(obj.eve_unit_id, 108)
 
 
 @patch("eveuniverse.managers.esi")
@@ -64,30 +49,6 @@ class TestEveAncestry(NoSocketsTestCase):
 
         with self.assertRaises(HTTPNotFound):
             EveAncestry.objects.update_or_create_esi(id=1)
-
-
-@patch("eveuniverse.managers.esi")
-class TestEveRace(NoSocketsTestCase):
-    def test_create_from_esi(self, mock_esi):
-        mock_esi.client = esi_mock_client()
-
-        obj, created = EveRace.objects.update_or_create_esi(id=1)
-        self.assertTrue(created)
-        self.assertEqual(obj.id, 1)
-        self.assertEqual(obj.name, "Caldari")
-        self.assertEqual(obj.alliance_id, 500001)
-
-
-@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
-@patch("eveuniverse.managers.esi")
-class TestEveDogmaEffect(NoSocketsTestCase):
-    def test_can_create_from_esi(self, mock_esi):
-        mock_esi.client = esi_mock_client()
-
-        obj, created = EveDogmaEffect.objects.update_or_create_esi(id=1816)
-        self.assertTrue(created)
-        self.assertEqual(obj.id, 1816)
-        self.assertEqual(obj.name, "shipShieldEMResistanceCF2")
 
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
@@ -136,6 +97,209 @@ class TestEveCategory(NoSocketsTestCase):
         self.assertEqual(obj.id, 6)
         self.assertEqual(obj.name, "Ship")
         self.assertTrue(obj.published)
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveConstellation(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveConstellation.objects.update_or_create_esi(id=20000785)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 20000785)
+        self.assertEqual(obj.name, "Ishaga")
+        self.assertEqual(obj.position_x, -222687068034733630)
+        self.assertEqual(obj.position_y, 108368351346494510)
+        self.assertEqual(obj.position_z, 136029596082308480)
+
+        self.assertTrue(EveRegion.objects.filter(id=10000069).exists())
+
+
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+@patch("eveuniverse.managers.esi")
+class TestEveDogmaAttribute(NoSocketsTestCase):
+    def test_can_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveDogmaAttribute.objects.update_or_create_esi(id=271)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 271)
+        self.assertEqual(obj.name, "shieldEmDamageResonance")
+        self.assertEqual(obj.default_value, 1)
+        self.assertEqual(obj.description, "Multiplies EM damage taken by shield")
+        self.assertEqual(obj.display_name, "Shield EM Damage Resistance")
+        self.assertEqual(obj.icon_id, 1396)
+        self.assertTrue(obj.published)
+        self.assertEqual(obj.eve_unit_id, 108)
+
+
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+@patch("eveuniverse.managers.esi")
+class TestEveDogmaEffect(NoSocketsTestCase):
+    def test_can_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveDogmaEffect.objects.update_or_create_esi(id=1816)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 1816)
+        self.assertEqual(obj.name, "shipShieldEMResistanceCF2")
+
+
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+@patch("eveuniverse.managers.esi")
+class TestEveMarketGroup(NoSocketsTestCase):
+    def test_can_fetch_parent_group(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveMarketGroup.objects.get_or_create_esi(id=4)
+        self.assertTrue(created)
+        self.assertEqual(obj.name, "Ships")
+
+    def test_can_fetch_group_and_all_parents(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveMarketGroup.objects.get_or_create_esi(id=61)
+        self.assertTrue(created)
+        self.assertEqual(obj.name, "Caldari")
+        self.assertEqual(obj.parent_market_group.name, "Standard Frigates")
+        self.assertEqual(obj.parent_market_group.parent_market_group.name, "Frigates")
+        self.assertEqual(
+            obj.parent_market_group.parent_market_group.parent_market_group.name,
+            "Ships",
+        )
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveRace(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveRace.objects.update_or_create_esi(id=1)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 1)
+        self.assertEqual(obj.name, "Caldari")
+        self.assertEqual(obj.alliance_id, 500001)
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveRegion(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveRegion.objects.update_or_create_esi(id=10000069)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 10000069)
+        self.assertEqual(obj.name, "Black Rise")
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveSolarSystem(NoSocketsTestCase):
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_create_from_esi_1(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveSolarSystem.objects.update_or_create_esi(id=30045339)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 30045339)
+        self.assertEqual(obj.name, "Enaluri")
+
+        self.assertTrue(EveConstellation.objects.filter(id=20000785).exists())
+        self.assertTrue(EveRegion.objects.filter(id=10000069).exists())
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARS", True)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_create_from_esi_with_stars(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveSolarSystem.objects.update_or_create_esi(id=30045339)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 30045339)
+
+        self.assertTrue(EveStar.objects.filter(id=40349466).exists())
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", True)
+    def test_create_from_esi_with_stations(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveSolarSystem.objects.update_or_create_esi(
+            id=30045339, include_children=True
+        )
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 30045339)
+
+        self.assertTrue(EveStation.objects.filter(id=60015068).exists())
+
+
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+@patch("eveuniverse.managers.esi")
+class TestEveStar(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveStar.objects.update_or_create_esi(id=40349466)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 40349466)
+        self.assertEqual(obj.name, "Enaluri - Star")
+        self.assertEqual(obj.luminosity, 0.02542000077664852)
+        self.assertEqual(obj.radius, 590000000)
+        self.assertEqual(obj.spectral_class, "M6 V")
+        self.assertEqual(obj.temperature, 2385)
+
+        self.assertTrue(EveType.objects.filter(id=3800).exists())
+
+
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", True)
+@patch("eveuniverse.managers.esi")
+class TestEveStation(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveStation.objects.update_or_create_esi(id=60015068)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 60015068)
+        self.assertEqual(obj.name, "Enaluri V - State Protectorate Assembly Plant")
+        self.assertEqual(obj.office_rental_cost, 118744)
+        self.assertEqual(obj.owner_id, 1000180)
+        self.assertEqual(obj.position_x, 96519659520)
+        self.assertEqual(obj.position_y, 65249280)
+        self.assertEqual(obj.position_z, 976627507200)
+        self.assertEqual(obj.reprocessing_efficiency, 0.5)
+        self.assertEqual(obj.reprocessing_stations_take, 0.025)
+        self.assertEqual(
+            set(obj.services.values_list("name", flat=True)),
+            set(
+                [
+                    "bounty-missions",
+                    "courier-missions",
+                    "reprocessing-plant",
+                    "market",
+                    "repair-facilities",
+                    "factory",
+                    "fitting",
+                    "news",
+                    "insurance",
+                    "docking",
+                    "office-rental",
+                    "loyalty-point-store",
+                    "navy-offices",
+                    "security-offices",
+                ]
+            ),
+        )
+
+        self.assertTrue(EveRace.objects.filter(id=1).exists())
+        self.assertTrue(EveType.objects.filter(id=1529).exists())
 
 
 @patch("eveuniverse.managers.esi")
@@ -239,30 +403,6 @@ class TestEveType(NoSocketsTestCase):
         self.assertGreater(EveTypeDogmaEffect.objects.count(), 0)
 
 
-@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
-@patch("eveuniverse.managers.esi")
-class TestEveMarketGroup(NoSocketsTestCase):
-    def test_can_fetch_parent_group(self, mock_esi):
-        mock_esi.client = esi_mock_client()
-
-        obj, created = EveMarketGroup.objects.get_or_create_esi(id=4)
-        self.assertTrue(created)
-        self.assertEqual(obj.name, "Ships")
-
-    def test_can_fetch_group_and_all_parents(self, mock_esi):
-        mock_esi.client = esi_mock_client()
-
-        obj, created = EveMarketGroup.objects.get_or_create_esi(id=61)
-        self.assertTrue(created)
-        self.assertEqual(obj.name, "Caldari")
-        self.assertEqual(obj.parent_market_group.name, "Standard Frigates")
-        self.assertEqual(obj.parent_market_group.parent_market_group.name, "Frigates")
-        self.assertEqual(
-            obj.parent_market_group.parent_market_group.parent_market_group.name,
-            "Ships",
-        )
-
-
 class TestEsiMapping(NoSocketsTestCase):
 
     maxDiff = None
@@ -309,7 +449,7 @@ class TestEsiMapping(NoSocketsTestCase):
 
     def test_with_fk(self):
         mapping = EveConstellation.esi_mapping()
-        self.assertEqual(len(mapping.keys()), 3)
+        self.assertEqual(len(mapping.keys()), 6)
         self.assertEqual(
             mapping["id"],
             EsiMapping(
@@ -342,6 +482,42 @@ class TestEsiMapping(NoSocketsTestCase):
                 is_pk=False,
                 is_fk=True,
                 related_model=EveRegion,
+                is_parent_fk=False,
+                is_charfield=False,
+            ),
+        )
+        self.assertEqual(
+            mapping["position_x"],
+            EsiMapping(
+                esi_name=("position", "x"),
+                is_optional=True,
+                is_pk=False,
+                is_fk=False,
+                related_model=None,
+                is_parent_fk=False,
+                is_charfield=False,
+            ),
+        )
+        self.assertEqual(
+            mapping["position_y"],
+            EsiMapping(
+                esi_name=("position", "y"),
+                is_optional=True,
+                is_pk=False,
+                is_fk=False,
+                related_model=None,
+                is_parent_fk=False,
+                is_charfield=False,
+            ),
+        )
+        self.assertEqual(
+            mapping["position_z"],
+            EsiMapping(
+                esi_name=("position", "z"),
+                is_optional=True,
+                is_pk=False,
+                is_fk=False,
+                related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
             ),
@@ -485,4 +661,3 @@ class TestEsiMapping(NoSocketsTestCase):
                 "volume",
             },
         )
-

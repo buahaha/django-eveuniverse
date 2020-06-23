@@ -210,21 +210,38 @@
                 "willpower": 4
             }
         ],
-        "get_universe_races": [
-            {
-                "alliance_id": 500001,
-                "description": "Founded on the tenets of patriotism and hard work that carried its ancestors through hardships on an inhospitable homeworld, the Caldari State is today a corporate dictatorship, led by rulers who are determined to see it return to the meritocratic ideals of old. Ruthless and efficient in the boardroom as well as on the battlefield, the Caldari are living emblems of strength, persistence, and dignity.",
-                "name": "Caldari",
-                "race_id": 1
-            },
-            {
-                "alliance_id": 500004,
-                "description": "Champions of liberty and defenders of the downtrodden, the Gallente play host to the only true democracy in New Eden. Some of the most progressive leaders, scientists, and businessmen of the era have emerged from its diverse peoples. A pioneer of artificial intelligence, the Federation relies heavily on drones and other automated systems. This is not to detract from the skill of their pilots, though: the Gallente Federation is known for producing some of the best and bravest the universe has to offer.",
-                "name": "Gallente",
-                "race_id": 8
+        "get_universe_constellations_constellation_id": {
+            "20000785": {
+                "constellation_id": 20000785,
+                "name": "Ishaga",
+                "position": {
+                    "x": -222687068034733630,
+                    "y": 108368351346494510,
+                    "z": 136029596082308480
+                },
+                "region_id": 10000069,
+                "systems": [
+                    30045339
+                ]
             }
-        ],
+        },
         "get_universe_categories_category_id": {
+            "2": {
+                "category_id": 2,
+                "groups": [
+                    6
+                ],
+                "name": "Celestial",
+                "published": true
+            },
+            "3": {
+                "category_id": 3,
+                "groups": [
+                    15
+                ],
+                "name": "Station",
+                "published": false
+            },
             "6": {
                 "category_id": 6,
                 "groups": [
@@ -236,6 +253,24 @@
             }
         },
         "get_universe_groups_group_id": {
+            "6": {
+                "category_id": 2,
+                "group_id": 6,
+                "name": "Sun",
+                "published": false,
+                "types": [
+                    3800
+                ]
+            },
+            "15": {
+                "category_id": 3,
+                "group_id": 15,
+                "name": "Station",
+                "published": false,
+                "types": [
+                    1529
+                ]
+            },
             "25": {
                 "category_id": 6,
                 "group_id": 25,
@@ -255,6 +290,143 @@
                     621,
                     626
                 ]
+            }
+        },
+        "get_universe_races": [
+            {
+                "alliance_id": 500001,
+                "description": "Founded on the tenets of patriotism and hard work that carried its ancestors through hardships on an inhospitable homeworld, the Caldari State is today a corporate dictatorship, led by rulers who are determined to see it return to the meritocratic ideals of old. Ruthless and efficient in the boardroom as well as on the battlefield, the Caldari are living emblems of strength, persistence, and dignity.",
+                "name": "Caldari",
+                "race_id": 1
+            },
+            {
+                "alliance_id": 500004,
+                "description": "Champions of liberty and defenders of the downtrodden, the Gallente play host to the only true democracy in New Eden. Some of the most progressive leaders, scientists, and businessmen of the era have emerged from its diverse peoples. A pioneer of artificial intelligence, the Federation relies heavily on drones and other automated systems. This is not to detract from the skill of their pilots, though: the Gallente Federation is known for producing some of the best and bravest the universe has to offer.",
+                "name": "Gallente",
+                "race_id": 8
+            }
+        ],
+        "get_universe_regions_region_id": {
+            "10000069": {
+                "constellations": [
+                    20000785
+                ],
+                "description": "For centuries, this volume of space remained inexplicably impenetrable to investigation. It possesses no apparent mass or dimension, but the abrupt disappearance of every expedition into the zone made it an effective bulwark against flanking attacks during the first Gallente-Caldari war, and the subsequent uneasy peace.<br><br>Several decades ago, a coalition of like-minded Caldari megacorps discovered ways to traverse Black Rise safely, and began a secret programme of colonization. The start of the Empyrean War forced them to show their hand, and the region soon became a key front in the conflict between Caldari and Gallente forces.<br><br>Today the region remains somewhat underdeveloped, but rich in raw materials. The poorly-understood phenomena that still manifest can make life awkward, but fluid router networks and jump travel permit unrestricted travel and communications. Of the many early expeditions, though, no trace has yet been found.",
+                "name": "Black Rise",
+                "region_id": 10000069
+            }
+        },
+        "get_universe_stars_star_id": {
+            "40349466": {
+                "age": 37075060962,
+                "luminosity": 0.02542000077664852,
+                "name": "Enaluri - Star",
+                "radius": 590000000,
+                "solar_system_id": 30045339,
+                "spectral_class": "M6 V",
+                "temperature": 2385,
+                "type_id": 3800
+            }
+        },
+        "get_universe_stations_station_id": {
+            "60015068": {
+                "max_dockable_ship_volume": 50000000,
+                "name": "Enaluri V - State Protectorate Assembly Plant",
+                "office_rental_cost": 118744,
+                "owner": 1000180,
+                "position": {
+                    "x": 96519659520,
+                    "y": 65249280,
+                    "z": 976627507200
+                },
+                "race_id": 1,
+                "reprocessing_efficiency": 0.5,
+                "reprocessing_stations_take": 0.025,
+                "services": [
+                    "bounty-missions",
+                    "courier-missions",
+                    "reprocessing-plant",
+                    "market",
+                    "repair-facilities",
+                    "factory",
+                    "fitting",
+                    "news",
+                    "insurance",
+                    "docking",
+                    "office-rental",
+                    "loyalty-point-store",
+                    "navy-offices",
+                    "security-offices"
+                ],
+                "station_id": 60015068,
+                "system_id": 30045339,
+                "type_id": 1529
+            },
+            "60015069": {
+                "max_dockable_ship_volume": 50000000,
+                "name": "Enaluri V - Dummy station",
+                "office_rental_cost": 118744,
+                "owner": 1000180,
+                "position": {
+                    "x": 96519659520,
+                    "y": 65249280,
+                    "z": 976627507200
+                },
+                "race_id": 1,
+                "reprocessing_efficiency": 0.5,
+                "reprocessing_stations_take": 0.025,
+                "services": [
+                    "bounty-missions",
+                    "courier-missions",
+                    "market",
+                    "docking",
+                    "office-rental",
+                    "navy-offices",
+                    "security-offices"
+                ],
+                "station_id": 60015069,
+                "system_id": 30045339,
+                "type_id": 1529
+            }
+        },
+        "get_universe_systems_system_id": {
+            "30045339": {
+                "constellation_id": 20000785,
+                "name": "Enaluri",
+                "planets": [
+                    {
+                        "moons": [
+                            40349468
+                        ],
+                        "planet_id": 40349467
+                    },
+                    {
+                        "asteroid_belts": [
+                            40349487
+                        ],
+                        "moons": [
+                            40349472,
+                            40349473
+                        ],
+                        "planet_id": 40349471
+                    }
+                ],
+                "position": {
+                    "x": -227875173313944580,
+                    "y": 104688385699531790,
+                    "z": 120279417692650270
+                },
+                "security_status": 0.3277980387210846,
+                "star_id": 40349466,
+                "stargates": [
+                    50016284,
+                    50016286
+                ],
+                "stations": [
+                    60015068,
+                    60015069
+                ],
+                "system_id": 30045339
             }
         },
         "get_universe_types_type_id": {
@@ -397,6 +569,34 @@
                 "radius": 110,
                 "type_id": 626,
                 "volume": 115000
+            },
+            "1529": {
+                "capacity": 0,
+                "description": "",
+                "graphic_id": 1019,
+                "group_id": 15,
+                "mass": 0,
+                "name": "Caldari Administrative Station",
+                "packaged_volume": 1,
+                "portion_size": 1,
+                "published": false,
+                "radius": 45734,
+                "type_id": 1529,
+                "volume": 1
+            },
+            "3800": {
+                "capacity": 0,
+                "description": "Orange and red-orange stars in this class are very abundant, making up by far the largest number of main-sequence stars in the locale of the New Eden cluster. However, many such stars are dim and in the dwarf category with the more radiant members of the class being the better known.\r\n\r\nRather cool and experiencing constant remixing of their hydrogen fuel by convection, it is believed that stars of this kind could potentially remain stable, at constant luminosity, for trillions of years. By this scale, all stars of this kind are young in terms of their potential lifetime due to the relatively short age of the universe.",
+                "graphic_id": 21475,
+                "group_id": 6,
+                "mass": 1000000000000000000,
+                "name": "Sun M0 (Orange radiant)",
+                "packaged_volume": 1,
+                "portion_size": 1,
+                "published": false,
+                "radius": 10000,
+                "type_id": 3800,
+                "volume": 1
             }
         }
     }

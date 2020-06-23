@@ -17,9 +17,7 @@ FakeResponse = namedtuple("FakeResponse", ["status_code"])
 
 
 class EveUniverseBaseModelManager(models.Manager):
-    def _defaults_from_esi_obj(
-        self, eve_data_obj: dict, include_children: bool, wait_for_children: bool,
-    ) -> dict:
+    def _defaults_from_esi_obj(self, eve_data_obj: dict) -> dict:
         """compiles defaults from an esi data object for update/creating the model"""
         defaults = dict()
         for field_name, mapping in self.model.esi_mapping().items():
@@ -49,8 +47,8 @@ class EveUniverseBaseModelManager(models.Manager):
                             if hasattr(ParentClass.objects, "update_or_create_esi"):
                                 value, _ = ParentClass.objects.update_or_create_esi(
                                     esi_value,
-                                    include_children=include_children,
-                                    wait_for_children=wait_for_children,
+                                    include_children=False,
+                                    wait_for_children=True,
                                 )
                             else:
                                 value = None
@@ -72,7 +70,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         id: int,
         *,
         include_children: bool = False,
-        wait_for_children: bool = False,
+        wait_for_children: bool = True,
     ) -> tuple:
         """gets or creates eve universe object fetched from ESI if needed. 
         Will always get/create parent objects.
@@ -102,7 +100,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         id: int,
         *,
         include_children: bool = False,
-        wait_for_children: bool = False,
+        wait_for_children: bool = True,
     ) -> tuple:
         """updates or creates Eve Universe object with data fetched from ESI. 
         Will always get/create parent objects.
@@ -138,11 +136,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             else:
                 eve_data_obj = esi_data
 
-            defaults = self._defaults_from_esi_obj(
-                eve_data_obj,
-                include_children=include_children,
-                wait_for_children=wait_for_children,
-            )
+            defaults = self._defaults_from_esi_obj(eve_data_obj)
             obj, created = self.update_or_create(id=id, defaults=defaults)
             inline_objects = self.model.inline_objects()
             if inline_objects:
@@ -150,8 +144,6 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                     primary_eve_data_obj=eve_data_obj,
                     primary_obj=obj,
                     inline_objects=inline_objects,
-                    include_children=include_children,
-                    wait_for_children=wait_for_children,
                 )
             if include_children:
                 self._update_or_create_children(
@@ -169,12 +161,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         return obj, created
 
     def _update_or_create_inline_objects(
-        self,
-        primary_eve_data_obj: dict,
-        primary_obj: object,
-        inline_objects: dict,
-        include_children: bool,
-        wait_for_children: bool,
+        self, primary_eve_data_obj: dict, primary_obj: object, inline_objects: dict,
     ) -> None:
         from . import models as eveuniverse_models
 
@@ -202,9 +189,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                         except ParentClass2.DoesNotExist:
                             if hasattr(ParentClass2.objects, "update_or_create_esi"):
                                 (value, _,) = ParentClass2.objects.get_or_create_esi(
-                                    id=esi_value,
-                                    include_children=include_children,
-                                    wait_for_children=wait_for_children,
+                                    id=esi_value
                                 )
                             else:
                                 value = None
@@ -214,8 +199,6 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                     args[other_pk[0]] = value
                     args["defaults"] = InlineModel.objects._defaults_from_esi_obj(
                         eve_data_obj,
-                        include_children=include_children,
-                        wait_for_children=wait_for_children,
                     )
                     InlineModel.objects.update_or_create(**args)
 
@@ -258,11 +241,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 for eve_data_obj in eve_data_objects:
                     id = eve_data_obj[self.model.esi_pk()]
                     defaults = self.model.convert_values(
-                        self._defaults_from_esi_obj(
-                            eve_data_obj,
-                            include_children=include_children,
-                            wait_for_children=wait_for_children,
-                        )
+                        self._defaults_from_esi_obj(eve_data_obj,)
                     )
                     obj, _ = self.update_or_create(id=id, defaults=defaults)
 
@@ -271,3 +250,22 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 raise ex
         else:
             NotImplementedError()
+
+
+class EveStationManager(EveUniverseEntityModelManager):
+    """For special handling of station services"""
+
+    def _update_or_create_inline_objects(
+        self, primary_eve_data_obj: dict, primary_obj: object, inline_objects: dict,
+    ) -> None:
+        from .models import EveStationService
+
+        if "services" in primary_eve_data_obj:
+            services = list()
+            for service_name in primary_eve_data_obj["services"]:
+                service, _ = EveStationService.objects.get_or_create(name=service_name)
+                services.append(service)
+
+            if services:
+                primary_obj.services.add(*services)
+

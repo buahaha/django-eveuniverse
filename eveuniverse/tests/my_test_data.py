@@ -18,15 +18,21 @@ class EsiRoute:
 
     def call(self, **kwargs):
         try:
+            pk_value = None
             if self._primary_key:
+                if self._primary_key not in kwargs:
+                    raise ValueError(
+                        f"{self._category}.{self._method}: Missing primary key: "
+                        f"{self._primary_key}"
+                    )
                 pk_value = str(kwargs[self._primary_key])
                 result = esi_data[self._category][self._method][pk_value]
             else:
                 result = esi_data[self._category][self._method]
         except KeyError:
             raise KeyError(
-                "No test data for %s.%s with %s = %s"
-                % (self._category, self._method, self._primary_key, pk_value)
+                f"{self._category}.{self._method}: No test data for "
+                f"{self._primary_key} = {pk_value}"
             ) from None
         return Mock(**{"results.return_value": result, "result.return_value": result})
 
@@ -48,24 +54,38 @@ def esi_mock_client():
     ).call
 
     # Universe
-    mock_client.Universe.get_universe_ancestries.side_effect = EsiRoute(
+    mock_Universe = mock_client.Universe
+    mock_Universe.get_universe_ancestries.side_effect = EsiRoute(
         "Universe", "get_universe_ancestries"
     ).call
-    mock_client.Universe.get_universe_bloodlines.side_effect = EsiRoute(
+    mock_Universe.get_universe_bloodlines.side_effect = EsiRoute(
         "Universe", "get_universe_bloodlines"
     ).call
-    mock_client.Universe.get_universe_races.side_effect = EsiRoute(
+    mock_Universe.get_universe_races.side_effect = EsiRoute(
         "Universe", "get_universe_races"
     ).call
-    mock_client.Universe.get_universe_categories_category_id.side_effect = EsiRoute(
+    mock_Universe.get_universe_categories_category_id.side_effect = EsiRoute(
         "Universe", "get_universe_categories_category_id", "category_id"
     ).call
-
-    mock_client.Universe.get_universe_groups_group_id.side_effect = EsiRoute(
+    mock_Universe.get_universe_constellations_constellation_id.side_effect = EsiRoute(
+        "Universe", "get_universe_constellations_constellation_id", "constellation_id"
+    ).call
+    mock_Universe.get_universe_groups_group_id.side_effect = EsiRoute(
         "Universe", "get_universe_groups_group_id", "group_id"
     ).call
-
-    mock_client.Universe.get_universe_types_type_id.side_effect = EsiRoute(
+    mock_Universe.get_universe_regions_region_id.side_effect = EsiRoute(
+        "Universe", "get_universe_regions_region_id", "region_id"
+    ).call
+    mock_Universe.get_universe_stars_star_id.side_effect = EsiRoute(
+        "Universe", "get_universe_stars_star_id", "star_id"
+    ).call
+    mock_Universe.get_universe_stations_station_id.side_effect = EsiRoute(
+        "Universe", "get_universe_stations_station_id", "station_id"
+    ).call
+    mock_Universe.get_universe_systems_system_id.side_effect = EsiRoute(
+        "Universe", "get_universe_systems_system_id", "system_id"
+    ).call
+    mock_Universe.get_universe_types_type_id.side_effect = EsiRoute(
         "Universe", "get_universe_types_type_id", "type_id"
     ).call
 

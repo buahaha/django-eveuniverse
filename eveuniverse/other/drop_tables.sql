@@ -19,6 +19,8 @@ DROP TABLE IF EXISTS eveuniverse_evesolarsystem ;
 DROP TABLE IF EXISTS eveuniverse_evestar ;
 DROP TABLE IF EXISTS eveuniverse_evestargate;
 DROP TABLE IF EXISTS eveuniverse_evestation;
+DROP TABLE IF EXISTS eveuniverse_evestationservice;
+DROP TABLE IF EXISTS eveuniverse_evestation_services;
 DROP TABLE IF EXISTS eveuniverse_evetype;
 DROP TABLE IF EXISTS eveuniverse_evetypedogmaattribute;
 DROP TABLE IF EXISTS eveuniverse_evetypedogmaeffect;

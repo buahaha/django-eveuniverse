@@ -21,4 +21,7 @@ EVEUNIVERSE_LOAD_PLANETS = clean_setting("EVEUNIVERSE_LOAD_PLANETS", False)
 EVEUNIVERSE_LOAD_STARGATES = clean_setting("EVEUNIVERSE_LOAD_STARGATES", False)
 
 # when true will automatically be with every solar system
-EVEUNIVERSE_LOAD_STATIONS = clean_setting("EVEUNIVERSE_LOAD_STATIONS", False)
+EVEUNIVERSE_LOAD_STARS = clean_setting("EVEUNIVERSE_LOAD_STARS", False)
+
+# when true will automatically be with every solar system
+EVEUNIVERSE_LOAD_STATIONS = clean_setting("EVEUNIVERSE_LOAD_STATIONS", True)
