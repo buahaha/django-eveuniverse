@@ -462,3 +462,27 @@ class TestEsiMapping(NoSocketsTestCase):
                 is_charfield=False,
             ),
         )
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+    def test_EveType_mapping(self):
+        mapping = EveType.esi_mapping()
+        self.assertSetEqual(
+            set(mapping.keys()),
+            {
+                "id",
+                "name",
+                "capacity",
+                "eve_group",
+                "graphic_id",
+                "icon_id",
+                "eve_market_group",
+                "mass",
+                "packaged_volume",
+                "portion_size",
+                "radius",
+                "published",
+                "volume",
+            },
+        )
+

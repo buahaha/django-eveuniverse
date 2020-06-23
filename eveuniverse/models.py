@@ -4,7 +4,16 @@ import logging
 from django.db import models
 
 from . import __title__
-from .app_settings import EVEUNIVERSE_LOAD_DOGMAS, EVEUNIVERSE_LOAD_MARKET_GROUPS
+from .app_settings import (
+    EVEUNIVERSE_LOAD_DOGMAS,
+    EVEUNIVERSE_LOAD_MARKET_GROUPS,
+    EVEUNIVERSE_LOAD_ASTEROID_BELTS,
+    EVEUNIVERSE_LOAD_MOONS,
+    EVEUNIVERSE_LOAD_PLANETS,
+    EVEUNIVERSE_LOAD_STARGATES,
+    EVEUNIVERSE_LOAD_STATIONS,
+)
+
 from .managers import (
     EveUniverseBaseModelManager,
     EveUniverseEntityModelManager,
@@ -51,6 +60,7 @@ class EveUniverseBaseModel(models.Model):
             if not field.auto_created
             and field.name != "last_updated"
             and field.name not in cls._disabled_fields()
+            and not field.many_to_many
         ]:
             if field_mappings and field.name in field_mappings:
                 esi_name = field_mappings[field.name]
@@ -140,11 +150,6 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 
     def __str__(self):
         return self.name
-
-    @classmethod
-    def is_loading_inlines_enabled(cls):
-        """wether to load inline objects"""
-        return bool(cls.inline_objects())
 
     @classmethod
     def esi_pk(cls) -> str:
@@ -570,7 +575,7 @@ class EveSolarSystem(EveUniverseEntityModel):
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
         }
-        children = {"planets": "EvePlanet"}
+        children = {}
 
     @property
     def is_high_sec(self):
@@ -601,6 +606,23 @@ class EveSolarSystem(EveUniverseEntityModel):
             return self.TYPE_W_SPACE
         else:
             return self.TYPE_UNKNOWN
+
+    @classmethod
+    def children(cls) -> dict:
+        children = dict()
+        """
+        if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
+            children["planets"] = "EvePlanet"
+        
+        if EVEUNIVERSE_LOAD_STARGATES:
+            children["stargates"] = "EveStargate"
+        
+        """
+
+        if EVEUNIVERSE_LOAD_STATIONS:
+            children["stations"] = "EveStation"
+
+        return children
 
 
 class EveStar(EveUniverseEntityModel):
@@ -730,15 +752,18 @@ class EveType(EveUniverseEntityModel):
         }
 
     @classmethod
-    def is_loading_inlines_enabled(cls):
-        return EVEUNIVERSE_LOAD_DOGMAS
-
-    @classmethod
     def _disabled_fields(cls) -> set:
         if not EVEUNIVERSE_LOAD_MARKET_GROUPS:
             return {"eve_market_group"}
         else:
             return {}
+
+    @classmethod
+    def inline_objects(cls) -> dict:
+        if EVEUNIVERSE_LOAD_DOGMAS:
+            return super().inline_objects()
+        else:
+            return dict()
 
 
 class EveTypeDogmaAttribute(EveUniverseInlineModel):
@@ -770,7 +795,8 @@ class EveTypeDogmaAttribute(EveUniverseInlineModel):
     def __repr__(self) -> str:
         return (
             f"EveTypeDogmaAttributes(eve_type='{self.eve_type}', "
-            f"attribute_id={self.attribute_id})"
+            f"eve_dogma_attribute={self.eve_dogma_attribute}, "
+            f"value={self.value})"
         )
 
 
@@ -800,8 +826,10 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
 
     def __repr__(self) -> str:
         return (
-            f"EveTypeDogmaEffect(eve_type='{self.eve_type}', "
-            f"effect_id={self.effect_id})"
+            f"EveTypeDogmaEffect("
+            f"eve_type='{self.eve_type}', "
+            f"eve_dogma_effect={self.eve_dogma_effect}, "
+            f"is_default={self.is_default})"
         )
 
 

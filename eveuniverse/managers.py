@@ -145,7 +145,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             )
             obj, created = self.update_or_create(id=id, defaults=defaults)
             inline_objects = self.model.inline_objects()
-            if inline_objects and self.model.is_loading_inlines_enabled():
+            if inline_objects:
                 self._update_or_create_inline_objects(
                     primary_eve_data_obj=eve_data_obj,
                     primary_obj=obj,
@@ -201,7 +201,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             value = ParentClass2.objects.get(id=esi_value)
                         except ParentClass2.DoesNotExist:
                             if hasattr(ParentClass2.objects, "update_or_create_esi"):
-                                (value, _,) = ParentClass2.objects.update_or_create_esi(
+                                (value, _,) = ParentClass2.objects.get_or_create_esi(
                                     id=esi_value,
                                     include_children=include_children,
                                     wait_for_children=wait_for_children,
