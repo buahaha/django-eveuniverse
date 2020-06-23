@@ -224,13 +224,12 @@ class EveAsteroidBelt(EveUniverseEntityModel):
     position_z = models.FloatField(
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
-    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
+    eve_planet = models.ForeignKey("EvePlanet", on_delete=models.CASCADE)
 
     class EveUniverseMeta:
         esi_pk = "asteroid_belt_id"
         esi_path = "Universe.get_universe_asteroid_belts_asteroid_belt_id"
         field_mappings = {
-            "eve_solar_system": "system_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -484,7 +483,7 @@ class EveMoon(EveUniverseEntityModel):
     position_z = models.FloatField(
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
-    eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
+    eve_planet = models.ForeignKey("EvePLanet", on_delete=models.CASCADE)
 
     class EveUniverseMeta:
         esi_pk = "moon_id"
