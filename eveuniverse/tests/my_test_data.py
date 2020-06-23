@@ -11,15 +11,18 @@ _currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 
 
 class EsiRoute:
-    def __init__(self, category, method, primary_key):
+    def __init__(self, category, method, primary_key=None):
         self._category = category
         self._method = method
         self._primary_key = primary_key
 
     def call(self, **kwargs):
         try:
-            pk_value = str(kwargs[self._primary_key])
-            result = esi_data[self._category][self._method][pk_value]
+            if self._primary_key:
+                pk_value = str(kwargs[self._primary_key])
+                result = esi_data[self._category][self._method][pk_value]
+            else:
+                result = esi_data[self._category][self._method]
         except KeyError:
             raise KeyError(
                 "No test data for %s.%s with %s = %s"
@@ -45,6 +48,15 @@ def esi_mock_client():
     ).call
 
     # Universe
+    mock_client.Universe.get_universe_ancestries.side_effect = EsiRoute(
+        "Universe", "get_universe_ancestries"
+    ).call
+    mock_client.Universe.get_universe_bloodlines.side_effect = EsiRoute(
+        "Universe", "get_universe_bloodlines"
+    ).call
+    mock_client.Universe.get_universe_races.side_effect = EsiRoute(
+        "Universe", "get_universe_races"
+    ).call
     mock_client.Universe.get_universe_categories_category_id.side_effect = EsiRoute(
         "Universe", "get_universe_categories_category_id", "category_id"
     ).call

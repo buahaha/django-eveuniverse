@@ -4,7 +4,7 @@ from unittest.mock import patch
 from .my_test_data import esi_mock_client
 from ..models import (
     EsiMapping,
-    EveAncestries,
+    EveAncestry,
     EveBloodline,
     EveCategory,
     EveConstellation,
@@ -13,22 +13,24 @@ from ..models import (
     EveMarketGroup,
     EveDogmaAttribute,
     EveDogmaEffect,
+    EveRace,
     EveRegion,
     EveTypeDogmaEffect,
+    EveTypeDogmaAttribute,
 )
 from ..utils import NoSocketsTestCase
 
 unittest.util._MAX_LENGTH = 1000
+MODULE_PATH = "eveuniverse.models"
 
 
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
 @patch("eveuniverse.managers.esi")
 class TestEveDogmaAttribute(NoSocketsTestCase):
     def test_can_create_from_esi(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        obj, created = EveDogmaAttribute.objects.update_or_create_esi(
-            id=271, include_children=False
-        )
+        obj, created = EveDogmaAttribute.objects.update_or_create_esi(id=271)
         self.assertTrue(created)
         self.assertEqual(obj.id, 271)
         self.assertEqual(obj.name, "shieldEmDamageResonance")
@@ -41,26 +43,48 @@ class TestEveDogmaAttribute(NoSocketsTestCase):
 
 
 @patch("eveuniverse.managers.esi")
+class TestEveAncestry(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveAncestry.objects.update_or_create_esi(id=1)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 8)
+        self.assertEqual(obj.name, "Mercs")
+        self.assertEqual(obj.icon_id, 8)
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveRace(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        obj, created = EveRace.objects.update_or_create_esi(id=1)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 1)
+        self.assertEqual(obj.name, "Caldari")
+        self.assertEqual(obj.alliance_id, 500001)
+
+
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+@patch("eveuniverse.managers.esi")
 class TestEveDogmaEffect(NoSocketsTestCase):
     def test_can_create_from_esi(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        obj, created = EveDogmaEffect.objects.update_or_create_esi(
-            id=1816, include_children=False
-        )
+        obj, created = EveDogmaEffect.objects.update_or_create_esi(id=1816)
         self.assertTrue(created)
         self.assertEqual(obj.id, 1816)
         self.assertEqual(obj.name, "shipShieldEMResistanceCF2")
 
 
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
 @patch("eveuniverse.managers.esi")
 class TestEveCategory(NoSocketsTestCase):
     def test_when_not_exists_load_object_from_esi(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        obj, created = EveCategory.objects.get_or_create_esi(
-            id=6, include_children=False
-        )
+        obj, created = EveCategory.objects.get_or_create_esi(id=6)
         self.assertTrue(created)
         self.assertEqual(obj.id, 6)
         self.assertEqual(obj.name, "Ship")
@@ -69,11 +93,9 @@ class TestEveCategory(NoSocketsTestCase):
     def test_when_exists_just_return_object(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        EveCategory.objects.update_or_create_esi(id=6, include_children=False)
+        EveCategory.objects.update_or_create_esi(id=6)
 
-        obj, created = EveCategory.objects.get_or_create_esi(
-            id=6, include_children=False
-        )
+        obj, created = EveCategory.objects.get_or_create_esi(id=6)
         self.assertFalse(created)
         self.assertEqual(obj.id, 6)
         self.assertEqual(obj.name, "Ship")
@@ -82,13 +104,11 @@ class TestEveCategory(NoSocketsTestCase):
     def test_when_exists_can_reload_from_esi(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        obj, _ = EveCategory.objects.update_or_create_esi(id=6, include_children=False)
+        obj, _ = EveCategory.objects.update_or_create_esi(id=6)
         obj.name = "xxx"
         obj.save()
 
-        obj, created = EveCategory.objects.update_or_create_esi(
-            id=6, include_children=False
-        )
+        obj, created = EveCategory.objects.update_or_create_esi(id=6)
         self.assertFalse(created)
         self.assertEqual(obj.id, 6)
         self.assertEqual(obj.name, "Ship")
@@ -98,7 +118,7 @@ class TestEveCategory(NoSocketsTestCase):
         mock_esi.client = esi_mock_client()
 
         obj, created = EveCategory.objects.get_or_create_esi(
-            id=6, include_children=True
+            id=6, include_children=True, wait_for_children=True
         )
         self.assertTrue(created)
         self.assertEqual(obj.id, 6)
@@ -108,36 +128,119 @@ class TestEveCategory(NoSocketsTestCase):
 
 @patch("eveuniverse.managers.esi")
 class TestEveType(NoSocketsTestCase):
-    def test_when_not_exists_load_object_from_esi(self, mock_esi):
+    @patch("eveuniverse.managers.esi")
+    def setUp(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        EveCategory.objects.update_or_create_esi(id=6, include_children=False)
-        EveGroup.objects.update_or_create_esi(id=25, include_children=False)
+        EveCategory.objects.update_or_create_esi(id=6)
+        EveGroup.objects.update_or_create_esi(id=25)
 
-        obj, created = EveType.objects.get_or_create_esi(id=603, include_children=False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
+    def test_can_create_type_from_esi_including_dogmas(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        # type
+        eve_type, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
-        self.assertEqual(obj.id, 603)
-        self.assertEqual(obj.name, "Merlin")
-        self.assertTrue(obj.published)
+        self.assertEqual(eve_type.id, 603)
+        self.assertEqual(eve_type.name, "Merlin")
+        self.assertTrue(eve_type.published)
+
+        # market group
+        self.assertTrue(EveMarketGroup.objects.filter(id=61).exists())
+
+        # dogmas
+        self.assertTrue(EveDogmaAttribute.objects.filter(id=129).exists())
+        self.assertTrue(EveDogmaAttribute.objects.filter(id=588).exists())
+        self.assertTrue(EveDogmaEffect.objects.filter(id=1816).exists())
+        self.assertTrue(EveDogmaEffect.objects.filter(id=1817).exists())
+
+        # type dogmas
+        obj = EveTypeDogmaAttribute.objects.get(
+            eve_type=eve_type, eve_dogma_attribute_id=129
+        )
+        self.assertEqual(obj.value, 12)
+        obj = EveTypeDogmaAttribute.objects.get(
+            eve_type=eve_type, eve_dogma_attribute_id=588
+        )
+        self.assertEqual(obj.value, 5)
+        obj = EveTypeDogmaEffect.objects.get(
+            eve_type=eve_type, eve_dogma_effect_id=1816
+        )
+        self.assertFalse(obj.is_default)
+        obj = EveTypeDogmaEffect.objects.get(
+            eve_type=eve_type, eve_dogma_effect_id=1817
+        )
+        self.assertTrue(obj.is_default)
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    def test_when_disabled_can_create_type_from_esi_excluding_dogmas(self, mock_esi):
+        mock_esi.client = esi_mock_client()
+
+        # type
+        eve_type, created = EveType.objects.get_or_create_esi(id=603)
+        self.assertTrue(created)
+        self.assertEqual(eve_type.id, 603)
+        self.assertEqual(eve_type.name, "Merlin")
+        self.assertTrue(eve_type.published)
+
+        # market group
+        self.assertTrue(EveMarketGroup.objects.filter(id=61).exists())
+
+        # dogmas
+        self.assertFalse(EveDogmaAttribute.objects.filter(id=129).exists())
+        self.assertFalse(EveDogmaAttribute.objects.filter(id=588).exists())
+        self.assertFalse(EveDogmaEffect.objects.filter(id=1816).exists())
+        self.assertFalse(EveDogmaEffect.objects.filter(id=1817).exists())
+
+        # type dogmas
+        self.assertEqual(EveTypeDogmaAttribute.objects.count(), 0)
+        self.assertEqual(EveTypeDogmaEffect.objects.count(), 0)
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+    def test_when_disabled_can_create_type_from_esi_excluding_market_groups(
+        self, mock_esi
+    ):
+        mock_esi.client = esi_mock_client()
+
+        # type
+        eve_type, created = EveType.objects.get_or_create_esi(id=603)
+        self.assertTrue(created)
+        self.assertEqual(eve_type.id, 603)
+        self.assertEqual(eve_type.name, "Merlin")
+        self.assertTrue(eve_type.published)
+
+        # market group
+        self.assertFalse(EveMarketGroup.objects.filter(id=61).exists())
+
+        # dogmas
+        self.assertTrue(EveDogmaAttribute.objects.filter(id=129).exists())
+        self.assertTrue(EveDogmaAttribute.objects.filter(id=588).exists())
+        self.assertTrue(EveDogmaEffect.objects.filter(id=1816).exists())
+        self.assertTrue(EveDogmaEffect.objects.filter(id=1817).exists())
+
+        # type dogmas
+        self.assertGreater(EveTypeDogmaAttribute.objects.count(), 0)
+        self.assertGreater(EveTypeDogmaEffect.objects.count(), 0)
 
 
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
 @patch("eveuniverse.managers.esi")
 class TestEveMarketGroup(NoSocketsTestCase):
     def test_can_fetch_parent_group(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        obj, created = EveMarketGroup.objects.get_or_create_esi(
-            id=4, include_children=False
-        )
+        obj, created = EveMarketGroup.objects.get_or_create_esi(id=4)
         self.assertTrue(created)
         self.assertEqual(obj.name, "Ships")
 
     def test_can_fetch_group_and_all_parents(self, mock_esi):
         mock_esi.client = esi_mock_client()
 
-        obj, created = EveMarketGroup.objects.get_or_create_esi(
-            id=61, include_children=False
-        )
+        obj, created = EveMarketGroup.objects.get_or_create_esi(id=61)
         self.assertTrue(created)
         self.assertEqual(obj.name, "Caldari")
         self.assertEqual(obj.parent_market_group.name, "Standard Frigates")
@@ -233,7 +336,7 @@ class TestEsiMapping(NoSocketsTestCase):
         )
 
     def test_optional_fields(self):
-        mapping = EveAncestries.esi_mapping()
+        mapping = EveAncestry.esi_mapping()
         self.assertEqual(len(mapping.keys()), 6)
         self.assertEqual(
             mapping["id"],

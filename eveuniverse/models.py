@@ -1,12 +1,15 @@
 from collections import namedtuple
 
 from django.db import models
-from django.utils.timezone import now
 
 from allianceauth.services.hooks import get_extension_logger
 
 from . import __title__
-from .managers import EveUniverseModelManager, EveUniverseListManager
+from .app_settings import EVEUNIVERSE_LOAD_DOGMAS, EVEUNIVERSE_LOAD_MARKET_GROUPS
+from .managers import (
+    EveUniverseBaseModelManager,
+    EveUniverseEntityModelManager,
+)
 from .utils import LoggerAddTag
 
 
@@ -32,21 +35,25 @@ EsiMapping = namedtuple(
 class EveUniverseBaseModel(models.Model):
     """Base properties and features"""
 
+    objects = EveUniverseBaseModelManager()
+
     class Meta:
         abstract = True
 
     @classmethod
     def esi_mapping(cls) -> dict:
-        field_mappings = cls._field_mappings()
+        field_mappings = cls._eve_universe_meta_attr("field_mappings")
         functional_pk = cls._eve_universe_meta_attr("functional_pk")
         parent_fk = cls._eve_universe_meta_attr("parent_fk")
         mapping = dict()
         for field in [
             field
             for field in cls._meta.get_fields()
-            if not field.auto_created and field.name != "last_updated"
+            if not field.auto_created
+            and field.name != "last_updated"
+            and field.name not in cls._disabled_fields()
         ]:
-            if field.name in field_mappings:
+            if field_mappings and field.name in field_mappings:
                 esi_name = field_mappings[field.name]
             else:
                 esi_name = field.name
@@ -84,142 +91,9 @@ class EveUniverseBaseModel(models.Model):
         return mapping
 
     @classmethod
-    def defaults_from_esi_obj(
-        cls, eve_data_obj: dict, include_children: bool = True
-    ) -> dict:
-        defaults = dict()
-        for field_name, mapping in cls.esi_mapping().items():
-            if not mapping.is_pk:
-                if not isinstance(mapping.esi_name, tuple):
-                    if mapping.esi_name in eve_data_obj:
-                        esi_value = eve_data_obj[mapping.esi_name]
-                    else:
-                        esi_value = None
-                else:
-                    if (
-                        mapping.esi_name[0] in eve_data_obj
-                        and mapping.esi_name[1] in eve_data_obj[mapping.esi_name[0]]
-                    ):
-                        esi_value = eve_data_obj[mapping.esi_name[0]][
-                            mapping.esi_name[1]
-                        ]
-                    else:
-                        esi_value = None
-
-                if esi_value is not None:
-                    if mapping.is_fk:
-                        ParentClass = mapping.related_model
-                        try:
-                            value = ParentClass.objects.get(id=esi_value)
-                        except ParentClass.DoesNotExist:
-                            if hasattr(ParentClass.objects, "update_or_create_esi"):
-                                value, _ = ParentClass.objects.update_or_create_esi(
-                                    esi_value, include_children=include_children
-                                )
-                            else:
-                                value = None
-
-                    else:
-                        if mapping.is_charfield and esi_value is None:
-                            value = ""
-                        else:
-                            value = esi_value
-
-                    defaults[field_name] = value
-
-        return defaults
-
-    @classmethod
-    def map_esi_names_to_model_old(cls, eve_data_obj: dict) -> dict:
-        """maps ESi fields to model fields incl. translations if any
-        returns the result as defaults dict
-        """
-        field_mappings = cls.field_mappings()
-        field_mappings = cls._field_mappings()
-        defaults = {"last_updated": now()}
-        for key in cls._field_names_not_pk():
-            if key in field_mappings:
-                esi_key, ParentClass = field_mappings[key]
-                if esi_key in eve_data_obj:
-                    esi_id = eve_data_obj[esi_key]
-                    if esi_id is None:
-                        value = None
-                    else:
-                        try:
-                            value = ParentClass.objects.get(id=esi_id)
-                        except ParentClass.DoesNotExist:
-                            if hasattr(ParentClass.objects, "update_or_create_esi"):
-                                value, _ = ParentClass.objects.update_or_create_esi(
-                                    esi_id
-                                )
-                            else:
-                                value = None
-                else:
-                    key = None
-            else:
-                if key in field_mappings:
-                    mapping = field_mappings[key]
-                    if len(mapping) != 2:
-                        raise ValueError(
-                            "Currently only supports mapping to 1-level nested dicts"
-                        )
-                    try:
-                        value = eve_data_obj[mapping[0]][mapping[1]]
-                    except AttributeError:
-                        key = None
-                else:
-                    if key in eve_data_obj:
-                        value = eve_data_obj[key]
-                    else:
-                        key = None
-
-            if key:
-                defaults[key] = value
-
-        return defaults
-
-    @classmethod
-    def _field_mappings(cls) -> dict:
-        """returns the mappings for model fields vs. esi fields"""
-        mappings = cls._eve_universe_meta_attr("field_mappings")
-        return mappings if mappings else dict()
-
-    @classmethod
-    def field_mappings_OLD(cls) -> dict:
-        """returns the foreign key mappings for this class
-        
-        'model field name': ('Foreign Key name on ESI', 'related model class')
-        """
-
-        def convert_to_esi_name(name: str, extra_field_mappings: dict) -> str:
-            if name in extra_field_mappings:
-                esi_name = extra_field_mappings[name]
-            else:
-                esi_name = name.replace("eve_", "") + "_id"
-            return esi_name
-
-        extra_field_mappings = cls._eve_universe_meta_attr("field_mappings")
-        if not extra_field_mappings:
-            extra_field_mappings = {}
-
-        mappings = {
-            x.name: (convert_to_esi_name(x.name, extra_field_mappings), x.related_model)
-            for x in cls._meta.get_fields()
-            if isinstance(x, models.ForeignKey)
-        }
-        return mappings
-
-    @classmethod
-    def _field_names_not_pk_OLD(cls) -> set:
-        """returns field names excl. PK, FK to parent, and auto created fields"""
-        return {
-            x.name
-            for x in cls._meta.get_fields()
-            if not x.auto_created
-            and (not hasattr(x, "primary_key") or x.primary_key is False)
-            and x.name not in {"last_updated"}
-            and "name_" not in x.name
-        }
+    def _disabled_fields(cls) -> set:
+        """returns name of fields that must not be loaded from ESI"""
+        return {}
 
     @classmethod
     def _eve_universe_meta_attr(cls, attr_name: str, is_mandatory: bool = False):
@@ -255,7 +129,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         db_index=True,
     )
 
-    objects = EveUniverseModelManager()
+    objects = EveUniverseEntityModelManager()
 
     class Meta:
         abstract = True
@@ -269,48 +143,41 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return self.name
 
     @classmethod
+    def is_loading_inlines_enabled(cls):
+        """wether to load inline objects"""
+        return bool(cls.inline_objects())
+
+    @classmethod
     def esi_pk(cls) -> str:
         """returns the name of the pk column on ESI that must exist"""
         return cls._eve_universe_meta_attr("esi_pk", is_mandatory=True)
 
     @classmethod
-    def esi_path(cls) -> str:
+    def esi_route_category(cls) -> str:
+        return cls._esi_path()[0]
+
+    @classmethod
+    def esi_route_method(cls) -> str:
+        return cls._esi_path()[1]
+
+    @classmethod
+    def _esi_path(cls) -> tuple:
         path = cls._eve_universe_meta_attr("esi_path", is_mandatory=True)
         if len(path.split(".")) != 2:
             raise "esi_path not valid: %s" % path
-        return path
+        return path.split(".")
 
     @classmethod
-    def child_mappings(cls) -> dict:
+    def children(cls) -> dict:
         """returns the mapping of children for this class"""
         mappings = cls._eve_universe_meta_attr("children")
         return mappings if mappings else dict()
 
     @classmethod
     def inline_objects(cls) -> dict:
-        """returns the inline objects if any"""
+        """returns a dict of inline objects if any"""
         inline_objects = cls._eve_universe_meta_attr("inline_objects")
         return inline_objects if inline_objects else dict()
-
-    @classmethod
-    def convert_values_OLD(cls, data_object: dict) -> dict:
-        """ convert values of eve data objects"""
-        # replace None with "" for CharFields
-        char_fields = cls._char_fields()
-        for field, value in data_object.items():
-            if field in char_fields and value is None:
-                data_object[field] = ""
-
-        return data_object
-
-    @classmethod
-    def _char_fields(cls) -> set:
-        """returns list of fields that are of type CharField"""
-        return {
-            f.name
-            for f in cls._meta.get_fields(include_parents=False)
-            if isinstance(f, (models.CharField, models.TextField))
-        }
 
 
 class EveUniverseInlineModel(EveUniverseBaseModel):
@@ -322,17 +189,8 @@ class EveUniverseInlineModel(EveUniverseBaseModel):
     class Meta:
         abstract = True
 
-    @classmethod
-    def parent_fk(cls) -> str:
-        return cls._eve_universe_meta_attr("parent_fk", is_mandatory=True)
 
-    @classmethod
-    def functional_pk(cls) -> str:
-        """returns the list of field names that form the functional PK"""
-        return cls._eve_universe_meta_attr("functional_pk", is_mandatory=True)
-
-
-class EveAncestries(EveUniverseEntityModel):
+class EveAncestry(EveUniverseEntityModel):
     """"Ancestry in Eve Online"""
 
     eve_bloodline = models.ForeignKey("EveBloodline", on_delete=models.CASCADE)
@@ -340,11 +198,10 @@ class EveAncestries(EveUniverseEntityModel):
     icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
     short_description = models.TextField(default="")
 
-    objects = EveUniverseListManager()
-
     class EveUniverseMeta:
         esi_pk = "id"
         esi_path = "Universe.get_universe_ancestries"
+        is_list_endpoint = True
         field_mappings = {"eve_bloodline": "bloodline_id"}
 
 
@@ -388,11 +245,10 @@ class EveBloodline(EveUniverseEntityModel):
     eve_ship_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
     willpower = models.PositiveIntegerField()
 
-    objects = EveUniverseListManager()
-
     class EveUniverseMeta:
         esi_pk = "bloodline_id"
         esi_path = "Universe.get_universe_bloodlines"
+        is_list_endpoint = True
         field_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
 
 
@@ -571,11 +427,10 @@ class EveFaction(EveUniverseEntityModel):
     station_count = models.PositiveIntegerField()
     station_system_count = models.PositiveIntegerField()
 
-    objects = EveUniverseListManager()
-
     class EveUniverseMeta:
         esi_pk = "faction_id"
         esi_path = "Universe.get_universe_factions"
+        is_list_endpoint = True
         field_mappings = {"eve_solar_system": "solar_system_id"}
 
 
@@ -638,11 +493,10 @@ class EveRace(EveUniverseEntityModel):
     alliance_id = models.PositiveIntegerField(db_index=True)
     description = models.TextField()
 
-    objects = EveUniverseListManager()
-
     class EveUniverseMeta:
         esi_pk = "race_id"
         esi_path = "Universe.get_universe_races"
+        is_list_endpoint = True
 
 
 class EvePlanet(EveUniverseEntityModel):
@@ -869,6 +723,17 @@ class EveType(EveUniverseEntityModel):
             "dogma_attributes": "EveTypeDogmaAttribute",
             "dogma_effects": "EveTypeDogmaEffect",
         }
+
+    @classmethod
+    def is_loading_inlines_enabled(cls):
+        return EVEUNIVERSE_LOAD_DOGMAS
+
+    @classmethod
+    def _disabled_fields(cls) -> set:
+        if not EVEUNIVERSE_LOAD_MARKET_GROUPS:
+            return {"eve_market_group"}
+        else:
+            return {}
 
 
 class EveTypeDogmaAttribute(EveUniverseInlineModel):

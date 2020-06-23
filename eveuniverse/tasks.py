@@ -24,7 +24,9 @@ def _get_model_class(model_name: str) -> object:
 @shared_task
 def load_eve_entity(model_name: str, entity_id: int) -> None:
     ModelClass = _get_model_class(model_name)
-    ModelClass.objects.update_or_create_esi(entity_id)
+    ModelClass.objects.update_or_create_esi(
+        entity_id, include_children=True, wait_for_children=False
+    )
 
 
 @shared_task(ignore_result=False)

@@ -104,6 +104,13 @@
                 "parent_group_id": 1361,
                 "types": []
             },
+            "6": {
+                "description": "The middle children of the starship industry, but not to be underestimated.",
+                "market_group_id": 6,
+                "name": "Standard Cruisers",
+                "parent_group_id": 1367,
+                "types": []
+            },
             "61": {
                 "description": "Caldari frigate designs.",
                 "market_group_id": 61,
@@ -113,16 +120,110 @@
                     603
                 ]
             },
+            "75": {
+                "description": "Caldari cruiser designs.",
+                "market_group_id": 75,
+                "name": "Caldari",
+                "parent_group_id": 6,
+                "types": [
+                    621
+                ]
+            },
+            "76": {
+                "description": "Gallente cruiser designs.",
+                "market_group_id": 76,
+                "name": "Gallente",
+                "parent_group_id": 6,
+                "types": [
+                    626
+                ]
+            },
+            "77": {
+                "description": "Gallente frigate designs.",
+                "market_group_id": 77,
+                "name": "Gallente",
+                "parent_group_id": 5,
+                "types": [
+                    608
+                ]
+            },
             "1361": {
                 "description": "Small spaceships that excel in any role involving speed and agility",
                 "market_group_id": 1361,
                 "name": "Frigates",
                 "parent_group_id": 4,
                 "types": []
+            },
+            "1367": {
+                "description": "Medium-sized spaceships intended for a variety of roles",
+                "market_group_id": 1367,
+                "name": "Cruisers",
+                "parent_group_id": 4,
+                "types": []
             }
         }
     },
     "Universe": {
+        "get_universe_ancestries": [
+            {
+                "bloodline_id": 2,
+                "description": "Many Civire have a deep fascination with the brutality of battle. For these brazen individuals, the promise of steady combat is what drives the eager sale of their own services to the highest bidder. Some even hail from families who have followed the mercenary tradition for generations, albeit within the shadows of society.",
+                "icon_id": 1648,
+                "id": 8,
+                "name": "Mercs",
+                "short_description": "Guns for hire that are always available to the highest bidder."
+            },
+            {
+                "bloodline_id": 7,
+                "description": "The Gallente prize political activism more so than other Empires. Many devote their efforts towards one or more causes that suit their ambitions. Activists understand that things will never change for the better unless someone has the courage to fight the good fight.",
+                "icon_id": 1653,
+                "id": 13,
+                "name": "Activists",
+                "short_description": "Making the universe a better place, one fight at a time."
+            }
+        ],
+        "get_universe_bloodlines": [
+            {
+                "bloodline_id": 2,
+                "charisma": 6,
+                "corporation_id": 1000009,
+                "description": "Whether engaged in trade or combat, the Civire are absolute masters of focused aggression. Highly competitive individuals, they thrive under chaotic circumstances and frenetic activity. They are often employed in highly stressful industrial and military professions due to an innate ability to think quickly on their feet and remain composed under pressure.",
+                "intelligence": 5,
+                "memory": 4,
+                "name": "Civire",
+                "perception": 9,
+                "race_id": 1,
+                "ship_type_id": 601,
+                "willpower": 6
+            },
+            {
+                "bloodline_id": 7,
+                "charisma": 8,
+                "corporation_id": 1000107,
+                "description": "The Gallente value freedom and individual liberty above all else. Founders of the only true democracy of New Eden, they have created an ethnically diverse, culturally rich, progressive society that encourages enterprise and initiative in its citizens. While slow to anger and occasionally indecisive, they are also capable of harnessing enormous military and economic resolve when truly tested.",
+                "intelligence": 6,
+                "memory": 4,
+                "name": "Gallente",
+                "perception": 8,
+                "race_id": 8,
+                "ship_type_id": 606,
+                "willpower": 4
+            }
+        ],
+        "get_universe_races": [
+            {
+                "alliance_id": 500001,
+                "description": "Founded on the tenets of patriotism and hard work that carried its ancestors through hardships on an inhospitable homeworld, the Caldari State is today a corporate dictatorship, led by rulers who are determined to see it return to the meritocratic ideals of old. Ruthless and efficient in the boardroom as well as on the battlefield, the Caldari are living emblems of strength, persistence, and dignity.",
+                "name": "Caldari",
+                "race_id": 1
+            },
+            {
+                "alliance_id": 500004,
+                "description": "Champions of liberty and defenders of the downtrodden, the Gallente play host to the only true democracy in New Eden. Some of the most progressive leaders, scientists, and businessmen of the era have emerged from its diverse peoples. A pioneer of artificial intelligence, the Federation relies heavily on drones and other automated systems. This is not to detract from the skill of their pilots, though: the Gallente Federation is known for producing some of the best and bravest the universe has to offer.",
+                "name": "Gallente",
+                "race_id": 8
+            }
+        ],
         "get_universe_categories_category_id": {
             "6": {
                 "category_id": 6,
@@ -167,7 +268,7 @@
                     },
                     {
                         "attribute_id": 129,
-                        "value": 5
+                        "value": 12
                     }
                 ],
                 "dogma_effects": [
@@ -177,7 +278,7 @@
                     },
                     {
                         "effect_id": 1817,
-                        "is_default": false
+                        "is_default": true
                     }
                 ],
                 "graphic_id": 314,
@@ -226,77 +327,77 @@
                 "radius": 24,
                 "type_id": 608,
                 "volume": 22500
+            },
+            "621": {
+                "capacity": 450,
+                "description": "The Caracal is a powerful vessel that specializes in missile deployment. It has excellent shield defenses, but poor armor plating. Its missile arsenal, when fully stocked, is capable of making mincemeat of almost anyone.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 588,
+                        "value": 5
+                    },
+                    {
+                        "attribute_id": 129,
+                        "value": 5
+                    }
+                ],
+                "dogma_effects": [
+                    {
+                        "effect_id": 1816,
+                        "is_default": false
+                    },
+                    {
+                        "effect_id": 1817,
+                        "is_default": false
+                    }
+                ],
+                "graphic_id": 42,
+                "group_id": 26,
+                "market_group_id": 75,
+                "mass": 11910000,
+                "name": "Caracal",
+                "packaged_volume": 10000,
+                "portion_size": 1,
+                "published": true,
+                "radius": 202,
+                "type_id": 621,
+                "volume": 92000
+            },
+            "626": {
+                "capacity": 480,
+                "description": "The Vexor is a strong combat ship that is also geared to operate in a variety of other roles. The Vexor is especially useful for surveying in potentially hostile sectors as it can stay on duty for a very long time before having to return to base. Furthermore, it is well capable of defending itself against even concentrated attacks.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 588,
+                        "value": 5
+                    },
+                    {
+                        "attribute_id": 129,
+                        "value": 5
+                    }
+                ],
+                "dogma_effects": [
+                    {
+                        "effect_id": 1816,
+                        "is_default": false
+                    },
+                    {
+                        "effect_id": 1817,
+                        "is_default": false
+                    }
+                ],
+                "graphic_id": 62,
+                "group_id": 26,
+                "market_group_id": 76,
+                "mass": 11100000,
+                "name": "Vexor",
+                "packaged_volume": 10000,
+                "portion_size": 1,
+                "published": true,
+                "radius": 110,
+                "type_id": 626,
+                "volume": 115000
             }
-        },
-        "621": {
-            "capacity": 450,
-            "description": "The Caracal is a powerful vessel that specializes in missile deployment. It has excellent shield defenses, but poor armor plating. Its missile arsenal, when fully stocked, is capable of making mincemeat of almost anyone.",
-            "dogma_attributes": [
-                {
-                    "attribute_id": 588,
-                    "value": 5
-                },
-                {
-                    "attribute_id": 129,
-                    "value": 5
-                }
-            ],
-            "dogma_effects": [
-                {
-                    "effect_id": 1816,
-                    "is_default": false
-                },
-                {
-                    "effect_id": 1817,
-                    "is_default": false
-                }
-            ],
-            "graphic_id": 42,
-            "group_id": 26,
-            "market_group_id": 75,
-            "mass": 11910000,
-            "name": "Caracal",
-            "packaged_volume": 10000,
-            "portion_size": 1,
-            "published": true,
-            "radius": 202,
-            "type_id": 621,
-            "volume": 92000
-        },
-        "626:": {
-            "capacity": 480,
-            "description": "The Vexor is a strong combat ship that is also geared to operate in a variety of other roles. The Vexor is especially useful for surveying in potentially hostile sectors as it can stay on duty for a very long time before having to return to base. Furthermore, it is well capable of defending itself against even concentrated attacks.",
-            "dogma_attributes": [
-                {
-                    "attribute_id": 588,
-                    "value": 5
-                },
-                {
-                    "attribute_id": 129,
-                    "value": 5
-                }
-            ],
-            "dogma_effects": [
-                {
-                    "effect_id": 1816,
-                    "is_default": false
-                },
-                {
-                    "effect_id": 1817,
-                    "is_default": false
-                }
-            ],
-            "graphic_id": 62,
-            "group_id": 26,
-            "market_group_id": 76,
-            "mass": 11100000,
-            "name": "Vexor",
-            "packaged_volume": 10000,
-            "portion_size": 1,
-            "published": true,
-            "radius": 110,
-            "type_id": 626,
-            "volume": 115000
         }
     }
 }

@@ -2,21 +2,28 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from ...models import (
+    EveAncestry,
+    EveAsteroidBelt,
+    EveBloodline,
     EveCategory,
-    EveGroup,
-    EveType,
-    EveRegion,
     EveConstellation,
-    EveSolarSystem,
+    EveDogmaAttribute,
+    EveDogmaEffect,
+    EveDogmaEffectModifier,
+    EveFaction,
+    EveGroup,
+    EveMarketGroup,
     EveMoon,
     EvePlanet,
-    StructureTag,
-    StructureService,
-    Webhook,
-    EveEntity,
-    Owner,
-    Notification,
-    Structure,
+    EveRace,
+    EveRegion,
+    EveSolarSystem,
+    EveStar,
+    EveStargate,
+    EveStation,
+    EveType,
+    EveTypeDogmaAttribute,
+    EveTypeDogmaEffect,
 )
 
 
@@ -38,22 +45,33 @@ class Command(BaseCommand):
             EveCategory,
             EveGroup,
             EveType,
+            EveDogmaAttribute,
+            EveDogmaEffect,
+            EveDogmaEffectModifier,
+            EveTypeDogmaEffect,
+            EveTypeDogmaAttribute,
+            EveRace,
+            EvePlanet,
+            EveStation,
+            EveBloodline,
+            EveAncestry,
             EveRegion,
             EveConstellation,
             EveSolarSystem,
+            EveAsteroidBelt,
+            EveFaction,
             EveMoon,
-            EvePlanet,
-            StructureTag,
-            StructureService,
-            Webhook,
-            EveEntity,
-            Owner,
-            Notification,
-            Structure,
+            EveStar,
+            EveStargate,
+            EveMarketGroup,
         ]
         with transaction.atomic():
             for MyModel in models:
-                self.stdout.write("Deleting all {} objects".format(MyModel.__name__))
+                self.stdout.write(
+                    "Deleting {:,} objects from {}".format(
+                        MyModel.objects.count(), MyModel.__name__,
+                    )
+                )
                 MyModel.objects.all().delete()
 
     def handle(self, *args, **options):
@@ -65,6 +83,6 @@ class Command(BaseCommand):
         if user_input == "Y":
             self.stdout.write("Starting data purge. Please stand by.")
             self._purge_all_data()
-            self.stdout.write("Purge complete!")
+            self.stdout.write(self.style.SUCCESS("Purge complete!"))
         else:
-            self.stdout.write("Aborted")
+            self.stdout.write(self.style.WARNING("Aborted"))
