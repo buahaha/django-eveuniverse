@@ -73,6 +73,9 @@ class EsiMockClient:
             EsiEndpoint("Universe", "get_universe_planets_planet_id", "planet_id"),
             EsiEndpoint("Universe", "get_universe_races", None),
             EsiEndpoint("Universe", "get_universe_regions_region_id", "region_id"),
+            EsiEndpoint(
+                "Universe", "get_universe_stargates_stargate_id", "stargate_id"
+            ),
             EsiEndpoint("Universe", "get_universe_stars_star_id", "star_id"),
             EsiEndpoint("Universe", "get_universe_stations_station_id", "station_id"),
             EsiEndpoint("Universe", "get_universe_systems_system_id", "system_id"),

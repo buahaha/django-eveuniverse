@@ -23,6 +23,7 @@ from ..models import (
     EveSolarSystem,
     EveStation,
     EveStar,
+    EveStargate,
     EveTypeDogmaEffect,
     EveTypeDogmaAttribute,
 )
@@ -363,6 +364,47 @@ class TestEveStar(NoSocketsTestCase):
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+@patch("eveuniverse.managers.esi")
+class TestEveStargate(NoSocketsTestCase):
+    def test_create_from_esi(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        obj, created = EveStargate.objects.get_or_create_esi(id=50016284)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 50016284)
+        self.assertEqual(obj.name, "Stargate (Akidagi)")
+        self.assertEqual(obj.position_x, 4845263708160)
+        self.assertEqual(obj.position_y, 97343692800)
+        self.assertEqual(obj.position_z, 3689037127680)
+        self.assertEqual(obj.eve_solar_system, EveSolarSystem.objects.get(id=30045339))
+        self.assertEqual(obj.eve_type, EveType.objects.get(id=16))
+        self.assertIsNone(obj.destination_eve_stargate)
+        self.assertIsNone(obj.destination_eve_solar_system)
+
+    def test_create_from_esi_2nd_gate(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        akidagi, _ = EveStargate.objects.get_or_create_esi(id=50016284)
+        self.assertEqual(akidagi.id, 50016284)
+        enaluri, _ = EveStargate.objects.get_or_create_esi(id=50016283)
+        self.assertEqual(enaluri.id, 50016283)
+        akidagi.refresh_from_db()
+
+        self.assertEqual(enaluri.destination_eve_stargate, akidagi)
+        self.assertEqual(akidagi.destination_eve_stargate, enaluri)
+
+        self.assertEqual(
+            enaluri.destination_eve_solar_system,
+            EveSolarSystem.objects.get(id=30045339),
+        )
+        self.assertEqual(
+            akidagi.destination_eve_solar_system,
+            EveSolarSystem.objects.get(id=30045342),
+        )
+
+
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", True)
 @patch("eveuniverse.managers.esi")
 class TestEveStation(NoSocketsTestCase):
@@ -408,12 +450,17 @@ class TestEveStation(NoSocketsTestCase):
 
 @patch("eveuniverse.managers.esi")
 class TestEveType(NoSocketsTestCase):
-    @patch("eveuniverse.managers.esi")
-    def setUp(self, mock_esi):
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    def test_can_create_type_from_esi_excluding_all(self, mock_esi):
         mock_esi.client = EsiMockClient()
 
-        EveCategory.objects.update_or_create_esi(id=6)
-        EveGroup.objects.update_or_create_esi(id=25)
+        # type
+        eve_type, created = EveType.objects.get_or_create_esi(id=603)
+        self.assertTrue(created)
+        self.assertEqual(eve_type.id, 603)
+        self.assertEqual(eve_type.name, "Merlin")
+        self.assertTrue(eve_type.published)
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
@@ -524,6 +571,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -536,6 +584,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=True,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -548,6 +597,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
 
@@ -564,6 +614,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -576,6 +627,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=True,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -588,6 +640,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=EveRegion,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -600,6 +653,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -612,6 +666,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -624,6 +679,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
 
@@ -640,6 +696,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -652,6 +709,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=True,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -664,6 +722,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=EveBloodline,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -676,6 +735,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=True,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -688,6 +748,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -700,6 +761,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=True,
+                create_related=True,
             ),
         )
 
@@ -716,6 +778,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=EveType,
                 is_parent_fk=True,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -728,6 +791,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=EveDogmaEffect,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
         self.assertEqual(
@@ -740,6 +804,7 @@ class TestEsiMapping(NoSocketsTestCase):
                 related_model=None,
                 is_parent_fk=False,
                 is_charfield=False,
+                create_related=True,
             ),
         )
 

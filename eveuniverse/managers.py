@@ -44,7 +44,9 @@ class EveUniverseBaseModelManager(models.Manager):
                         try:
                             value = ParentClass.objects.get(id=esi_value)
                         except ParentClass.DoesNotExist:
-                            if hasattr(ParentClass.objects, "update_or_create_esi"):
+                            if mapping.create_related and hasattr(
+                                ParentClass.objects, "update_or_create_esi"
+                            ):
                                 value, _ = ParentClass.objects.update_or_create_esi(
                                     esi_value,
                                     include_children=False,
@@ -319,6 +321,41 @@ class EvePlanetManager(EveUniverseEntityModelManager):
             f"Failed to find moon {id} in solar system response for {system_id} "
             f"- data error"
         )
+
+
+class EveStargateManager(EveUniverseEntityModelManager):
+    """For special handling of relations"""
+
+    def update_or_create_esi(
+        self,
+        id: int,
+        *,
+        include_children: bool = False,
+        wait_for_children: bool = True,
+    ) -> tuple:
+        """If our destination is not null, then we also need to update 
+        the other stargate's relation to us
+        """
+        obj, created = super().update_or_create_esi(
+            id=id,
+            include_children=include_children,
+            wait_for_children=wait_for_children,
+        )
+        if obj.destination_eve_stargate is not None:
+            obj.destination_eve_stargate.destination_eve_stargate = obj
+
+        if obj.destination_eve_solar_system is not None:
+            obj.destination_eve_stargate.destination_eve_solar_system = (
+                obj.eve_solar_system
+            )
+
+        if (
+            obj.destination_eve_stargate is not None
+            or obj.destination_eve_solar_system is not None
+        ):
+            obj.destination_eve_stargate.save()
+
+        return obj, created
 
 
 class EveStationManager(EveUniverseEntityModelManager):

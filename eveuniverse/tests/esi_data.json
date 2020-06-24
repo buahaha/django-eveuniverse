@@ -273,6 +273,15 @@
                     3800
                 ]
             },
+            "10": {
+                "category_id": 2,
+                "group_id": 10,
+                "name": "Stargate",
+                "published": false,
+                "types": [
+                    16
+                ]
+            },
             "7": {
                 "category_id": 2,
                 "group_id": 7,
@@ -403,6 +412,108 @@
                 "spectral_class": "M6 V",
                 "temperature": 2385,
                 "type_id": 3800
+            },
+            "40349691": {
+                "age": 844487519,
+                "luminosity": 0.11349999904632568,
+                "name": "Akidagi - Star",
+                "radius": 98750000,
+                "solar_system_id": 30045342,
+                "spectral_class": "G0 VI",
+                "temperature": 5992,
+                "type_id": 45038
+            }
+        },
+        "get_universe_stargates_stargate_id": {
+            "50016280": {
+                "destination": {
+                    "stargate_id": 50016279,
+                    "system_id": 30045340
+                },
+                "name": "Stargate (Aivonen)",
+                "position": {
+                    "x": -2641869742080,
+                    "y": -145388298240,
+                    "z": 29053870080
+                },
+                "stargate_id": 50016280,
+                "system_id": 30045342,
+                "type_id": 16
+            },
+            "50016281": {
+                "destination": {
+                    "stargate_id": 50016282,
+                    "system_id": 30045344
+                },
+                "name": "Stargate (Nennamaila)",
+                "position": {
+                    "x": -2641864826880,
+                    "y": -145387315200,
+                    "z": 29032980480
+                },
+                "stargate_id": 50016281,
+                "system_id": 30045342,
+                "type_id": 16
+            },
+            "50016283": {
+                "destination": {
+                    "stargate_id": 50016284,
+                    "system_id": 30045339
+                },
+                "name": "Stargate (Enaluri)",
+                "position": {
+                    "x": -488354242560,
+                    "y": -6052208640,
+                    "z": -1692333711360
+                },
+                "stargate_id": 50016283,
+                "system_id": 30045342,
+                "type_id": 16
+            },
+            "50016284": {
+                "destination": {
+                    "stargate_id": 50016283,
+                    "system_id": 30045342
+                },
+                "name": "Stargate (Akidagi)",
+                "position": {
+                    "x": 4845263708160,
+                    "y": 97343692800,
+                    "z": 3689037127680
+                },
+                "stargate_id": 50016284,
+                "system_id": 30045339,
+                "type_id": 16
+            },
+            "50016286": {
+                "destination": {
+                    "stargate_id": 50016285,
+                    "system_id": 30045344
+                },
+                "name": "Stargate (Nennamaila)",
+                "position": {
+                    "x": -211363553280,
+                    "y": -41140101120,
+                    "z": 216507555840
+                },
+                "stargate_id": 50016286,
+                "system_id": 30045339,
+                "type_id": 16
+            },
+            "50016295": {
+                "destination": {
+                    "stargate_id": 50016296,
+                    "system_id": 30045329
+                },
+                "name": "Stargate (Ichoriya)",
+                "position": {
+                    "x": 7899832320,
+                    "y": -2648527626240,
+                    "z": 1207011287040
+                },
+                "stargate_id": 50016295,
+                "system_id": 30045342,
+                "type_id": 29627
             }
         },
         "get_universe_stations_station_id": {
@@ -504,6 +615,24 @@
                     60015069
                 ],
                 "system_id": 30045339
+            },
+            "30045342": {
+                "constellation_id": 20000785,
+                "name": "Akidagi",
+                "position": {
+                    "x": -219794204992826370,
+                    "y": 109083447304347180,
+                    "z": 136246854436173300
+                },
+                "security_status": 0.4449388384819031,
+                "star_id": 40349691,
+                "stargates": [
+                    50016280,
+                    50016281,
+                    50016283,
+                    50016295
+                ],
+                "system_id": 30045342
             }
         },
         "get_universe_types_type_id": {
@@ -521,6 +650,20 @@
                 "radius": 10000,
                 "type_id": 13,
                 "volume": 1
+            },
+            "16": {
+                "capacity": 0,
+                "description": "",
+                "graphic_id": 235,
+                "group_id": 10,
+                "mass": 100000000000,
+                "name": "Stargate (Caldari System)",
+                "packaged_volume": 10000000,
+                "portion_size": 1,
+                "published": false,
+                "radius": 3532,
+                "type_id": 16,
+                "volume": 10000000
             },
             "603": {
                 "capacity": 150,
@@ -703,6 +846,34 @@
                 "published": false,
                 "radius": 10000,
                 "type_id": 3800,
+                "volume": 1
+            },
+            "29627": {
+                "capacity": 0,
+                "description": "",
+                "graphic_id": 1258,
+                "group_id": 10,
+                "mass": 100000000000,
+                "name": "Stargate (Caldari Constellation)",
+                "packaged_volume": 10000000,
+                "portion_size": 1,
+                "published": false,
+                "radius": 4499,
+                "type_id": 29627,
+                "volume": 10000000
+            },
+            "45038": {
+                "capacity": 0,
+                "description": "Small, red-white stars of this kind are relatively old and may be on the verge of exhausting their hydrogen fusion fuel before becoming red giants.\r\n\r\nPlanetary systems can often be found around these stars and an abundance of heavier metals is not uncommon.",
+                "graphic_id": 21474,
+                "group_id": 6,
+                "mass": 1000000000000000000,
+                "name": "Sun G3 (Pink Small)",
+                "packaged_volume": 1,
+                "portion_size": 1,
+                "published": false,
+                "radius": 10000,
+                "type_id": 45038,
                 "volume": 1
             }
         }

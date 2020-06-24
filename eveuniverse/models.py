@@ -20,6 +20,7 @@ from .managers import (
     EveUniverseEntityModelManager,
     EvePlanetChildrenManager,
     EvePlanetManager,
+    EveStargateManager,
     EveStationManager,
 )
 from .utils import LoggerAddTag
@@ -40,6 +41,7 @@ EsiMapping = namedtuple(
         "related_model",
         "is_parent_fk",
         "is_charfield",
+        "create_related",
     ],
 )
 
@@ -57,6 +59,7 @@ class EveUniverseBaseModel(models.Model):
         field_mappings = cls._eve_universe_meta_attr("field_mappings")
         functional_pk = cls._eve_universe_meta_attr("functional_pk")
         parent_fk = cls._eve_universe_meta_attr("parent_fk")
+        dont_create_related = cls._eve_universe_meta_attr("dont_create_related")
         mapping = dict()
         for field in [
             field
@@ -91,6 +94,11 @@ class EveUniverseBaseModel(models.Model):
                 is_fk = False
                 related_model = None
 
+            if dont_create_related and field.name in dont_create_related:
+                create_related = False
+            else:
+                create_related = True
+
             mapping[field.name] = EsiMapping(
                 esi_name=esi_name,
                 is_optional=field.has_default(),
@@ -99,6 +107,7 @@ class EveUniverseBaseModel(models.Model):
                 related_model=related_model,
                 is_parent_fk=is_parent_fk,
                 is_charfield=isinstance(field, (models.CharField, models.TextField)),
+                create_related=create_related,
             )
 
         return mapping
@@ -692,13 +701,8 @@ class EveStar(EveUniverseEntityModel):
 class EveStargate(EveUniverseEntityModel):
     """"Stargate in Eve Online"""
 
-    destination_eve_stargate = models.ForeignKey(
-        "EveStargate",
-        on_delete=models.SET_DEFAULT,
-        null=True,
-        default=None,
-        blank=True,
-        related_name="destination_eve_stargate_set",
+    destination_eve_stargate = models.OneToOneField(
+        "EveStargate", on_delete=models.SET_DEFAULT, null=True, default=None, blank=True
     )
     destination_eve_solar_system = models.ForeignKey(
         "EveSolarSystem",
@@ -706,7 +710,7 @@ class EveStargate(EveUniverseEntityModel):
         null=True,
         default=None,
         blank=True,
-        related_name="destination_eve_solar_system_set",
+        related_name="destination_eve_stargates",
     )
     eve_solar_system = models.ForeignKey("EveSolarSystem", on_delete=models.CASCADE)
     eve_type = models.ForeignKey("EveType", on_delete=models.CASCADE)
@@ -720,6 +724,8 @@ class EveStargate(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
+    objects = EveStargateManager()
+
     class EveUniverseMeta:
         esi_pk = "stargate_id"
         esi_path = "Universe.get_universe_stargates_stargate_id"
@@ -731,6 +737,10 @@ class EveStargate(EveUniverseEntityModel):
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
+        }
+        dont_create_related = {
+            "destination_eve_stargate",
+            "destination_eve_solar_system",
         }
 
 
