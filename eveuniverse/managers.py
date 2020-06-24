@@ -213,16 +213,17 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         from . import models as eveuniverse_models
 
         for key, child_class in self.model.children().items():
-            for id in eve_data_obj[key]:
-                if wait_for_children:
-                    ChildClass = getattr(eveuniverse_models, child_class)
-                    ChildClass.objects.update_or_create_esi(
-                        id=id,
-                        include_children=include_children,
-                        wait_for_children=wait_for_children,
-                    )
-                else:
-                    load_eve_entity.delay(child_class, id)
+            if key in eve_data_obj:
+                for id in eve_data_obj[key]:
+                    if wait_for_children:
+                        ChildClass = getattr(eveuniverse_models, child_class)
+                        ChildClass.objects.update_or_create_esi(
+                            id=id,
+                            include_children=include_children,
+                            wait_for_children=wait_for_children,
+                        )
+                    else:
+                        load_eve_entity.delay(child_class, id)
 
     def update_or_create_all_esi(
         self, *, include_children: bool = False, wait_for_children: bool = False,
@@ -256,7 +257,11 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             NotImplementedError()
 
 
-class EveMoonManager(EveUniverseEntityModelManager):
+class EvePlanetChildrenManager(EveUniverseEntityModelManager):
+    def __init__(self, property_name: str):
+        super().__init__()
+        self._my_property_name = property_name
+
     def _fetch_from_esi(self, id):
         from .models import EveSolarSystem
 
@@ -270,8 +275,44 @@ class EveMoonManager(EveUniverseEntityModelManager):
             raise ValueError("planets not found in solar system response - data error")
 
         for planet in solar_system_data["planets"]:
-            if "moons" in planet and id in planet["moons"]:
+            if (
+                self._my_property_name in planet
+                and id in planet[self._my_property_name]
+            ):
                 esi_data["planet_id"] = planet["planet_id"]
+                return esi_data
+
+        raise ValueError(
+            f"Failed to find moon {id} in solar system response for {system_id} "
+            f"- data error"
+        )
+
+
+class EvePlanetManager(EveUniverseEntityModelManager):
+    def _fetch_from_esi(self, id):
+        from .models import EveSolarSystem
+
+        esi_data = super()._fetch_from_esi(id)
+        # no need to proceed if all children have been disabled
+        if not self.model.children():
+            return esi_data
+
+        if "system_id" not in esi_data:
+            raise ValueError("system_id not found in moon response - data error")
+
+        system_id = esi_data["system_id"]
+        solar_system_data = EveSolarSystem.objects._fetch_from_esi(system_id)
+        if "planets" not in solar_system_data:
+            raise ValueError("planets not found in solar system response - data error")
+
+        for planet in solar_system_data["planets"]:
+            if planet["planet_id"] == id:
+                if "moons" in planet:
+                    esi_data["moons"] = planet["moons"]
+
+                if "asteroid_belts" in planet:
+                    esi_data["asteroid_belts"] = planet["asteroid_belts"]
+
                 return esi_data
 
         raise ValueError(
@@ -296,4 +337,3 @@ class EveStationManager(EveUniverseEntityModelManager):
 
             if services:
                 primary_obj.services.add(*services)
-

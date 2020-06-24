@@ -38,48 +38,61 @@ class EsiRoute:
         return Mock(**{"results.return_value": result, "result.return_value": result})
 
 
-def _generate_esi_client_mock():
-    EsiEndpoint = namedtuple("EsiSpec", ["category", "method", "key"])
-    esi_endpoints = [
-        EsiEndpoint("Dogma", "get_dogma_attributes_attribute_id", "attribute_id"),
-        EsiEndpoint("Dogma", "get_dogma_effects_effect_id", "effect_id"),
-        EsiEndpoint("Market", "get_markets_groups_market_group_id", "market_group_id"),
-        EsiEndpoint("Universe", "get_universe_ancestries", None),
-        EsiEndpoint(
-            "Universe",
-            "get_universe_asteroid_belts_asteroid_belt_id",
-            "asteroid_belt_id",
-        ),
-        EsiEndpoint("Universe", "get_universe_bloodlines", None),
-        EsiEndpoint("Universe", "get_universe_categories_category_id", "category_id"),
-        EsiEndpoint(
-            "Universe",
-            "get_universe_constellations_constellation_id",
-            "constellation_id",
-        ),
-        EsiEndpoint("Universe", "get_universe_groups_group_id", "group_id"),
-        EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
-        EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
-        EsiEndpoint("Universe", "get_universe_planets_planet_id", "planet_id"),
-        EsiEndpoint("Universe", "get_universe_races", None),
-        EsiEndpoint("Universe", "get_universe_regions_region_id", "region_id"),
-        EsiEndpoint("Universe", "get_universe_stars_star_id", "star_id"),
-        EsiEndpoint("Universe", "get_universe_stations_station_id", "station_id"),
-        EsiEndpoint("Universe", "get_universe_systems_system_id", "system_id"),
-        EsiEndpoint("Universe", "get_universe_types_type_id", "type_id"),
-    ]
+class EsiMockClient:
+    pass
 
-    args = dict()
-    for endpoint in esi_endpoints:
-        args[f"{endpoint.category}.{endpoint.method}.side_effect"] = EsiRoute(
-            endpoint.category, endpoint.method, endpoint.key
-        ).call
-    mock_client = Mock(name="esi_mock_client", **args)
+    @classmethod
+    def _generate(cls):
+        """dnamically generates the client class with all attributes based on definition
+        """
+        EsiEndpoint = namedtuple("EsiSpec", ["category", "method", "key"])
+        esi_endpoints = [
+            EsiEndpoint("Dogma", "get_dogma_attributes_attribute_id", "attribute_id"),
+            EsiEndpoint("Dogma", "get_dogma_effects_effect_id", "effect_id"),
+            EsiEndpoint(
+                "Market", "get_markets_groups_market_group_id", "market_group_id"
+            ),
+            EsiEndpoint("Universe", "get_universe_ancestries", None),
+            EsiEndpoint(
+                "Universe",
+                "get_universe_asteroid_belts_asteroid_belt_id",
+                "asteroid_belt_id",
+            ),
+            EsiEndpoint("Universe", "get_universe_bloodlines", None),
+            EsiEndpoint(
+                "Universe", "get_universe_categories_category_id", "category_id"
+            ),
+            EsiEndpoint(
+                "Universe",
+                "get_universe_constellations_constellation_id",
+                "constellation_id",
+            ),
+            EsiEndpoint("Universe", "get_universe_groups_group_id", "group_id"),
+            EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
+            EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
+            EsiEndpoint("Universe", "get_universe_planets_planet_id", "planet_id"),
+            EsiEndpoint("Universe", "get_universe_races", None),
+            EsiEndpoint("Universe", "get_universe_regions_region_id", "region_id"),
+            EsiEndpoint("Universe", "get_universe_stars_star_id", "star_id"),
+            EsiEndpoint("Universe", "get_universe_stations_station_id", "station_id"),
+            EsiEndpoint("Universe", "get_universe_systems_system_id", "system_id"),
+            EsiEndpoint("Universe", "get_universe_types_type_id", "type_id"),
+        ]
+        for endpoint in esi_endpoints:
+            if not hasattr(cls, endpoint.category):
+                setattr(
+                    cls, endpoint.category, type(endpoint.category, (object,), dict())
+                )
+            my_category = getattr(cls, endpoint.category)
+            if not hasattr(my_category, endpoint.method):
+                setattr(
+                    my_category,
+                    endpoint.method,
+                    EsiRoute(endpoint.category, endpoint.method, endpoint.key).call,
+                )
 
-    return mock_client
 
-
-esi_mock_client = _generate_esi_client_mock()
+EsiMockClient._generate()
 
 
 def _load_esi_data():

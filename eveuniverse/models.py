@@ -18,7 +18,8 @@ from .app_settings import (
 from .managers import (
     EveUniverseBaseModelManager,
     EveUniverseEntityModelManager,
-    EveMoonManager,
+    EvePlanetChildrenManager,
+    EvePlanetManager,
     EveStationManager,
 )
 from .utils import LoggerAddTag
@@ -229,10 +230,13 @@ class EveAsteroidBelt(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
+    objects = EvePlanetChildrenManager("asteroid_belts")
+
     class EveUniverseMeta:
         esi_pk = "asteroid_belt_id"
         esi_path = "Universe.get_universe_asteroid_belts_asteroid_belt_id"
         field_mappings = {
+            "eve_planet": "planet_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -502,7 +506,7 @@ class EveMoon(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
-    objects = EveMoonManager()
+    objects = EvePlanetChildrenManager("moons")
 
     class EveUniverseMeta:
         esi_pk = "moon_id"
@@ -513,18 +517,6 @@ class EveMoon(EveUniverseEntityModel):
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
         }
-
-
-class EveRace(EveUniverseEntityModel):
-    """"faction in Eve Online"""
-
-    alliance_id = models.PositiveIntegerField(db_index=True)
-    description = models.TextField()
-
-    class EveUniverseMeta:
-        esi_pk = "race_id"
-        esi_path = "Universe.get_universe_races"
-        is_list_endpoint = True
 
 
 class EvePlanet(EveUniverseEntityModel):
@@ -542,6 +534,8 @@ class EvePlanet(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
+    objects = EvePlanetManager()
+
     class EveUniverseMeta:
         esi_pk = "planet_id"
         esi_path = "Universe.get_universe_planets_planet_id"
@@ -552,6 +546,31 @@ class EvePlanet(EveUniverseEntityModel):
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
         }
+        children = {"moons": "EveMoon", "asteroid_belts": "EveAsteroidBelt"}
+
+    @classmethod
+    def children(cls) -> dict:
+        children = dict()
+
+        if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
+            children["asteroid_belts"] = "EveAsteroidBelt"
+
+        if EVEUNIVERSE_LOAD_MOONS:
+            children["moons"] = "EveMoon"
+
+        return children
+
+
+class EveRace(EveUniverseEntityModel):
+    """"faction in Eve Online"""
+
+    alliance_id = models.PositiveIntegerField(db_index=True)
+    description = models.TextField()
+
+    class EveUniverseMeta:
+        esi_pk = "race_id"
+        esi_path = "Universe.get_universe_races"
+        is_list_endpoint = True
 
 
 class EveRegion(EveUniverseEntityModel):
