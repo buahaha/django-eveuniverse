@@ -18,6 +18,7 @@ from .app_settings import (
 from .managers import (
     EveUniverseBaseModelManager,
     EveUniverseEntityModelManager,
+    EveMoonManager,
     EveStationManager,
 )
 from .utils import LoggerAddTag
@@ -501,11 +502,13 @@ class EveMoon(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
+    objects = EveMoonManager()
+
     class EveUniverseMeta:
         esi_pk = "moon_id"
         esi_path = "Universe.get_universe_moons_moon_id"
         field_mappings = {
-            "eve_solar_system": "system_id",
+            "eve_planet": "planet_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
@@ -544,6 +547,7 @@ class EvePlanet(EveUniverseEntityModel):
         esi_path = "Universe.get_universe_planets_planet_id"
         field_mappings = {
             "eve_solar_system": "system_id",
+            "eve_type": "type_id",
             "position_x": ("position", "x"),
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),

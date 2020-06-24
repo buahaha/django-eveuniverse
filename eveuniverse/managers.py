@@ -113,29 +113,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         Returns: object, created
         """
         add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
-        esi_pk = self.model.esi_pk()
         try:
-            args = {esi_pk: id}
-            esi_data = getattr(
-                getattr(esi.client, self.model.esi_route_category()),
-                self.model.esi_route_method(),
-            )(**args).results()
-            is_list_endpoint = self.model._eve_universe_meta_attr("is_list_endpoint")
-            if is_list_endpoint:
-                eve_data_obj = None
-                for row in esi_data:
-                    if esi_pk in row and row[esi_pk] == id:
-                        eve_data_obj = row
-
-                if not eve_data_obj:
-                    raise HTTPNotFound(
-                        FakeResponse(status_code=404),
-                        message=f"{self.model.__name__} object with id {id} not found",
-                    )
-
-            else:
-                eve_data_obj = esi_data
-
+            eve_data_obj = self._handle_list_endpoints(id, self._fetch_from_esi(id))
             defaults = self._defaults_from_esi_obj(eve_data_obj)
             obj, created = self.update_or_create(id=id, defaults=defaults)
             inline_objects = self.model.inline_objects()
@@ -159,6 +138,31 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             raise ex
 
         return obj, created
+
+    def _fetch_from_esi(self, id) -> object:
+        """make request to ESI and return response data"""
+        args = {self.model.esi_pk(): id}
+        esi_data = getattr(
+            getattr(esi.client, self.model.esi_route_category()),
+            self.model.esi_route_method(),
+        )(**args).results()
+        return esi_data
+
+    def _handle_list_endpoints(self, id, esi_data) -> object:
+        is_list_endpoint = self.model._eve_universe_meta_attr("is_list_endpoint")
+        if not is_list_endpoint:
+            return esi_data
+
+        else:
+            esi_pk = self.model.esi_pk()
+            for row in esi_data:
+                if esi_pk in row and row[esi_pk] == id:
+                    return row
+
+            raise HTTPNotFound(
+                FakeResponse(status_code=404),
+                message=f"{self.model.__name__} object with id {id} not found",
+            )
 
     def _update_or_create_inline_objects(
         self, primary_eve_data_obj: dict, primary_obj: object, inline_objects: dict,
@@ -250,6 +254,30 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 raise ex
         else:
             NotImplementedError()
+
+
+class EveMoonManager(EveUniverseEntityModelManager):
+    def _fetch_from_esi(self, id):
+        from .models import EveSolarSystem
+
+        esi_data = super()._fetch_from_esi(id)
+        if "system_id" not in esi_data:
+            raise ValueError("system_id not found in moon response - data error")
+
+        system_id = esi_data["system_id"]
+        solar_system_data = EveSolarSystem.objects._fetch_from_esi(system_id)
+        if "planets" not in solar_system_data:
+            raise ValueError("planets not found in solar system response - data error")
+
+        for planet in solar_system_data["planets"]:
+            if "moons" in planet and id in planet["moons"]:
+                esi_data["planet_id"] = planet["planet_id"]
+                return esi_data
+
+        raise ValueError(
+            f"Failed to find moon {id} in solar system response for {system_id} "
+            f"- data error"
+        )
 
 
 class EveStationManager(EveUniverseEntityModelManager):

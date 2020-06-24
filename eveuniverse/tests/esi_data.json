@@ -182,6 +182,17 @@
                 "short_description": "Making the universe a better place, one fight at a time."
             }
         ],
+        "get_universe_asteroid_belts_asteroid_belt_id": {
+            "40349487": {
+                "name": "Enaluri III - Asteroid Belt 1",
+                "position": {
+                    "x": -214506997304.68906,
+                    "y": -41236109278.05316,
+                    "z": 219234300596.24887
+                },
+                "system_id": 30045339
+            }
+        },
         "get_universe_bloodlines": [
             {
                 "bloodline_id": 2,
@@ -262,6 +273,16 @@
                     3800
                 ]
             },
+            "7": {
+                "category_id": 2,
+                "group_id": 7,
+                "name": "Planet",
+                "published": false,
+                "types": [
+                    13,
+                    2016
+                ]
+            },
             "15": {
                 "category_id": 3,
                 "group_id": 15,
@@ -290,6 +311,62 @@
                     621,
                     626
                 ]
+            }
+        },
+        "get_universe_moons_moon_id": {
+            "40349468": {
+                "moon_id": 40349468,
+                "name": "Enaluri I - Moon 1",
+                "position": {
+                    "x": -79612836383.01112,
+                    "y": -1951529197.9895465,
+                    "z": 48035834113.70182
+                },
+                "system_id": 30045339
+            },
+            "40349472": {
+                "moon_id": 40349472,
+                "name": "Enaluri III - Moon 1",
+                "position": {
+                    "x": -211160238164.1635,
+                    "y": -41134078174.39227,
+                    "z": 216642195394.3166
+                },
+                "system_id": 30045339
+            },
+            "40349473": {
+                "moon_id": 40349473,
+                "name": "Enaluri III - Moon 2",
+                "position": {
+                    "x": -211170744313.01465,
+                    "y": -41132957854.23283,
+                    "z": 216414418211.96503
+                },
+                "system_id": 30045339
+            }
+        },
+        "get_universe_planets_planet_id": {
+            "40349467": {
+                "name": "Enaluri I",
+                "planet_id": 40349467,
+                "position": {
+                    "x": -79928787523.97133,
+                    "y": -1951674993.3224173,
+                    "z": 48099232021.23506
+                },
+                "system_id": 30045339,
+                "type_id": 2016
+            },
+            "40349471": {
+                "name": "Enaluri III",
+                "planet_id": 40349471,
+                "position": {
+                    "x": -211213768723.6519,
+                    "y": -41134179058.56027,
+                    "z": 216542741625.2739
+                },
+                "system_id": 30045339,
+                "type_id": 13
             }
         },
         "get_universe_races": [
@@ -430,6 +507,21 @@
             }
         },
         "get_universe_types_type_id": {
+            "13": {
+                "capacity": 0,
+                "description": "Gas planets are characterized by a deep, opaque upper atmosphere, usually composed primarily of light elements such as hydrogen or helium. Simple chemicals can add a range of hues and shades in the visual spectrum, and the interaction between upwellings and rapidly circulating pressure bands result in a huge variety of visible surface structures. A similar level of diversity can be found beneath the cloud-tops: the inner composition of a given gas planet might belong to any one of a dozen broad groups, with no two planets entirely alike in this regard.",
+                "graphic_id": 3833,
+                "group_id": 7,
+                "icon_id": 10139,
+                "mass": 1e+35,
+                "name": "Planet (Gas)",
+                "packaged_volume": 1,
+                "portion_size": 1,
+                "published": false,
+                "radius": 10000,
+                "type_id": 13,
+                "volume": 1
+            },
             "603": {
                 "capacity": 150,
                 "description": "The Merlin is the most powerful combat frigate of the Caldari. Its role has evolved through the years, and while its defenses have always remained exceptionally strong for a Caldari vessel, its offensive capabilities have evolved from versatile, jack-of-all-trades attack patterns into focused and deadly gunfire tactics. The Merlin's primary aim is to have its turrets punch holes in opponents' hulls.",
@@ -582,6 +674,21 @@
                 "published": false,
                 "radius": 45734,
                 "type_id": 1529,
+                "volume": 1
+            },
+            "2016": {
+                "capacity": 0,
+                "description": "Barren planets are archetypical \"dead terrestrials\": dry, rocky worlds with a minimal atmosphere and an unremarkable composition. They are commonly etched with flood channels, which are often broad enough to be visible from orbit; most such worlds have accumulated significant quantities of ice over their lifetimes, but cannot retain it on their surface. Generally surface liquid evaporates rapidly, contributing to the thin atmosphere, but occasionally it will seep back into the ground and refreeze, ready for another breakout in future when the local temperature rises.",
+                "graphic_id": 3837,
+                "group_id": 7,
+                "icon_id": 10135,
+                "mass": 1e+35,
+                "name": "Planet (Barren)",
+                "packaged_volume": 1,
+                "portion_size": 1,
+                "published": false,
+                "radius": 10000,
+                "type_id": 2016,
                 "volume": 1
             },
             "3800": {

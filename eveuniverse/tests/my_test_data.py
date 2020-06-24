@@ -1,3 +1,4 @@
+from collections import namedtuple
 import inspect
 import json
 import os
@@ -37,59 +38,48 @@ class EsiRoute:
         return Mock(**{"results.return_value": result, "result.return_value": result})
 
 
-def esi_mock_client():
-    mock_client = Mock()
+def _generate_esi_client_mock():
+    EsiEndpoint = namedtuple("EsiSpec", ["category", "method", "key"])
+    esi_endpoints = [
+        EsiEndpoint("Dogma", "get_dogma_attributes_attribute_id", "attribute_id"),
+        EsiEndpoint("Dogma", "get_dogma_effects_effect_id", "effect_id"),
+        EsiEndpoint("Market", "get_markets_groups_market_group_id", "market_group_id"),
+        EsiEndpoint("Universe", "get_universe_ancestries", None),
+        EsiEndpoint(
+            "Universe",
+            "get_universe_asteroid_belts_asteroid_belt_id",
+            "asteroid_belt_id",
+        ),
+        EsiEndpoint("Universe", "get_universe_bloodlines", None),
+        EsiEndpoint("Universe", "get_universe_categories_category_id", "category_id"),
+        EsiEndpoint(
+            "Universe",
+            "get_universe_constellations_constellation_id",
+            "constellation_id",
+        ),
+        EsiEndpoint("Universe", "get_universe_groups_group_id", "group_id"),
+        EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
+        EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
+        EsiEndpoint("Universe", "get_universe_planets_planet_id", "planet_id"),
+        EsiEndpoint("Universe", "get_universe_races", None),
+        EsiEndpoint("Universe", "get_universe_regions_region_id", "region_id"),
+        EsiEndpoint("Universe", "get_universe_stars_star_id", "star_id"),
+        EsiEndpoint("Universe", "get_universe_stations_station_id", "station_id"),
+        EsiEndpoint("Universe", "get_universe_systems_system_id", "system_id"),
+        EsiEndpoint("Universe", "get_universe_types_type_id", "type_id"),
+    ]
 
-    # Dogma
-    mock_client.Dogma.get_dogma_attributes_attribute_id.side_effect = EsiRoute(
-        "Dogma", "get_dogma_attributes_attribute_id", "attribute_id"
-    ).call
-    mock_client.Dogma.get_dogma_effects_effect_id.side_effect = EsiRoute(
-        "Dogma", "get_dogma_effects_effect_id", "effect_id"
-    ).call
-
-    # Market
-    mock_client.Market.get_markets_groups_market_group_id.side_effect = EsiRoute(
-        "Market", "get_markets_groups_market_group_id", "market_group_id"
-    ).call
-
-    # Universe
-    mock_Universe = mock_client.Universe
-    mock_Universe.get_universe_ancestries.side_effect = EsiRoute(
-        "Universe", "get_universe_ancestries"
-    ).call
-    mock_Universe.get_universe_bloodlines.side_effect = EsiRoute(
-        "Universe", "get_universe_bloodlines"
-    ).call
-    mock_Universe.get_universe_races.side_effect = EsiRoute(
-        "Universe", "get_universe_races"
-    ).call
-    mock_Universe.get_universe_categories_category_id.side_effect = EsiRoute(
-        "Universe", "get_universe_categories_category_id", "category_id"
-    ).call
-    mock_Universe.get_universe_constellations_constellation_id.side_effect = EsiRoute(
-        "Universe", "get_universe_constellations_constellation_id", "constellation_id"
-    ).call
-    mock_Universe.get_universe_groups_group_id.side_effect = EsiRoute(
-        "Universe", "get_universe_groups_group_id", "group_id"
-    ).call
-    mock_Universe.get_universe_regions_region_id.side_effect = EsiRoute(
-        "Universe", "get_universe_regions_region_id", "region_id"
-    ).call
-    mock_Universe.get_universe_stars_star_id.side_effect = EsiRoute(
-        "Universe", "get_universe_stars_star_id", "star_id"
-    ).call
-    mock_Universe.get_universe_stations_station_id.side_effect = EsiRoute(
-        "Universe", "get_universe_stations_station_id", "station_id"
-    ).call
-    mock_Universe.get_universe_systems_system_id.side_effect = EsiRoute(
-        "Universe", "get_universe_systems_system_id", "system_id"
-    ).call
-    mock_Universe.get_universe_types_type_id.side_effect = EsiRoute(
-        "Universe", "get_universe_types_type_id", "type_id"
-    ).call
+    args = dict()
+    for endpoint in esi_endpoints:
+        args[f"{endpoint.category}.{endpoint.method}.side_effect"] = EsiRoute(
+            endpoint.category, endpoint.method, endpoint.key
+        ).call
+    mock_client = Mock(name="esi_mock_client", **args)
 
     return mock_client
+
+
+esi_mock_client = _generate_esi_client_mock()
 
 
 def _load_esi_data():
