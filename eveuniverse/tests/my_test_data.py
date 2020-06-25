@@ -4,6 +4,7 @@ import json
 import os
 from unittest.mock import Mock
 
+from .. import models as eveuniverse_models
 
 _currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
@@ -74,6 +75,7 @@ class EsiMockClient:
             EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
             EsiEndpoint("Universe", "get_universe_planets_planet_id", "planet_id"),
             EsiEndpoint("Universe", "get_universe_races", None),
+            EsiEndpoint("Universe", "get_universe_regions", None),
             EsiEndpoint("Universe", "get_universe_regions_region_id", "region_id"),
             EsiEndpoint(
                 "Universe", "get_universe_stargates_stargate_id", "stargate_id"
@@ -103,6 +105,22 @@ EsiMockClient._generate()
 def _load_esi_data():
     with open(_currentdir + "/esi_data.json", "r", encoding="utf-8") as f:
         data = json.load(f)
+
+    # generate list endpoints from existing test data
+    entity_classes = [
+        x
+        for x in [x[1] for x in inspect.getmembers(eveuniverse_models, inspect.isclass)]
+        if hasattr(x, "EveUniverseMeta")
+        and hasattr(x, "is_list_only_endpoint")
+        and not x.is_list_only_endpoint()
+        and x.has_esi_path_list()
+    ]
+    for EntityClass in entity_classes:
+        list_category, list_method = EntityClass.esi_path_list()
+        object_category, object_method = EntityClass.esi_path_object()
+        data[list_category][list_method] = [
+            int(x) for x in data[object_category][object_method].keys()
+        ]
 
     return data
 

@@ -342,6 +342,13 @@ class TestEveRace(NoSocketsTestCase):
         self.assertEqual(obj.name, "Caldari")
         self.assertEqual(obj.alliance_id, 500001)
 
+    def test_create_all_from_esi(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        EveRace.objects.update_or_create_all_esi()
+        self.assertTrue(EveRace.objects.filter(id=1).exists())
+        self.assertTrue(EveRace.objects.filter(id=8).exists())
+
 
 @patch("eveuniverse.managers.esi")
 class TestEveRegion(NoSocketsTestCase):
@@ -352,6 +359,13 @@ class TestEveRegion(NoSocketsTestCase):
         self.assertTrue(created)
         self.assertEqual(obj.id, 10000069)
         self.assertEqual(obj.name, "Black Rise")
+
+    def test_create_all_from_esi(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        EveRegion.objects.update_or_create_all_esi()
+        self.assertTrue(EveRegion.objects.filter(id=10000002).exists())
+        self.assertTrue(EveRegion.objects.filter(id=10000069).exists())
 
 
 @patch("eveuniverse.managers.esi")

@@ -19,7 +19,6 @@ class Command(BaseCommand):
     help = "Updates Eve Online SDE data"
 
     def _load_models(self):
-        # self._load_parent('EveCategory', 'get_universe_categories')
         self._load_parent("EveRegion", "get_universe_regions")
 
     def _load_parent(self, model_name, eve_method):

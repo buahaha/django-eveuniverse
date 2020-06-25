@@ -171,18 +171,23 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return cls._eve_universe_meta_attr("esi_pk", is_mandatory=True)
 
     @classmethod
-    def esi_route_category(cls) -> str:
-        return cls._esi_path()[0]
+    def has_esi_path_list(cls) -> str:
+        return bool(cls._eve_universe_meta_attr("esi_path_list"))
 
     @classmethod
-    def esi_route_method(cls) -> str:
-        return cls._esi_path()[1]
+    def esi_path_list(cls) -> str:
+        return cls._esi_path("list")
 
     @classmethod
-    def _esi_path(cls) -> tuple:
-        path = cls._eve_universe_meta_attr("esi_path", is_mandatory=True)
+    def esi_path_object(cls) -> str:
+        return cls._esi_path("object")
+
+    @classmethod
+    def _esi_path(cls, variant: str) -> tuple:
+        attr_name = f"esi_path_{str(variant)}"
+        path = cls._eve_universe_meta_attr(attr_name, is_mandatory=True)
         if len(path.split(".")) != 2:
-            raise "esi_path not valid: %s" % path
+            raise ValueError(f"{attr_name} not valid")
         return path.split(".")
 
     @classmethod
@@ -196,6 +201,12 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         """returns a dict of inline objects if any"""
         inline_objects = cls._eve_universe_meta_attr("inline_objects")
         return inline_objects if inline_objects else dict()
+
+    @classmethod
+    def is_list_only_endpoint(cls) -> bool:
+        esi_path_list = cls._eve_universe_meta_attr("esi_path_list")
+        esi_path_object = cls._eve_universe_meta_attr("esi_path_object")
+        return esi_path_list and esi_path_object and esi_path_list == esi_path_object
 
 
 class EveUniverseInlineModel(EveUniverseBaseModel):
@@ -221,8 +232,8 @@ class EveAncestry(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "id"
-        esi_path = "Universe.get_universe_ancestries"
-        is_list_endpoint = True
+        esi_path_list = "Universe.get_universe_ancestries"
+        esi_path_object = "Universe.get_universe_ancestries"
         field_mappings = {"eve_bloodline": "bloodline_id"}
 
 
@@ -244,7 +255,7 @@ class EveAsteroidBelt(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "asteroid_belt_id"
-        esi_path = "Universe.get_universe_asteroid_belts_asteroid_belt_id"
+        esi_path_object = "Universe.get_universe_asteroid_belts_asteroid_belt_id"
         field_mappings = {
             "eve_planet": "planet_id",
             "position_x": ("position", "x"),
@@ -270,8 +281,8 @@ class EveBloodline(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "bloodline_id"
-        esi_path = "Universe.get_universe_bloodlines"
-        is_list_endpoint = True
+        esi_path_list = "Universe.get_universe_bloodlines"
+        esi_path_object = "Universe.get_universe_bloodlines"
         field_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
 
 
@@ -282,7 +293,8 @@ class EveCategory(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "category_id"
-        esi_path = "Universe.get_universe_categories_category_id"
+        esi_path_list = "Universe.get_universe_categories"
+        esi_path_object = "Universe.get_universe_categories_category_id"
         children = {"groups": "EveGroup"}
 
 
@@ -302,7 +314,8 @@ class EveConstellation(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "constellation_id"
-        esi_path = "Universe.get_universe_constellations_constellation_id"
+        esi_path_list = "Universe.get_universe_constellations"
+        esi_path_object = "Universe.get_universe_constellations_constellation_id"
         field_mappings = {
             "eve_region": "region_id",
             "position_x": ("position", "x"),
@@ -328,7 +341,8 @@ class EveDogmaAttribute(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "attribute_id"
-        esi_path = "Dogma.get_dogma_attributes_attribute_id"
+        esi_path_list = "Dogma.get_dogma_attributes"
+        esi_path_object = "Dogma.get_dogma_attributes_attribute_id"
         field_mappings = {"eve_unit": "unit_id"}
 
 
@@ -382,7 +396,8 @@ class EveDogmaEffect(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "effect_id"
-        esi_path = "Dogma.get_dogma_effects_effect_id"
+        esi_path_list = "Dogma.get_dogma_effects"
+        esi_path_object = "Dogma.get_dogma_effects_effect_id"
         field_mappings = {
             "discharge_attribute": "discharge_attribute_id",
             "duration_attribute": "duration_attribute_id",
@@ -471,8 +486,8 @@ class EveFaction(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "faction_id"
-        esi_path = "Universe.get_universe_factions"
-        is_list_endpoint = True
+        esi_path_list = "Universe.get_universe_factions"
+        esi_path_object = "Universe.get_universe_factions"
         field_mappings = {"eve_solar_system": "solar_system_id"}
 
 
@@ -491,7 +506,8 @@ class EveGraphic(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "graphic_id"
-        esi_path = "Universe.get_universe_graphics_graphic_id"
+        esi_path_list = "Universe.get_universe_graphics"
+        esi_path_object = "Universe.get_universe_graphics_graphic_id"
 
 
 class EveGroup(EveUniverseEntityModel):
@@ -502,7 +518,8 @@ class EveGroup(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "group_id"
-        esi_path = "Universe.get_universe_groups_group_id"
+        esi_path_list = "Universe.get_universe_groups"
+        esi_path_object = "Universe.get_universe_groups_group_id"
         field_mappings = {"eve_category": "category_id"}
         children = {"types": "EveType"}
 
@@ -517,7 +534,8 @@ class EveMarketGroup(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "market_group_id"
-        esi_path = "Market.get_markets_groups_market_group_id"
+        esi_path_list = "Market.get_markets_groups"
+        esi_path_object = "Market.get_markets_groups_market_group_id"
         field_mappings = {"parent_market_group": "parent_group_id"}
         children = {"types": "EveType"}
 
@@ -540,7 +558,7 @@ class EveMoon(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "moon_id"
-        esi_path = "Universe.get_universe_moons_moon_id"
+        esi_path_object = "Universe.get_universe_moons_moon_id"
         field_mappings = {
             "eve_planet": "planet_id",
             "position_x": ("position", "x"),
@@ -568,7 +586,7 @@ class EvePlanet(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "planet_id"
-        esi_path = "Universe.get_universe_planets_planet_id"
+        esi_path_object = "Universe.get_universe_planets_planet_id"
         field_mappings = {
             "eve_solar_system": "system_id",
             "eve_type": "type_id",
@@ -599,8 +617,8 @@ class EveRace(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "race_id"
-        esi_path = "Universe.get_universe_races"
-        is_list_endpoint = True
+        esi_path_list = "Universe.get_universe_races"
+        esi_path_object = "Universe.get_universe_races"
 
 
 class EveRegion(EveUniverseEntityModel):
@@ -610,7 +628,8 @@ class EveRegion(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "region_id"
-        esi_path = "Universe.get_universe_regions_region_id"
+        esi_path_list = "Universe.get_universe_regions"
+        esi_path_object = "Universe.get_universe_regions_region_id"
         children = {"constellations": "EveConstellation"}
 
 
@@ -640,7 +659,8 @@ class EveSolarSystem(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "system_id"
-        esi_path = "Universe.get_universe_systems_system_id"
+        esi_path_list = "Universe.get_universe_systems"
+        esi_path_object = "Universe.get_universe_systems_system_id"
         field_mappings = {
             "eve_constellation": "constellation_id",
             "eve_star": "star_id",
@@ -715,7 +735,7 @@ class EveStar(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "star_id"
-        esi_path = "Universe.get_universe_stars_star_id"
+        esi_path_object = "Universe.get_universe_stars_star_id"
         field_mappings = {"eve_type": "type_id"}
 
 
@@ -749,7 +769,7 @@ class EveStargate(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "stargate_id"
-        esi_path = "Universe.get_universe_stargates_stargate_id"
+        esi_path_object = "Universe.get_universe_stargates_stargate_id"
         field_mappings = {
             "destination_eve_stargate": ("destination", "stargate_id"),
             "destination_eve_solar_system": ("destination", "system_id"),
@@ -793,7 +813,7 @@ class EveStation(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "station_id"
-        esi_path = "Universe.get_universe_stations_station_id"
+        esi_path_object = "Universe.get_universe_stations_station_id"
         field_mappings = {
             "eve_race": "race_id",
             "eve_solar_system": "system_id",
@@ -833,7 +853,8 @@ class EveType(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "type_id"
-        esi_path = "Universe.get_universe_types_type_id"
+        esi_path_list = "Universe.get_universe_types"
+        esi_path_object = "Universe.get_universe_types_type_id"
         field_mappings = {
             "eve_graphic": "graphic_id",
             "eve_group": "group_id",
@@ -940,7 +961,7 @@ class EveUnit(EveUniverseEntityModel):
 
     class EveUniverseMeta:
         esi_pk = "unit_id"
-        esi_path = None
+        esi_path_object = None
         field_mappings = {
             "unit_id": "id",
             "unit_name": "name",

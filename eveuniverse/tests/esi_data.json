@@ -221,21 +221,6 @@
                 "willpower": 4
             }
         ],
-        "get_universe_constellations_constellation_id": {
-            "20000785": {
-                "constellation_id": 20000785,
-                "name": "Ishaga",
-                "position": {
-                    "x": -222687068034733630,
-                    "y": 108368351346494510,
-                    "z": 136029596082308480
-                },
-                "region_id": 10000069,
-                "systems": [
-                    30045339
-                ]
-            }
-        },
         "get_universe_categories_category_id": {
             "2": {
                 "category_id": 2,
@@ -261,6 +246,34 @@
                 ],
                 "name": "Ship",
                 "published": true
+            }
+        },
+        "get_universe_constellations_constellation_id": {
+            "20000020": {
+                "constellation_id": 20000020,
+                "name": "Kimotoro",
+                "position": {
+                    "x": -134996400468185440,
+                    "y": 64999452632293260,
+                    "z": 103325617317521340
+                },
+                "region_id": 10000002,
+                "systems": [
+                    30000142
+                ]
+            },
+            "20000785": {
+                "constellation_id": 20000785,
+                "name": "Ishaga",
+                "position": {
+                    "x": -222687068034733630,
+                    "y": 108368351346494510,
+                    "z": 136029596082308480
+                },
+                "region_id": 10000069,
+                "systems": [
+                    30045339
+                ]
             }
         },
         "get_universe_factions": [
@@ -314,12 +327,34 @@
             }
         ],
         "get_universe_graphics_graphic_id": {
+            "235": {
+                "graphic_id": 235,
+                "sof_dna": "csg:caldaribase:caldari",
+                "sof_fation_name": "caldaribase",
+                "sof_hull_name": "csg",
+                "sof_race_name": "caldari"
+            },
             "314": {
                 "graphic_id": 314,
                 "sof_dna": "cf7_t1:caldaribase:caldari",
                 "sof_fation_name": "caldaribase",
                 "sof_hull_name": "cf7_t1",
                 "sof_race_name": "caldari"
+            },
+            "1258": {
+                "graphic_id": 1258,
+                "sof_dna": "csmg:caldaribase:caldari",
+                "sof_fation_name": "caldaribase",
+                "sof_hull_name": "csmg",
+                "sof_race_name": "caldari"
+            },
+            "3833": {
+                "graphic_file": "res:/dx9/model/worldobject/planet/GasGiant.red",
+                "graphic_id": 3833
+            },
+            "21475": {
+                "graphic_file": "res:/dx9/model/celestial/sun/sun_orange_radiating_01a.red",
+                "graphic_id": 21475
             }
         },
         "get_universe_groups_group_id": {
@@ -332,15 +367,6 @@
                     3800
                 ]
             },
-            "10": {
-                "category_id": 2,
-                "group_id": 10,
-                "name": "Stargate",
-                "published": false,
-                "types": [
-                    16
-                ]
-            },
             "7": {
                 "category_id": 2,
                 "group_id": 7,
@@ -349,6 +375,15 @@
                 "types": [
                     13,
                     2016
+                ]
+            },
+            "10": {
+                "category_id": 2,
+                "group_id": 10,
+                "name": "Stargate",
+                "published": false,
+                "types": [
+                    16
                 ]
             },
             "15": {
@@ -414,6 +449,17 @@
             }
         },
         "get_universe_planets_planet_id": {
+            "40009077": {
+                "name": "Jita I",
+                "planet_id": 40009077,
+                "position": {
+                    "x": -35639949630,
+                    "y": -6225947509,
+                    "z": 20551935633
+                },
+                "system_id": 30000142,
+                "type_id": 2016
+            },
             "40349467": {
                 "name": "Enaluri I",
                 "planet_id": 40349467,
@@ -452,6 +498,14 @@
             }
         ],
         "get_universe_regions_region_id": {
+            "10000002": {
+                "constellations": [
+                    20000017
+                ],
+                "description": "\"The greater the State becomes, the greater humanity under it flourishes.\"",
+                "name": "The Forge",
+                "region_id": 10000002
+            },
             "10000069": {
                 "constellations": [
                     20000785
@@ -462,6 +516,16 @@
             }
         },
         "get_universe_stars_star_id": {
+            "40009076": {
+                "age": 689215910,
+                "luminosity": 1.6920000314712524,
+                "name": "Jita - Star",
+                "radius": 513100000,
+                "solar_system_id": 30000142,
+                "spectral_class": "F1 V",
+                "temperature": 7305,
+                "type_id": 3800
+            },
             "40349466": {
                 "age": 37075060962,
                 "luminosity": 0.02542000077664852,
@@ -637,6 +701,27 @@
             }
         },
         "get_universe_systems_system_id": {
+            "30000142": {
+                "constellation_id": 20000020,
+                "name": "Jita",
+                "planets": [
+                    {
+                        "planet_id": 40009077
+                    }
+                ],
+                "position": {
+                    "x": -129064861734878260,
+                    "y": 60755306909963630,
+                    "z": 117469227060090290
+                },
+                "security_class": "B",
+                "security_status": 0.9459131360054016,
+                "star_id": 40009076,
+                "stations": [
+                    60003760
+                ],
+                "system_id": 30000142
+            },
             "30045339": {
                 "constellation_id": 20000785,
                 "name": "Enaluri",
@@ -782,7 +867,7 @@
                         "is_default": false
                     }
                 ],
-                "graphic_id": 323,
+                "graphic_id": 314,
                 "group_id": 25,
                 "market_group_id": 77,
                 "mass": 1050000,
@@ -817,7 +902,7 @@
                         "is_default": false
                     }
                 ],
-                "graphic_id": 42,
+                "graphic_id": 314,
                 "group_id": 26,
                 "market_group_id": 75,
                 "mass": 11910000,
@@ -852,7 +937,7 @@
                         "is_default": false
                     }
                 ],
-                "graphic_id": 62,
+                "graphic_id": 314,
                 "group_id": 26,
                 "market_group_id": 76,
                 "mass": 11100000,
@@ -867,7 +952,7 @@
             "1529": {
                 "capacity": 0,
                 "description": "",
-                "graphic_id": 1019,
+                "graphic_id": 235,
                 "group_id": 15,
                 "mass": 0,
                 "name": "Caldari Administrative Station",
@@ -881,7 +966,7 @@
             "2016": {
                 "capacity": 0,
                 "description": "Barren planets are archetypical \"dead terrestrials\": dry, rocky worlds with a minimal atmosphere and an unremarkable composition. They are commonly etched with flood channels, which are often broad enough to be visible from orbit; most such worlds have accumulated significant quantities of ice over their lifetimes, but cannot retain it on their surface. Generally surface liquid evaporates rapidly, contributing to the thin atmosphere, but occasionally it will seep back into the ground and refreeze, ready for another breakout in future when the local temperature rises.",
-                "graphic_id": 3837,
+                "graphic_id": 3833,
                 "group_id": 7,
                 "icon_id": 10135,
                 "mass": 1e+35,
@@ -924,7 +1009,7 @@
             "45038": {
                 "capacity": 0,
                 "description": "Small, red-white stars of this kind are relatively old and may be on the verge of exhausting their hydrogen fusion fuel before becoming red giants.\r\n\r\nPlanetary systems can often be found around these stars and an abundance of heavier metals is not uncommon.",
-                "graphic_id": 21474,
+                "graphic_id": 21475,
                 "group_id": 6,
                 "mass": 1000000000000000000,
                 "name": "Sun G3 (Pink Small)",

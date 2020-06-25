@@ -48,7 +48,7 @@ class EveUniverseBaseModelManager(models.Manager):
                                 ParentClass.objects, "update_or_create_esi"
                             ):
                                 value, _ = ParentClass.objects.update_or_create_esi(
-                                    esi_value,
+                                    id=esi_value,
                                     include_children=False,
                                     wait_for_children=True,
                                 )
@@ -69,8 +69,8 @@ class EveUniverseBaseModelManager(models.Manager):
 class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
     def get_or_create_esi(
         self,
-        id: int,
         *,
+        id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
     ) -> tuple:
@@ -99,8 +99,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
     def update_or_create_esi(
         self,
-        id: int,
         *,
+        id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
     ) -> tuple:
@@ -135,24 +135,24 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
         except Exception as ex:
             logger.warn(
-                add_prefix("Failed to update or create: %s" % ex), exc_info=True
+                add_prefix("Failed to update or create: %s" % ex), exc_info=True,
             )
             raise ex
 
         return obj, created
 
-    def _fetch_from_esi(self, id) -> object:
+    def _fetch_from_esi(self, id=None) -> object:
         """make request to ESI and return response data"""
-        args = {self.model.esi_pk(): id}
-        esi_data = getattr(
-            getattr(esi.client, self.model.esi_route_category()),
-            self.model.esi_route_method(),
-        )(**args).results()
+        if id:
+            args = {self.model.esi_pk(): id}
+        else:
+            args = dict()
+        category, method = self.model.esi_path_object()
+        esi_data = getattr(getattr(esi.client, category), method,)(**args).results()
         return esi_data
 
     def _handle_list_endpoints(self, id, esi_data) -> object:
-        is_list_endpoint = self.model._eve_universe_meta_attr("is_list_endpoint")
-        if not is_list_endpoint:
+        if not self.model.is_list_only_endpoint():
             return esi_data
 
         else:
@@ -225,10 +225,15 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             wait_for_children=wait_for_children,
                         )
                     else:
-                        load_eve_entity.delay(child_class, id)
+                        load_eve_entity.delay(
+                            child_class,
+                            id,
+                            include_children=include_children,
+                            wait_for_children=wait_for_children,
+                        )
 
     def update_or_create_all_esi(
-        self, *, include_children: bool = False, wait_for_children: bool = False,
+        self, *, include_children: bool = False, wait_for_children: bool = True,
     ) -> None:
         """updates or creates all objects of this class from ESI
         
@@ -238,56 +243,41 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         else async
         """
         add_prefix = make_logger_prefix(f"{self.model.__name__}")
-        is_list_endpoint = self.model._eve_universe_meta_attr("is_list_endpoint")
-        if is_list_endpoint:
+        if self.model.is_list_only_endpoint():
             try:
-                eve_data_objects = getattr(
-                    esi.client.Universe, self.model.esi_path()
-                )().results()
-
-                for eve_data_obj in eve_data_objects:
-                    id = eve_data_obj[self.model.esi_pk()]
-                    defaults = self.model.convert_values(
-                        self._defaults_from_esi_obj(eve_data_obj,)
-                    )
-                    obj, _ = self.update_or_create(id=id, defaults=defaults)
+                esi_pk = self.model.esi_pk()
+                for eve_data_obj in self._fetch_from_esi():
+                    args = {"id": eve_data_obj[esi_pk]}
+                    args["defaults"] = self._defaults_from_esi_obj(eve_data_obj)
+                    obj, _ = self.update_or_create(**args)
 
             except Exception as ex:
-                logger.warn(add_prefix("Failed to update or create: %s" % ex))
+                logger.warn(
+                    add_prefix("Failed to update or create: %s" % ex), exc_info=True,
+                )
                 raise ex
         else:
-            NotImplementedError()
-
-
-class EvePlanetChildrenManager(EveUniverseEntityModelManager):
-    def __init__(self, property_name: str):
-        super().__init__()
-        self._my_property_name = property_name
-
-    def _fetch_from_esi(self, id):
-        from .models import EveSolarSystem
-
-        esi_data = super()._fetch_from_esi(id)
-        if "system_id" not in esi_data:
-            raise ValueError("system_id not found in moon response - data error")
-
-        system_id = esi_data["system_id"]
-        solar_system_data = EveSolarSystem.objects._fetch_from_esi(system_id)
-        if "planets" not in solar_system_data:
-            raise ValueError("planets not found in solar system response - data error")
-
-        for planet in solar_system_data["planets"]:
-            if (
-                self._my_property_name in planet
-                and id in planet[self._my_property_name]
-            ):
-                esi_data["planet_id"] = planet["planet_id"]
-                return esi_data
-
-        raise ValueError(
-            f"Failed to find moon {id} in solar system response for {system_id} "
-            f"- data error"
-        )
+            if self.model.has_esi_path_list():
+                category, method = self.model.esi_path_list()
+                ids = getattr(getattr(esi.client, category), method,)().results()
+                for id in ids:
+                    if wait_for_children:
+                        self.update_or_create_esi(
+                            id=id,
+                            include_children=include_children,
+                            wait_for_children=wait_for_children,
+                        )
+                    else:
+                        load_eve_entity.delay(
+                            model_name=self.model.__name__,
+                            entity_id=id,
+                            include_children=include_children,
+                            wait_for_children=wait_for_children,
+                        )
+            else:
+                raise TypeError(
+                    f"ESI does not provide a list endpoint for {self.model.__name__}"
+                )
 
 
 class EvePlanetManager(EveUniverseEntityModelManager):
@@ -315,6 +305,37 @@ class EvePlanetManager(EveUniverseEntityModelManager):
                 if "asteroid_belts" in planet:
                     esi_data["asteroid_belts"] = planet["asteroid_belts"]
 
+                return esi_data
+
+        raise ValueError(
+            f"Failed to find moon {id} in solar system response for {system_id} "
+            f"- data error"
+        )
+
+
+class EvePlanetChildrenManager(EveUniverseEntityModelManager):
+    def __init__(self, property_name: str):
+        super().__init__()
+        self._my_property_name = property_name
+
+    def _fetch_from_esi(self, id):
+        from .models import EveSolarSystem
+
+        esi_data = super()._fetch_from_esi(id)
+        if "system_id" not in esi_data:
+            raise ValueError("system_id not found in moon response - data error")
+
+        system_id = esi_data["system_id"]
+        solar_system_data = EveSolarSystem.objects._fetch_from_esi(system_id)
+        if "planets" not in solar_system_data:
+            raise ValueError("planets not found in solar system response - data error")
+
+        for planet in solar_system_data["planets"]:
+            if (
+                self._my_property_name in planet
+                and id in planet[self._my_property_name]
+            ):
+                esi_data["planet_id"] = planet["planet_id"]
                 return esi_data
 
         raise ValueError(
