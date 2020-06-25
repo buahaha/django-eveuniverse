@@ -25,7 +25,7 @@ def load_eve_entity(
 ) -> None:
     ModelClass = _get_model_class(model_name)
     ModelClass.objects.update_or_create_esi(
-        entity_id,
+        id=entity_id,
         include_children=include_children,
         wait_for_children=wait_for_children,
     )

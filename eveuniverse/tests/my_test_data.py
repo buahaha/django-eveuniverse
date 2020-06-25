@@ -30,6 +30,10 @@ class EsiRoute:
                 pk_value = str(kwargs[self._primary_key])
                 result = esi_data[self._category][self._method][pk_value]
             else:
+                if len(kwargs) > 0:
+                    raise ValueError(
+                        f"{self._method} does not have parameter {kwargs.popitem()[0]}"
+                    )
                 result = esi_data[self._category][self._method]
         except KeyError:
             raise KeyError(

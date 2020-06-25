@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from bravado.exception import HTTPNotFound
 
+from ..helpers import meters_to_ly
 from ..models import (
     EsiMapping,
     EveAncestry,
@@ -415,6 +416,12 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertEqual(obj.id, 30045339)
 
         self.assertTrue(EveStation.objects.filter(id=60015068).exists())
+
+    def test_distance_to(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+        enaluri, _ = EveSolarSystem.objects.get_or_create_esi(id=30045339)
+        jita, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142)
+        self.assertEqual(meters_to_ly(enaluri.distance_to(jita)), 11.764)
 
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)

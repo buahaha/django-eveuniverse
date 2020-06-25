@@ -117,21 +117,22 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
         try:
             eve_data_obj = self._handle_list_endpoints(id, self._fetch_from_esi(id))
-            defaults = self._defaults_from_esi_obj(eve_data_obj)
-            obj, created = self.update_or_create(id=id, defaults=defaults)
-            inline_objects = self.model.inline_objects()
-            if inline_objects:
-                self._update_or_create_inline_objects(
-                    primary_eve_data_obj=eve_data_obj,
-                    primary_obj=obj,
-                    inline_objects=inline_objects,
-                )
-            if include_children:
-                self._update_or_create_children(
-                    eve_data_obj=eve_data_obj,
-                    include_children=include_children,
-                    wait_for_children=wait_for_children,
-                )
+            if eve_data_obj:
+                defaults = self._defaults_from_esi_obj(eve_data_obj)
+                obj, created = self.update_or_create(id=id, defaults=defaults)
+                inline_objects = self.model.inline_objects()
+                if inline_objects:
+                    self._update_or_create_inline_objects(
+                        parent_eve_data_obj=eve_data_obj,
+                        parent_obj=obj,
+                        inline_objects=inline_objects,
+                    )
+                if eve_data_obj and include_children:
+                    self._update_or_create_children(
+                        parent_eve_data_obj=eve_data_obj,
+                        include_children=include_children,
+                        wait_for_children=wait_for_children,
+                    )
 
         except Exception as ex:
             logger.warn(
@@ -143,7 +144,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
     def _fetch_from_esi(self, id=None) -> object:
         """make request to ESI and return response data"""
-        if id:
+        if id and not self.model.is_list_only_endpoint():
             args = {self.model.esi_pk(): id}
         else:
             args = dict()
@@ -167,14 +168,20 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             )
 
     def _update_or_create_inline_objects(
-        self, primary_eve_data_obj: dict, primary_obj: object, inline_objects: dict,
+        self, *, parent_eve_data_obj: dict, parent_obj: object, inline_objects: dict,
     ) -> None:
         from . import models as eveuniverse_models
 
+        if not parent_eve_data_obj or not parent_obj:
+            raise ValueError(
+                "%s: Tried to create inline object from empty parent object"
+                % self.model.__name__,
+            )
+
         for inline_field, model_name in inline_objects.items():
             if (
-                inline_field in primary_eve_data_obj
-                and primary_eve_data_obj[inline_field]
+                inline_field in parent_eve_data_obj
+                and parent_eve_data_obj[inline_field]
             ):
                 InlineModel = getattr(eveuniverse_models, model_name)
                 esi_mapping = InlineModel.esi_mapping()
@@ -186,8 +193,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             other_pk = (field_name, mapping)
                             ParentClass2 = mapping.related_model
 
-                for eve_data_obj in primary_eve_data_obj[inline_field]:
-                    args = {parent_fk: primary_obj}
+                for eve_data_obj in parent_eve_data_obj[inline_field]:
+                    args = {parent_fk: parent_obj}
                     esi_value = eve_data_obj[other_pk[1].esi_name]
                     if other_pk[1].is_fk:
                         try:
@@ -209,14 +216,24 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                     InlineModel.objects.update_or_create(**args)
 
     def _update_or_create_children(
-        self, eve_data_obj: dict, include_children: bool, wait_for_children: bool
+        self,
+        *,
+        parent_eve_data_obj: dict,
+        include_children: bool,
+        wait_for_children: bool,
     ) -> None:
         """updates or creates child objects specified in eve mapping"""
         from . import models as eveuniverse_models
 
+        if not parent_eve_data_obj:
+            raise ValueError(
+                "%s: Tried to create children from empty parent object"
+                % self.model.__name__,
+            )
+
         for key, child_class in self.model.children().items():
-            if key in eve_data_obj:
-                for id in eve_data_obj[key]:
+            if key in parent_eve_data_obj and parent_eve_data_obj[key]:
+                for id in parent_eve_data_obj[key]:
                     if wait_for_children:
                         ChildClass = getattr(eveuniverse_models, child_class)
                         ChildClass.objects.update_or_create_esi(
@@ -362,19 +379,15 @@ class EveStargateManager(EveUniverseEntityModelManager):
             include_children=include_children,
             wait_for_children=wait_for_children,
         )
-        if obj.destination_eve_stargate is not None:
-            obj.destination_eve_stargate.destination_eve_stargate = obj
+        if obj:
+            if obj.destination_eve_stargate is not None:
+                obj.destination_eve_stargate.destination_eve_stargate = obj
 
-        if obj.destination_eve_solar_system is not None:
-            obj.destination_eve_stargate.destination_eve_solar_system = (
-                obj.eve_solar_system
-            )
-
-        if (
-            obj.destination_eve_stargate is not None
-            or obj.destination_eve_solar_system is not None
-        ):
-            obj.destination_eve_stargate.save()
+                if obj.eve_solar_system is not None:
+                    obj.destination_eve_stargate.destination_eve_solar_system = (
+                        obj.eve_solar_system
+                    )
+                obj.destination_eve_stargate.save()
 
         return obj, created
 
@@ -383,15 +396,15 @@ class EveStationManager(EveUniverseEntityModelManager):
     """For special handling of station services"""
 
     def _update_or_create_inline_objects(
-        self, primary_eve_data_obj: dict, primary_obj: object, inline_objects: dict,
+        self, *, parent_eve_data_obj: dict, parent_obj: object, inline_objects: dict,
     ) -> None:
         from .models import EveStationService
 
-        if "services" in primary_eve_data_obj:
+        if "services" in parent_eve_data_obj:
             services = list()
-            for service_name in primary_eve_data_obj["services"]:
+            for service_name in parent_eve_data_obj["services"]:
                 service, _ = EveStationService.objects.get_or_create(name=service_name)
                 services.append(service)
 
             if services:
-                primary_obj.services.add(*services)
+                parent_obj.services.add(*services)
