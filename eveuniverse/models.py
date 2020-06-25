@@ -8,6 +8,7 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_DOGMAS,
     EVEUNIVERSE_LOAD_MARKET_GROUPS,
     EVEUNIVERSE_LOAD_ASTEROID_BELTS,
+    EVEUNIVERSE_LOAD_GRAPHICS,
     EVEUNIVERSE_LOAD_MOONS,
     EVEUNIVERSE_LOAD_PLANETS,
     EVEUNIVERSE_LOAD_STARGATES,
@@ -341,7 +342,7 @@ class EveDogmaEffect(EveUniverseEntityModel):
         on_delete=models.SET_DEFAULT,
         default=None,
         null=True,
-        related_name="discharge_attribute",
+        related_name="discharge_attributes",
     )
     display_name = models.CharField(max_length=NAMES_MAX_LENGTH, default="")
     duration_attribute = models.ForeignKey(
@@ -354,7 +355,7 @@ class EveDogmaEffect(EveUniverseEntityModel):
         on_delete=models.SET_DEFAULT,
         default=None,
         null=True,
-        related_name="falloff_attribute",
+        related_name="falloff_attributes",
     )
     icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
     is_assistance = models.BooleanField(default=None, null=True)
@@ -368,7 +369,7 @@ class EveDogmaEffect(EveUniverseEntityModel):
         on_delete=models.SET_DEFAULT,
         default=None,
         null=True,
-        related_name="range_attribute",
+        related_name="range_attributes",
     )
     range_chance = models.BooleanField(default=None, null=True)
     tracking_speed_attribute = models.ForeignKey(
@@ -376,7 +377,7 @@ class EveDogmaEffect(EveUniverseEntityModel):
         on_delete=models.SET_DEFAULT,
         default=None,
         null=True,
-        related_name="tracking_speed_attribute",
+        related_name="tracking_speed_attributes",
     )
 
     class EveUniverseMeta:
@@ -398,7 +399,9 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
     """Modifier for a dogma effect in Eve Online"""
 
     domain = models.CharField(max_length=NAMES_MAX_LENGTH, default="")
-    eve_dogma_effect = models.ForeignKey("EveDogmaEffect", on_delete=models.CASCADE)
+    eve_dogma_effect = models.ForeignKey(
+        "EveDogmaEffect", on_delete=models.CASCADE, related_name="modifiers"
+    )
     func = models.CharField(max_length=NAMES_MAX_LENGTH)
     modified_attribute = models.ForeignKey(
         "EveDogmaAttribute",
@@ -471,6 +474,24 @@ class EveFaction(EveUniverseEntityModel):
         esi_path = "Universe.get_universe_factions"
         is_list_endpoint = True
         field_mappings = {"eve_solar_system": "solar_system_id"}
+
+
+class EveGraphic(EveUniverseEntityModel):
+    """graphic in Eve Online"""
+
+    FILENAME_MAX_CHARS = 255
+
+    collision_file = models.CharField(max_length=FILENAME_MAX_CHARS, default="")
+    graphic_file = models.CharField(max_length=FILENAME_MAX_CHARS, default="")
+    icon_folder = models.CharField(max_length=FILENAME_MAX_CHARS, default="")
+    sof_dna = models.CharField(max_length=FILENAME_MAX_CHARS, default="")
+    sof_fation_name = models.CharField(max_length=FILENAME_MAX_CHARS, default="")
+    sof_hull_name = models.CharField(max_length=FILENAME_MAX_CHARS, default="")
+    sof_race_name = models.CharField(max_length=FILENAME_MAX_CHARS, default="")
+
+    class EveUniverseMeta:
+        esi_pk = "graphic_id"
+        esi_path = "Universe.get_universe_graphics_graphic_id"
 
 
 class EveGroup(EveUniverseEntityModel):
@@ -796,7 +817,9 @@ class EveType(EveUniverseEntityModel):
 
     capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey("EveGroup", on_delete=models.CASCADE)
-    graphic_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
+    eve_graphic = models.ForeignKey(
+        "EveGraphic", on_delete=models.SET_DEFAULT, default=None, null=True
+    )
     icon_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
     eve_market_group = models.ForeignKey(
         "EveMarketGroup", on_delete=models.SET_DEFAULT, default=None, null=True
@@ -812,6 +835,7 @@ class EveType(EveUniverseEntityModel):
         esi_pk = "type_id"
         esi_path = "Universe.get_universe_types_type_id"
         field_mappings = {
+            "eve_graphic": "graphic_id",
             "eve_group": "group_id",
             "eve_market_group": "market_group_id",
         }
@@ -822,10 +846,14 @@ class EveType(EveUniverseEntityModel):
 
     @classmethod
     def _disabled_fields(cls) -> set:
+        disabled_fields = set()
+        if not EVEUNIVERSE_LOAD_GRAPHICS:
+            disabled_fields.add("eve_graphic")
+
         if not EVEUNIVERSE_LOAD_MARKET_GROUPS:
-            return {"eve_market_group"}
-        else:
-            return {}
+            disabled_fields.add("eve_market_group")
+
+        return disabled_fields
 
     @classmethod
     def inline_objects(cls) -> dict:

@@ -67,6 +67,8 @@ class EsiMockClient:
                 "get_universe_constellations_constellation_id",
                 "constellation_id",
             ),
+            EsiEndpoint("Universe", "get_universe_factions", None),
+            EsiEndpoint("Universe", "get_universe_graphics_graphic_id", "graphic_id"),
             EsiEndpoint("Universe", "get_universe_groups_group_id", "group_id"),
             EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),
             EsiEndpoint("Universe", "get_universe_moons_moon_id", "moon_id"),

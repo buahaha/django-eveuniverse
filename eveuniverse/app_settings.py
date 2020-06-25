@@ -11,6 +11,9 @@ EVEUNIVERSE_LOAD_ASTEROID_BELTS = clean_setting(
     "EVEUNIVERSE_LOAD_ASTEROID_BELTS", False
 )
 
+# when true will automatically be with every type
+EVEUNIVERSE_LOAD_GRAPHICS = clean_setting("EVEUNIVERSE_LOAD_GRAPHICS", False)
+
 # when true will automatically be with every solar system
 EVEUNIVERSE_LOAD_MOONS = clean_setting("EVEUNIVERSE_LOAD_MOONS", False)
 

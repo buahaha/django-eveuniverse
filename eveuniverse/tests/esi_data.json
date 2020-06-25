@@ -263,6 +263,65 @@
                 "published": true
             }
         },
+        "get_universe_factions": [
+            {
+                "corporation_id": 1000035,
+                "description": "The Caldari State is ruled by several mega-corporations. There is no central government to speak of - all territories within the State are owned and ruled by corporations. Duty and discipline are required traits in Caldari citizens, plus unquestioning loyalty to the corporation they live to serve. The corporations compete aggressively amongst themselves and with companies outside the State, resulting in a highly capitalistic society.",
+                "faction_id": 500001,
+                "is_unique": true,
+                "militia_corporation_id": 1000180,
+                "name": "Caldari State",
+                "size_factor": 5,
+                "solar_system_id": 30045339,
+                "station_count": 1503,
+                "station_system_count": 503
+            },
+            {
+                "corporation_id": 1000051,
+                "description": "The Minmatar Republic was formed over a century ago when the Minmatar threw out their Amarrian overlords in what is now known as the Minmatar Rebellion. In this the Minmatar had the support of the Gallente Federation, and to this day the two nations remain close allies. Yet, only a quarter of the Minmatar people reside within the Republic. The rest are scattered around the star cluster, including a large portion who are still enslaved within the Amarr Empire. Minmatar individuals are independent and proud, possessing a strong will and a multitude of tribal traditions.",
+                "faction_id": 500002,
+                "is_unique": true,
+                "militia_corporation_id": 1000182,
+                "name": "Minmatar Republic",
+                "size_factor": 5,
+                "solar_system_id": 30045339,
+                "station_count": 570,
+                "station_system_count": 291
+            },
+            {
+                "corporation_id": 1000084,
+                "description": "The largest of the five main empires, the Amarr Empire is a sprawling patch-work of feudal-like provinces held together by the might of the emperor. Religion has always played a big part in Amarrian politics and the Amarrians believe they are the rightful masters of the world, souring their relations with their neighbours. Another source of ill-feelings on part of the other empires is the fact that the Amarrians embrace slavery.",
+                "faction_id": 500003,
+                "is_unique": true,
+                "militia_corporation_id": 1000179,
+                "name": "Amarr Empire",
+                "size_factor": 5,
+                "solar_system_id": 30045339,
+                "station_count": 998,
+                "station_system_count": 484
+            },
+            {
+                "corporation_id": 1000120,
+                "description": "The Gallente Federation encompasses several races, the Gallenteans the largest by far. The Federation is democratic and very liberal in a world full of dictators and oligarchies. The Caldari State was once part of the Federation, but a severe dispute resulted in their departure and a long war between the Gallente Federation and the Caldari State. The Gallenteans are the masters of pleasure and entertainment and their rich trade empire has given the world many of its most glorious and extravagant sights.  ",
+                "faction_id": 500004,
+                "is_unique": true,
+                "militia_corporation_id": 1000181,
+                "name": "Gallente Federation",
+                "size_factor": 5,
+                "solar_system_id": 30045339,
+                "station_count": 1051,
+                "station_system_count": 507
+            }
+        ],
+        "get_universe_graphics_graphic_id": {
+            "314": {
+                "graphic_id": 314,
+                "sof_dna": "cf7_t1:caldaribase:caldari",
+                "sof_fation_name": "caldaribase",
+                "sof_hull_name": "cf7_t1",
+                "sof_race_name": "caldari"
+            }
+        },
         "get_universe_groups_group_id": {
             "6": {
                 "category_id": 2,
