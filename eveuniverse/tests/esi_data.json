@@ -262,6 +262,19 @@
                     30000142
                 ]
             },
+            "20000169": {
+                "constellation_id": 20000169,
+                "name": "UX3-N2",
+                "position": {
+                    "x": -81442355316866580,
+                    "y": 8631923480121213,
+                    "z": -214200260427786100
+                },
+                "region_id": 10000014,
+                "systems": [
+                    30001161
+                ]
+            },
             "20000785": {
                 "constellation_id": 20000785,
                 "name": "Ishaga",
@@ -273,6 +286,19 @@
                 "region_id": 10000069,
                 "systems": [
                     30045339
+                ]
+            },
+            "21000324": {
+                "constellation_id": 21000324,
+                "name": "G-C00324",
+                "position": {
+                    "x": 7205800000000000000,
+                    "y": 1539300000000000000,
+                    "z": -9515100000000000000
+                },
+                "region_id": 11000031,
+                "systems": [
+                    31000005
                 ]
             }
         },
@@ -506,6 +532,14 @@
                 "name": "The Forge",
                 "region_id": 10000002
             },
+            "10000014": {
+                "constellations": [
+                    20000169
+                ],
+                "description": "Catch has long been a strategically important region. During the initial expansion into the rim territories, it linked the Khanid Kingdom, Sansha's Nation and the Angel Cartel to one another, and through its connections to Providence was given considerable status as the \"Southern Gateway\" by the Amarr Empire. Unlike regions such as Pure Blind, however, its importance did not fade with the dawn of the capsuleer era, as its branching links east and west ensured continued relevance. As a consequence it has earned itself a bloody reputation - some say the very stars reverberate with the dying breaths of the countless lost souls.",
+                "name": "Catch",
+                "region_id": 10000014
+            },
             "10000069": {
                 "constellations": [
                     20000785
@@ -513,6 +547,13 @@
                 "description": "For centuries, this volume of space remained inexplicably impenetrable to investigation. It possesses no apparent mass or dimension, but the abrupt disappearance of every expedition into the zone made it an effective bulwark against flanking attacks during the first Gallente-Caldari war, and the subsequent uneasy peace.<br><br>Several decades ago, a coalition of like-minded Caldari megacorps discovered ways to traverse Black Rise safely, and began a secret programme of colonization. The start of the Empyrean War forced them to show their hand, and the region soon became a key front in the conflict between Caldari and Gallente forces.<br><br>Today the region remains somewhat underdeveloped, but rich in raw materials. The poorly-understood phenomena that still manifest can make life awkward, but fluid router networks and jump travel permit unrestricted travel and communications. Of the many early expeditions, though, no trace has yet been found.",
                 "name": "Black Rise",
                 "region_id": 10000069
+            },
+            "11000031": {
+                "constellations": [
+                    21000324
+                ],
+                "name": "G-R00031",
+                "region_id": 11000031
             }
         },
         "get_universe_stars_star_id": {
@@ -525,6 +566,16 @@
                 "spectral_class": "F1 V",
                 "temperature": 7305,
                 "type_id": 3800
+            },
+            "40073893": {
+                "age": 11350672979,
+                "luminosity": 0.01754000037908554,
+                "name": "HED-GP - Star",
+                "radius": 57850000,
+                "solar_system_id": 30001161,
+                "spectral_class": "K0 V",
+                "temperature": 4910,
+                "type_id": 45038
             },
             "40349466": {
                 "age": 37075060962,
@@ -545,6 +596,16 @@
                 "spectral_class": "G0 VI",
                 "temperature": 5992,
                 "type_id": 45038
+            },
+            "40487620": {
+                "age": 478490130,
+                "luminosity": 30.337400436401367,
+                "name": "Thera - Star",
+                "radius": 1223500032,
+                "solar_system_id": 31000005,
+                "spectral_class": "A0",
+                "temperature": 9632,
+                "type_id": 3800
             }
         },
         "get_universe_stargates_stargate_id": {
@@ -722,6 +783,24 @@
                 ],
                 "system_id": 30000142
             },
+            "30001161": {
+                "constellation_id": 20000169,
+                "name": "HED-GP",
+                "planets": [],
+                "position": {
+                    "x": -95413697560001200,
+                    "y": 19654254337720636,
+                    "z": -206915366853997470
+                },
+                "security_class": "I",
+                "security_status": -0.14632222056388855,
+                "star_id": 40073893,
+                "stargates": [
+                    50002104,
+                    50013604
+                ],
+                "system_id": 30001161
+            },
             "30045339": {
                 "constellation_id": 20000785,
                 "name": "Enaluri",
@@ -777,6 +856,19 @@
                     50016295
                 ],
                 "system_id": 30045342
+            },
+            "31000005": {
+                "constellation_id": 21000324,
+                "name": "Thera",
+                "planets": [],
+                "position": {
+                    "x": 7201177000000000000,
+                    "y": 1534300000000000000,
+                    "z": -9501332482538404000
+                },
+                "security_status": -0.9900000095367432,
+                "star_id": 40487620,
+                "system_id": 31000005
             }
         },
         "get_universe_types_type_id": {

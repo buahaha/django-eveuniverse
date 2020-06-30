@@ -2,7 +2,13 @@ from collections import namedtuple
 import logging
 import math
 
+import networkx as nx
+from networkx.exception import NetworkXNoPath, NodeNotFound
+
+from django.core.cache import cache
 from django.db import models
+
+from allianceauth.eveonline.evelinks import eveimageserver, dotlan
 
 from . import __title__
 from .app_settings import (
@@ -31,6 +37,7 @@ from .utils import LoggerAddTag
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 NAMES_MAX_LENGTH = 100
+ROUTE_CACHE_DURATION = 86_400
 
 
 EsiMapping = namedtuple(
@@ -669,15 +676,13 @@ class EveRegion(EveUniverseEntityModel):
         esi_path_object = "Universe.get_universe_regions_region_id"
         children = {"constellations": "EveConstellation"}
 
+    @property
+    def dotlan_link(self):
+        return dotlan.region_url(self.name)
+
 
 class EveSolarSystem(EveUniverseEntityModel):
     """solar system in Eve Online"""
-
-    TYPE_HIGHSEC = "highsec"
-    TYPE_LOWSEC = "lowsec"
-    TYPE_NULLSEC = "nullsec"
-    TYPE_W_SPACE = "w-space"
-    TYPE_UNKNOWN = "unknown"
 
     eve_constellation = models.ForeignKey(
         "EveConstellation", on_delete=models.CASCADE, related_name="eve_solarsystems"
@@ -730,18 +735,8 @@ class EveSolarSystem(EveUniverseEntityModel):
         return 31000000 <= self.id < 32000000
 
     @property
-    def space_type(self):
-        """returns the space type"""
-        if self.is_null_sec:
-            return self.TYPE_NULLSEC
-        elif self.is_low_sec:
-            return self.TYPE_LOWSEC
-        elif self.is_high_sec:
-            return self.TYPE_HIGHSEC
-        elif self.is_w_space:
-            return self.TYPE_W_SPACE
-        else:
-            return self.TYPE_UNKNOWN
+    def dotlan_link(self):
+        return dotlan.solar_system_url(self.name)
 
     @classmethod
     def children(cls) -> dict:
@@ -778,6 +773,85 @@ class EveSolarSystem(EveUniverseEntityModel):
                 + (destination.position_y - self.position_y) ** 2
                 + (destination.position_z - self.position_z) ** 2
             )
+
+    def route_to(self, destination: object, exclude_high_sec: bool = False) -> list:
+        """returns the shortest route to given solar system in jumps
+
+        Result returned as list of solar systems incl. origin and destination
+        or None if there is no route
+        """
+        path_ids = self._shortest_path_to(destination, exclude_high_sec)
+        if path_ids:
+            return [
+                EveSolarSystem.objects.get(id=solar_system_id)
+                for solar_system_id in path_ids
+            ]
+        else:
+            return None
+
+    def jumps_to(self, destination: object, exclude_high_sec: bool = False) -> int:
+        """returns the shortest number of jumps to given solar system
+
+        return None if there is no route
+        """
+        path_ids = self._shortest_path_to(destination, exclude_high_sec)
+        return len(path_ids) - 1 if path_ids else None
+
+    def _shortest_path_to(self, destination: object, exclude_high_sec: bool) -> list:
+        """return shortest patch as list of IDs to given solar system
+        or empty list if not path exists
+        """
+
+        def jumps() -> models.QuerySet:
+            return EveStargate.objects.filter(
+                destination_eve_solar_system__isnull=False
+            ).values_list("eve_solar_system_id", "destination_eve_solar_system_id")
+
+        def jumps_excluding_high_sec() -> models.QuerySet:
+            return (
+                EveStargate.objects.filter(
+                    destination_eve_solar_system__isnull=False,
+                    eve_solar_system__security_status__lt=0.5,
+                    destination_eve_solar_system__security_status__lt=0.5,
+                )
+                .select_related("eve_solar_system", "destination_eve_solar_system")
+                .values_list("eve_solar_system_id", "destination_eve_solar_system_id")
+            )
+
+        cache_route_key = (
+            f"EVESDE_ROUTE_{self.id}_{destination.id}_" f"{exclude_high_sec}"
+        )
+        if self.is_w_space or destination.is_w_space:
+            return []
+
+        path = cache.get(cache_route_key)
+        if path is not None:
+            return path
+
+        else:
+            g = nx.Graph()
+            if exclude_high_sec:
+                jumps_qs = cache.get_or_set(
+                    "EVESDE_STARGATES_NO_HIGHSEC",
+                    jumps_excluding_high_sec,
+                    ROUTE_CACHE_DURATION,
+                )
+            else:
+                jumps_qs = cache.get_or_set(
+                    "EVESDE_STARGATES", jumps, ROUTE_CACHE_DURATION
+                )
+
+            for jump in jumps_qs:
+                g.add_edge(jump[0], jump[1])
+
+            try:
+                path = nx.shortest_path(g, self.id, destination.id)
+            except (NetworkXNoPath, NodeNotFound):
+                path = []
+
+            cache.set(key=cache_route_key, value=path, timeout=ROUTE_CACHE_DURATION)
+
+        return path
 
 
 class EveStar(EveUniverseEntityModel):
@@ -945,6 +1019,14 @@ class EveType(EveUniverseEntityModel):
             "dogma_attributes": "EveTypeDogmaAttribute",
             "dogma_effects": "EveTypeDogmaEffect",
         }
+
+    def icon_url(self, size=eveimageserver._DEFAULT_IMAGE_SIZE) -> str:
+        """return an image URL to this type as icon"""
+        return eveimageserver.type_icon_url(self.id, size=size)
+
+    def render_url(self, size=eveimageserver._DEFAULT_IMAGE_SIZE) -> str:
+        """return an image URL to this type as render"""
+        return eveimageserver.type_render_url(self.id, size=size)
 
     @classmethod
     def _disabled_fields(cls) -> set:

@@ -419,9 +419,64 @@ class TestEveSolarSystem(NoSocketsTestCase):
 
     def test_distance_to(self, mock_esi):
         mock_esi.client = EsiMockClient()
+
         enaluri, _ = EveSolarSystem.objects.get_or_create_esi(id=30045339)
+        akidagi, _ = EveSolarSystem.objects.get_or_create_esi(id=30045342)
+        self.assertEqual(meters_to_ly(enaluri.distance_to(akidagi)), 1.947802326920925)
+
+    def test_can_identify_highsec_system(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
         jita, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142)
-        self.assertEqual(meters_to_ly(enaluri.distance_to(jita)), 11.764)
+        self.assertTrue(jita.is_high_sec)
+        self.assertFalse(jita.is_low_sec)
+        self.assertFalse(jita.is_null_sec)
+        self.assertFalse(jita.is_w_space)
+
+    def test_can_identify_lowsec_system(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        enaluri, _ = EveSolarSystem.objects.get_or_create_esi(id=30045339)
+        self.assertTrue(enaluri.is_low_sec)
+        self.assertFalse(enaluri.is_high_sec)
+        self.assertFalse(enaluri.is_null_sec)
+        self.assertFalse(enaluri.is_w_space)
+
+    def test_can_identify_nullsec_system(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        hed_gp, _ = EveSolarSystem.objects.get_or_create_esi(id=30001161)
+        self.assertTrue(hed_gp.is_null_sec)
+        self.assertFalse(hed_gp.is_low_sec)
+        self.assertFalse(hed_gp.is_high_sec)
+        self.assertFalse(hed_gp.is_w_space)
+
+    def test_can_identify_ws_system(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        thera, _ = EveSolarSystem.objects.get_or_create_esi(id=31000005)
+        self.assertTrue(thera.is_w_space)
+        self.assertFalse(thera.is_null_sec)
+        self.assertFalse(thera.is_low_sec)
+        self.assertFalse(thera.is_high_sec)
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", True)
+    @patch(MODULE_PATH + ".cache")
+    def test_can_calculate_route(self, mock_cache, mock_esi):
+        def my_get_or_set(key, func, timeout):
+            return func()
+
+        mock_esi.client = EsiMockClient()
+        mock_cache.get.return_value = None
+        mock_cache.get_or_set.side_effect = my_get_or_set
+
+        enaluri, _ = EveSolarSystem.objects.get_or_create_esi(
+            id=30045339, include_children=True
+        )
+        akidagi, _ = EveSolarSystem.objects.get_or_create_esi(
+            id=30045342, include_children=True
+        )
+        self.assertEqual(enaluri.jumps_to(akidagi), 1)
 
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
@@ -444,6 +499,7 @@ class TestEveStar(NoSocketsTestCase):
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", True)
 @patch("eveuniverse.managers.esi")
 class TestEveStargate(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
@@ -626,6 +682,29 @@ class TestEveType(NoSocketsTestCase):
             eve_dogma_effect=EveDogmaEffect.objects.get(id=1817)
         ).first()
         self.assertTrue(dogma_effect_2.is_default)
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    def test_can_create_icon_url(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        eve_type, created = EveType.objects.get_or_create_esi(id=603)
+        self.assertTrue(created)
+        self.assertEqual(
+            eve_type.icon_url(256), "https://images.evetech.net/types/603/icon?size=256"
+        )
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    def test_can_create_render_url(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        eve_type, created = EveType.objects.get_or_create_esi(id=603)
+        self.assertTrue(created)
+        self.assertEqual(
+            eve_type.render_url(256),
+            "https://images.evetech.net/types/603/render?size=256",
+        )
 
 
 class TestEveUnit(NoSocketsTestCase):
