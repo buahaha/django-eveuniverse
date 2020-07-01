@@ -1286,4 +1286,3 @@ class EveEntity(EveUniverseEntityModel):
                     include_children=include_children,
                     wait_for_children=wait_for_children,
                 )
-

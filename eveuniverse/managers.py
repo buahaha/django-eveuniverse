@@ -7,7 +7,7 @@ from bravado.exception import HTTPNotFound
 
 from . import __title__
 from .providers import esi
-from .tasks import load_eve_entity
+from .tasks import load_eve_object
 from .utils import chunks, LoggerAddTag, make_logger_prefix
 
 
@@ -242,7 +242,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             wait_for_children=wait_for_children,
                         )
                     else:
-                        load_eve_entity.delay(
+                        load_eve_object.delay(
                             child_class,
                             id,
                             include_children=include_children,
@@ -256,8 +256,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         
         include_children: if child objects should be updated/created as well 
         (if any)
-        wait_for_children: when true child objects will be created blocking (if any), 
-        else async
+        wait_for_children: when false all objects will be loaded async, else blocking
         """
         add_prefix = make_logger_prefix(f"{self.model.__name__}")
         if self.model.is_list_only_endpoint():
@@ -266,7 +265,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 for eve_data_obj in self._fetch_from_esi():
                     args = {"id": eve_data_obj[esi_pk]}
                     args["defaults"] = self._defaults_from_esi_obj(eve_data_obj)
-                    obj, _ = self.update_or_create(**args)
+                    self.update_or_create(**args)
 
             except Exception as ex:
                 logger.warn(
@@ -285,7 +284,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             wait_for_children=wait_for_children,
                         )
                     else:
-                        load_eve_entity.delay(
+                        load_eve_object.delay(
                             model_name=self.model.__name__,
                             entity_id=id,
                             include_children=include_children,
@@ -298,7 +297,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
 
 class EvePlanetManager(EveUniverseEntityModelManager):
-    def _fetch_from_esi(self, id):
+    def _fetch_from_esi(self, id) -> object:
         from .models import EveSolarSystem
 
         esi_data = super()._fetch_from_esi(id)

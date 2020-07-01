@@ -4,6 +4,17 @@ from celery import shared_task
 
 from . import __title__
 from . import models
+from .app_settings import (
+    EVEUNIVERSE_LOAD_DOGMAS,
+    EVEUNIVERSE_LOAD_MARKET_GROUPS,
+    EVEUNIVERSE_LOAD_ASTEROID_BELTS,
+    EVEUNIVERSE_LOAD_GRAPHICS,
+    EVEUNIVERSE_LOAD_MOONS,
+    EVEUNIVERSE_LOAD_PLANETS,
+    EVEUNIVERSE_LOAD_STARGATES,
+    EVEUNIVERSE_LOAD_STARS,
+    EVEUNIVERSE_LOAD_STATIONS,
+)
 from .providers import esi
 from .utils import LoggerAddTag
 
@@ -20,41 +31,45 @@ def _get_model_class(model_name: str) -> object:
 
 
 @shared_task
-def load_eve_entity(
-    model_name: str, entity_id: int, include_children=False, wait_for_children=True
+def load_eve_object(
+    model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
     ModelClass = _get_model_class(model_name)
     ModelClass.objects.update_or_create_esi(
-        id=entity_id,
-        include_children=include_children,
-        wait_for_children=wait_for_children,
+        id=id, include_children=include_children, wait_for_children=wait_for_children,
     )
 
 
-@shared_task(ignore_result=False)
-def load_eve_entities_bulk(
-    model_name: str, esi_path: str, eve_ids: list = None
-) -> None:
-    all_ids = set(getattr(esi.client.Universe, esi_path)().results())
-    if eve_ids is not None:
-        requested_ids = all_ids.subset(set(eve_ids))
-    else:
-        requested_ids = all_ids
-
-    for entity_id in requested_ids:
-        load_eve_entity.delay(model_name, entity_id)
-
-
-@shared_task
-def load_categories(eve_ids: list = None) -> None:
-    load_eve_entities_bulk("EveCategory", "get_universe_categories", eve_ids)
-
-
-@shared_task
-def load_groups(eve_ids: list = None) -> None:
-    load_eve_entities_bulk("EveGroup", "get_universe_groups", eve_ids)
+def _eve_object_names_to_be_loaded() -> list:
+    """returns a list of eve object that are loaded"""
+    config_map = [
+        (EVEUNIVERSE_LOAD_DOGMAS, "dogmas"),
+        (EVEUNIVERSE_LOAD_MARKET_GROUPS, "market groups"),
+        (EVEUNIVERSE_LOAD_ASTEROID_BELTS, "asteroid belts"),
+        (EVEUNIVERSE_LOAD_GRAPHICS, "graphics"),
+        (EVEUNIVERSE_LOAD_MOONS, "moons"),
+        (EVEUNIVERSE_LOAD_PLANETS, "planets"),
+        (EVEUNIVERSE_LOAD_STARGATES, "stargates"),
+        (EVEUNIVERSE_LOAD_STARS, "stars"),
+        (EVEUNIVERSE_LOAD_STATIONS, "stations"),
+    ]
+    names_to_be_loaded = []
+    for setting, entity_name in config_map:
+        if setting:
+            names_to_be_loaded.append(entity_name)
+    return sorted(names_to_be_loaded)
 
 
 @shared_task
-def load_types(eve_ids: list = None) -> None:
-    load_eve_entities_bulk("EveType", "get_universe_types", eve_ids)
+def load_map() -> None:
+    logger.info(
+        "Loading map with regions, constellations, solarsystems "
+        "and the following additional entities if related to the map: %s",
+        ", ".join(_eve_object_names_to_be_loaded()),
+    )
+    category, method = models.EveRegion.esi_path_list()
+    all_ids = getattr(getattr(esi.client, category), method)().results()
+    for id in all_ids:
+        load_eve_object.delay(
+            "EveRegion", id, include_children=True, wait_for_children=False
+        )

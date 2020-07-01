@@ -57,8 +57,6 @@ class EsiRoute:
 
 
 class EsiMockClient:
-    pass
-
     @classmethod
     def _generate(cls):
         """dnamically generates the client class with all attributes based on definition
