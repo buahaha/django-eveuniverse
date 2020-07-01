@@ -6,9 +6,14 @@ import networkx as nx
 from networkx.exception import NetworkXNoPath, NodeNotFound
 
 from django.core.cache import cache
-from django.db import models
+from django.db import models, transaction
 
 from allianceauth.eveonline.evelinks import eveimageserver, dotlan
+from allianceauth.eveonline.models import (
+    EveAllianceInfo,
+    EveCorporationInfo,
+    EveCharacter,
+)
 
 from . import __title__
 from .app_settings import (
@@ -30,6 +35,7 @@ from .managers import (
     EvePlanetManager,
     EveStargateManager,
     EveStationManager,
+    EveEntityManager,
 )
 from .utils import LoggerAddTag
 
@@ -149,6 +155,8 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
     
     Entity models are normal Eve entities that have a dedicated ESI endpoint
     """
+
+    DEFAULT_ICON_SIZE = 64
 
     id = models.PositiveIntegerField(primary_key=True, help_text="Eve Online ID")
     name = models.CharField(
@@ -1020,11 +1028,11 @@ class EveType(EveUniverseEntityModel):
             "dogma_effects": "EveTypeDogmaEffect",
         }
 
-    def icon_url(self, size=eveimageserver._DEFAULT_IMAGE_SIZE) -> str:
+    def icon_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """return an image URL to this type as icon"""
         return eveimageserver.type_icon_url(self.id, size=size)
 
-    def render_url(self, size=eveimageserver._DEFAULT_IMAGE_SIZE) -> str:
+    def render_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """return an image URL to this type as render"""
         return eveimageserver.type_render_url(self.id, size=size)
 
@@ -1135,3 +1143,121 @@ class EveUnit(EveUniverseEntityModel):
             "unit_id": "id",
             "unit_name": "name",
         }
+
+
+class EveEntity(EveUniverseEntityModel):
+    """An entity object if Eve Online like a character or a corporation"""
+
+    EVE_IMAGESERVER_BASE_URL = "https://images.evetech.net"
+    ZKB_ENTITY_URL_BASE = "https://zkillboard.com/"
+
+    CATEGORY_ALLIANCE = "alliance"
+    CATEGORY_CHARACTER = "character"
+    CATEGORY_CONSTELLATION = "constellation"
+    CATEGORY_CORPORATION = "corporation"
+    CATEGORY_FACTION = "faction"
+    CATEGORY_INVENTORY_TYPE = "inventory_type"
+    CATEGORY_REGION = "region"
+    CATEGORY_SOLAR_SYSTEM = "solar_system"
+    CATEGORY_STATION = "station"
+
+    CATEGORY_CHOICES = (
+        (CATEGORY_ALLIANCE, "alliance"),
+        (CATEGORY_CHARACTER, "character"),
+        (CATEGORY_CONSTELLATION, "constellation"),
+        (CATEGORY_CORPORATION, "corporation"),
+        (CATEGORY_FACTION, "faction"),
+        (CATEGORY_INVENTORY_TYPE, "inventory_type"),
+        (CATEGORY_REGION, "region"),
+        (CATEGORY_SOLAR_SYSTEM, "solar_system"),
+        (CATEGORY_STATION, "station"),
+    )
+
+    category = models.CharField(
+        max_length=16, choices=CATEGORY_CHOICES, default=None, null=True
+    )
+
+    objects = EveEntityManager()
+
+    class EveUniverseMeta:
+        esi_pk = "ids"
+        esi_path_object = "Universe.post_universe_names"
+
+    def __str__(self):
+        if self.name:
+            return self.name
+        else:
+            return f"ID:{self.id}"
+
+    def __repr__(self):
+        return (
+            f"{type(self).__name__}(id={self.id}, name='{self.name}', "
+            f"category='{self.category}')"
+        )
+
+    @property
+    def zkb_url(self) -> str:
+        map_category_2_path = {
+            self.CATEGORY_ALLIANCE: "alliance",
+            self.CATEGORY_CHARACTER: "character",
+            self.CATEGORY_CORPORATION: "corporation",
+            self.CATEGORY_INVENTORY_TYPE: "ship",
+            self.CATEGORY_REGION: "region",
+            self.CATEGORY_SOLAR_SYSTEM: "system",
+        }
+        if self.category in map_category_2_path:
+            path = map_category_2_path[self.category]
+            return f"{self.ZKB_ENTITY_URL_BASE}{path}/{self.id}/"
+        else:
+            return ""
+
+    @property
+    def zkb_link(self) -> str:
+        url = self.zkb_url
+        if url:
+            return f"[{self.name}]({url})"
+        else:
+            return f"{self.name}"
+
+    @transaction.atomic
+    def update_from_esi(self):
+        EveEntity.objects.get(self.id).update_from_esi()
+
+    def icon_url(self, size: int = EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
+        if self.category == self.CATEGORY_ALLIANCE:
+            return eveimageserver.alliance_logo_url(self.id, size=size)
+        elif self.category == self.CATEGORY_CHARACTER:
+            return eveimageserver.character_portrait_url(self.id, size=size)
+        elif self.category == self.CATEGORY_CORPORATION:
+            return eveimageserver.corporation_logo_url(self.id, size=size)
+        elif self.category == self.CATEGORY_INVENTORY_TYPE:
+            return eveimageserver.type_icon_url(self.id, size=size)
+        else:
+            raise NotImplementedError()
+
+    def get_or_create_pendant_object(self) -> tuple:
+        """returns the pendant object for this entity along with a created flag,
+        e.g. EveSolarSystem for an entity with category "solar system"
+        """
+        map_category_2_path = {
+            self.CATEGORY_ALLIANCE: (EveAllianceInfo, "create_alliance"),
+            self.CATEGORY_CHARACTER: (EveCharacter, "create_character"),
+            self.CATEGORY_CORPORATION: (EveCorporationInfo, "create_corporation"),
+            self.CATEGORY_INVENTORY_TYPE: (EveType, None),
+            self.CATEGORY_REGION: (EveRegion, None),
+            self.CATEGORY_SOLAR_SYSTEM: (EveSolarSystem, None),
+        }
+        if self.category not in map_category_2_path:
+            raise NotImplementedError()
+        else:
+            MyModel, func = map_category_2_path[self.category]
+            if func:
+                try:
+                    obj = MyModel.objects.get(id=self.id)
+                    created = False
+                except MyModel.DoesNotExist:
+                    obj = getattr(MyModel.objects, func)(self.id)
+                    created = True
+                return obj, created
+            else:
+                return MyModel.objects.get_or_create_esi(id=self.id)

@@ -3,6 +3,8 @@ from unittest.mock import patch
 
 from bravado.exception import HTTPNotFound
 
+from allianceauth.eveonline.models import EveAllianceInfo
+
 from ..helpers import meters_to_ly
 from ..models import (
     EsiMapping,
@@ -28,6 +30,7 @@ from ..models import (
     EveType,
     EveTypeDogmaEffect,
     EveUnit,
+    EveEntity,
 )
 from ..utils import NoSocketsTestCase
 from .my_test_data import EsiMockClient
@@ -991,3 +994,203 @@ class TestEsiMapping(NoSocketsTestCase):
                 "volume",
             },
         )
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveEntityQuerySet(NoSocketsTestCase):
+    def setUp(self):
+        EveEntity.objects.all().delete()
+        self.e1 = EveEntity.objects.create(id=1001)
+        self.e2 = EveEntity.objects.create(id=1002)
+        self.e3 = EveEntity.objects.create(id=2001)
+
+    def test_can_update_one(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+        entities = EveEntity.objects.filter(id=1001)
+
+        result = entities.update_from_esi()
+        self.e1.refresh_from_db()
+        self.assertEqual(result, 1)
+        self.assertEqual(self.e1.name, "Bruce Wayne")
+        self.assertEqual(self.e1.category, EveEntity.CATEGORY_CHARACTER)
+
+    def test_can_update_many(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+        entities = EveEntity.objects.filter(id__in=[1001, 1002, 2001])
+
+        result = entities.update_from_esi()
+        self.assertEqual(result, 3)
+
+        self.e1.refresh_from_db()
+        self.assertEqual(self.e1.name, "Bruce Wayne")
+        self.assertEqual(self.e1.category, EveEntity.CATEGORY_CHARACTER)
+
+        self.e2.refresh_from_db()
+        self.assertEqual(self.e2.name, "Peter Parker")
+        self.assertEqual(self.e2.category, EveEntity.CATEGORY_CHARACTER)
+
+        self.e3.refresh_from_db()
+        self.assertEqual(self.e3.name, "Wayne Technologies")
+        self.assertEqual(self.e3.category, EveEntity.CATEGORY_CORPORATION)
+
+    def test_can_divide_and_conquer(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+        EveEntity.objects.create(id=9999)
+        entities = EveEntity.objects.filter(id__in=[1001, 1002, 2001, 9999])
+
+        result = entities.update_from_esi()
+        self.assertEqual(result, 3)
+
+        self.e1.refresh_from_db()
+        self.assertEqual(self.e1.name, "Bruce Wayne")
+        self.assertEqual(self.e1.category, EveEntity.CATEGORY_CHARACTER)
+
+        self.e2.refresh_from_db()
+        self.assertEqual(self.e2.name, "Peter Parker")
+        self.assertEqual(self.e2.category, EveEntity.CATEGORY_CHARACTER)
+
+        self.e3.refresh_from_db()
+        self.assertEqual(self.e3.name, "Wayne Technologies")
+        self.assertEqual(self.e3.category, EveEntity.CATEGORY_CORPORATION)
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveEntity(NoSocketsTestCase):
+    def setUp(self):
+        EveEntity.objects.all().delete()
+
+    def test_can_create_new_from_esi(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        obj, created = EveEntity.objects.update_or_create_esi(id=1001)
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+    def test_can_update_existing_from_esi(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        EveEntity.objects.create(
+            id=1001, name="John Doe", category=EveEntity.CATEGORY_CORPORATION
+        )
+        obj, created = EveEntity.objects.update_or_create_esi(id=1001)
+        self.assertFalse(created)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+    def test_can_bulk_create_from_esi_1(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        result = EveEntity.objects.bulk_create_from_esi(ids=[1001, 2001])
+        self.assertEqual(result, 2)
+
+        obj = EveEntity.objects.get(id=1001)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+        obj = EveEntity.objects.get(id=2001)
+        self.assertEqual(obj.id, 2001)
+        self.assertEqual(obj.name, "Wayne Technologies")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
+
+    def test_can_bulk_create_from_esi_2(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        EveEntity.objects.create(
+            id=1001, name="John Doe", category=EveEntity.CATEGORY_CORPORATION
+        )
+        result = EveEntity.objects.bulk_create_from_esi(ids=[1001, 2001])
+        self.assertEqual(result, 2)
+
+        obj = EveEntity.objects.get(id=1001)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+        obj = EveEntity.objects.get(id=2001)
+        self.assertEqual(obj.id, 2001)
+        self.assertEqual(obj.name, "Wayne Technologies")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
+
+    def test_update_or_create_all_esi_raises_exception(self, mock_esi):
+        with self.assertRaises(NotImplementedError):
+            EveEntity.objects.update_or_create_all_esi()
+
+    def test_can_bulk_update_new_from_esi(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        EveEntity.objects.create(id=1001)
+        EveEntity.objects.create(id=2001)
+
+        result = EveEntity.objects.bulk_update_new_from_esi()
+        self.assertEqual(result, 2)
+        obj = EveEntity.objects.get(id=1001)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+        obj = EveEntity.objects.get(id=2001)
+        self.assertEqual(obj.id, 2001)
+        self.assertEqual(obj.name, "Wayne Technologies")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
+
+    def test_can_create_icon_urls(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        # alliance
+        obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
+        expected = "https://images.evetech.net/alliances/3001/logo?size=128"
+        self.assertEqual(obj.icon_url(128), expected)
+
+        # character
+        obj, _ = EveEntity.objects.get_or_create_esi(id=1001)
+        expected = "https://images.evetech.net/characters/1001/portrait?size=128"
+        self.assertEqual(obj.icon_url(128), expected)
+
+        # corporation
+        obj, _ = EveEntity.objects.get_or_create_esi(id=2001)
+        expected = "https://images.evetech.net/corporations/2001/logo?size=128"
+        self.assertEqual(obj.icon_url(128), expected)
+
+        # type
+        obj, _ = EveEntity.objects.get_or_create_esi(id=603)
+        expected = "https://images.evetech.net/types/603/icon?size=128"
+        self.assertEqual(obj.icon_url(128), expected)
+
+    def test_can_get_or_create_pendant_object_type(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        obj_1, _ = EveEntity.objects.get_or_create_esi(id=603)
+        obj_2, created = obj_1.get_or_create_pendant_object()
+
+        self.assertTrue(created)
+        self.assertIsInstance(obj_2, EveType)
+        self.assertEqual(obj_2.id, 603)
+        self.assertEqual(obj_2.name, "Merlin")
+
+    @patch(MODULE_PATH + ".EveAllianceInfo.objects.create_alliance")
+    def test_can_get_or_create_pendant_object_alliance(
+        self, mock_create_alliance, mock_esi
+    ):
+        def func_create_alliance(*args, **kwargs):
+            return EveAllianceInfo.objects.create(
+                alliance_id=3001,
+                alliance_name="Wayne Enterprises",
+                alliance_ticker="WYE",
+                executor_corp_id=2001,
+            )
+
+        mock_esi.client = EsiMockClient()
+        mock_create_alliance.side_effect = func_create_alliance
+
+        obj_1, _ = EveEntity.objects.get_or_create_esi(id=3001)
+        obj_2, created = obj_1.get_or_create_pendant_object()
+
+        self.assertTrue(created)
+        self.assertIsInstance(obj_2, EveAllianceInfo)
+        self.assertEqual(obj_2.alliance_id, 3001)
+        self.assertEqual(obj_2.alliance_name, "Wayne Enterprises")
+

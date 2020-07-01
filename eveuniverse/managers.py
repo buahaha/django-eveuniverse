@@ -2,13 +2,14 @@ from collections import namedtuple
 import logging
 
 from django.db import models
+from django.utils.timezone import now
 
 from bravado.exception import HTTPNotFound
 
 from . import __title__
 from .providers import esi
 from .tasks import load_eve_entity
-from .utils import LoggerAddTag, make_logger_prefix
+from .utils import chunks, LoggerAddTag, make_logger_prefix
 
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
@@ -408,3 +409,88 @@ class EveStationManager(EveUniverseEntityModelManager):
 
             if services:
                 parent_obj.services.add(*services)
+
+
+class EveEntityQuerySet(models.QuerySet):
+    """Custom queryset for EveEntity"""
+
+    MAX_DEPTH = 5
+
+    def update_from_esi(self) -> int:
+        ids = list(self.values_list("id", flat=True))
+        if not ids:
+            return 0
+        else:
+            logger.info("Updating %d entities from ESI", len(ids))
+            resolved_counter = 0
+            for chunk_ids in chunks(ids, 1000):
+                logger.debug(
+                    "Trying to resolve the following IDs from ESI:\n%s", chunk_ids
+                )
+                resolved_counter = self._resolve_entities_from_esi(chunk_ids)
+            return resolved_counter
+
+        return resolved_counter
+
+    def _resolve_entities_from_esi(self, ids: list, depth: int = 1):
+        resolved_counter = 0
+        try:
+            items = esi.client.Universe.post_universe_names(ids=ids).results()
+        except HTTPNotFound:
+            # if API fails to resolve all IDs, we divide and conquer,
+            # trying to resolve each half of the ids seperately
+            if len(ids) > 1 and depth < self.MAX_DEPTH:
+                resolved_counter += self._resolve_entities_from_esi(ids[::2], depth + 1)
+                resolved_counter += self._resolve_entities_from_esi(
+                    ids[1::2], depth + 1
+                )
+            else:
+                logger.warning("Failed to resolve invalid IDs: %s", ids)
+        else:
+            resolved_counter += len(items)
+            for item in items:
+                self.update_or_create(
+                    id=item["id"],
+                    defaults={"name": item["name"], "category": item["category"]},
+                )
+        return resolved_counter
+
+
+class EveEntityManager(EveUniverseEntityModelManager):
+    """Custom manager for EveEntity"""
+
+    def get_queryset(self):
+        return EveEntityQuerySet(self.model, using=self._db)
+
+    def update_or_create_esi(
+        self,
+        *,
+        id: int,
+        include_children: bool = False,
+        wait_for_children: bool = True,
+    ) -> tuple:
+        """updated or creates object from ESI and returns it with created flag"""
+        obj, created = self.update_or_create(id=id)
+        self.filter(id=id).update_from_esi()
+        obj.refresh_from_db()
+        return obj, created
+
+    def bulk_create_from_esi(self, *, ids: list):
+        """bulk create multiple entities from ESI. Returns count of updated entities"""
+        objects = [self.model(id=id) for id in ids]
+        self.bulk_create(objects, ignore_conflicts=True)
+        return self.filter(id__in=ids).update_from_esi()
+
+    def update_or_create_all_esi(
+        self, *, include_children: bool = False, wait_for_children: bool = True,
+    ) -> None:
+        """not implemented"""
+        raise NotImplementedError()
+
+    def bulk_update_new_from_esi(self):
+        """updates all new entities from ESI. Returns count of updated entities."""
+        return self.filter(name="").update_from_esi()
+
+    def bulk_update_all_from_esi(self):
+        """updates all existing entities from ESI. Returns count of updated entities."""
+        return self.all.update_from_esi()

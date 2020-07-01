@@ -4,6 +4,8 @@ import json
 import os
 from unittest.mock import Mock
 
+from bravado.exception import HTTPNotFound
+
 from .. import models as eveuniverse_models
 
 _currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -29,17 +31,28 @@ class EsiRoute:
                     )
                 pk_value = str(kwargs[self._primary_key])
                 result = esi_data[self._category][self._method][pk_value]
+
+            elif self._category == "Universe" and self._method == "post_universe_names":
+                result = []
+                for id in kwargs["ids"]:
+                    if str(id) in esi_data[self._category][self._method]:
+                        result.append(esi_data[self._category][self._method][str(id)])
+                    else:
+                        raise HTTPNotFound(Mock(**{"status_code": 404}))
+
             else:
                 if len(kwargs) > 0:
                     raise ValueError(
                         f"{self._method} does not have parameter {kwargs.popitem()[0]}"
                     )
                 result = esi_data[self._category][self._method]
+
         except KeyError:
             raise KeyError(
                 f"{self._category}.{self._method}: No test data for "
                 f"{self._primary_key} = {pk_value}"
             ) from None
+
         return Mock(**{"results.return_value": result, "result.return_value": result})
 
 
@@ -88,6 +101,7 @@ class EsiMockClient:
             EsiEndpoint("Universe", "get_universe_stations_station_id", "station_id"),
             EsiEndpoint("Universe", "get_universe_systems_system_id", "system_id"),
             EsiEndpoint("Universe", "get_universe_types_type_id", "type_id"),
+            EsiEndpoint("Universe", "post_universe_names", None),
         ]
         for endpoint in esi_endpoints:
             if not hasattr(cls, endpoint.category):

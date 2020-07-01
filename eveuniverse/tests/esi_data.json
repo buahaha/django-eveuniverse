@@ -1112,6 +1112,33 @@
                 "type_id": 45038,
                 "volume": 1
             }
+        },
+        "post_universe_names": {
+            "1001": {
+                "id": 1001,
+                "name": "Bruce Wayne",
+                "category": "character"
+            },
+            "1002": {
+                "id": 1002,
+                "name": "Peter Parker",
+                "category": "character"
+            },
+            "2001": {
+                "id": 2001,
+                "name": "Wayne Technologies",
+                "category": "corporation"
+            },
+            "3001": {
+                "id": 3001,
+                "name": "Wayne Enterprises",
+                "category": "alliance"
+            },
+            "603": {
+                "id": 603,
+                "name": "Merlin",
+                "category": "inventory_type"
+            }
         }
     }
 }
