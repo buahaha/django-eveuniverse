@@ -2,7 +2,6 @@ from collections import namedtuple
 import logging
 
 from django.db import models
-from django.utils.timezone import now
 
 from bravado.exception import HTTPNotFound
 

@@ -10,6 +10,7 @@ from ...models import (
     EveDogmaAttribute,
     EveDogmaEffect,
     EveDogmaEffectModifier,
+    EveEntity,
     EveFaction,
     EveGraphic,
     EveGroup,
@@ -43,6 +44,7 @@ class Command(BaseCommand):
     def _purge_all_data(self):
         """updates all SDE models from ESI and provides progress output"""
         models = [
+            EveEntity,
             EveGraphic,
             EveCategory,
             EveGroup,

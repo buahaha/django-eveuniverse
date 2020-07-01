@@ -1193,4 +1193,3 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertIsInstance(obj_2, EveAllianceInfo)
         self.assertEqual(obj_2.alliance_id, 3001)
         self.assertEqual(obj_2.alliance_name, "Wayne Enterprises")
-
