@@ -1138,6 +1138,16 @@
                 "id": 603,
                 "name": "Merlin",
                 "category": "inventory_type"
+            },
+            "10000069": {
+                "id": 10000069,
+                "name": "Black Rise",
+                "category": "region"
+            },
+            "30004984": {
+                "id": 30004984,
+                "name": "Abune",
+                "category": "solar_system"
             }
         }
     }

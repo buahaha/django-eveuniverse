@@ -474,7 +474,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         obj.refresh_from_db()
         return obj, created
 
-    def bulk_create_from_esi(self, *, ids: list):
+    def bulk_create_esi(self, *, ids: list):
         """bulk create multiple entities from ESI. Returns count of updated entities"""
         objects = [self.model(id=id) for id in ids]
         self.bulk_create(objects, ignore_conflicts=True)
@@ -486,10 +486,10 @@ class EveEntityManager(EveUniverseEntityModelManager):
         """not implemented"""
         raise NotImplementedError()
 
-    def bulk_update_new_from_esi(self):
+    def bulk_update_new_esi(self):
         """updates all new entities from ESI. Returns count of updated entities."""
         return self.filter(name="").update_from_esi()
 
-    def bulk_update_all_from_esi(self):
+    def bulk_update_all_esi(self):
         """updates all existing entities from ESI. Returns count of updated entities."""
-        return self.all.update_from_esi()
+        return self.all().update_from_esi()

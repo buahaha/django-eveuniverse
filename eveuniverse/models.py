@@ -8,7 +8,7 @@ from networkx.exception import NetworkXNoPath, NodeNotFound
 from django.core.cache import cache
 from django.db import models, transaction
 
-from allianceauth.eveonline.evelinks import eveimageserver, dotlan
+from allianceauth.eveonline.evelinks import eveimageserver, dotlan, zkillboard
 from allianceauth.eveonline.models import (
     EveAllianceInfo,
     EveCorporationInfo,
@@ -685,8 +685,12 @@ class EveRegion(EveUniverseEntityModel):
         children = {"constellations": "EveConstellation"}
 
     @property
-    def dotlan_link(self):
+    def dotlan_url(self):
         return dotlan.region_url(self.name)
+
+    @property
+    def zkb_url(self):
+        return zkillboard.region_url(self.id)
 
 
 class EveSolarSystem(EveUniverseEntityModel):
@@ -743,8 +747,12 @@ class EveSolarSystem(EveUniverseEntityModel):
         return 31000000 <= self.id < 32000000
 
     @property
-    def dotlan_link(self):
+    def dotlan_url(self):
         return dotlan.solar_system_url(self.name)
+
+    @property
+    def zkb_url(self):
+        return zkillboard.solar_system_url(self.id)
 
     @classmethod
     def children(cls) -> dict:
@@ -1148,7 +1156,6 @@ class EveUnit(EveUniverseEntityModel):
 class EveEntity(EveUniverseEntityModel):
     """An entity object if Eve Online like a character or a corporation"""
 
-    EVE_IMAGESERVER_BASE_URL = "https://images.evetech.net"
     ZKB_ENTITY_URL_BASE = "https://zkillboard.com/"
 
     CATEGORY_ALLIANCE = "alliance"
@@ -1197,49 +1204,63 @@ class EveEntity(EveUniverseEntityModel):
 
     @property
     def zkb_url(self) -> str:
-        map_category_2_path = {
-            self.CATEGORY_ALLIANCE: "alliance",
-            self.CATEGORY_CHARACTER: "character",
-            self.CATEGORY_CORPORATION: "corporation",
-            self.CATEGORY_INVENTORY_TYPE: "ship",
-            self.CATEGORY_REGION: "region",
-            self.CATEGORY_SOLAR_SYSTEM: "system",
+        """return zkb link for this entity if one exists, else empty string"""
+        map_category_2_other = {
+            self.CATEGORY_ALLIANCE: "alliance_url",
+            self.CATEGORY_CHARACTER: "character_url",
+            self.CATEGORY_CORPORATION: "corporation_url",
+            self.CATEGORY_REGION: "region_url",
+            self.CATEGORY_SOLAR_SYSTEM: "solar_system_url",
         }
-        if self.category in map_category_2_path:
-            path = map_category_2_path[self.category]
-            return f"{self.ZKB_ENTITY_URL_BASE}{path}/{self.id}/"
-        else:
+        if self.category not in map_category_2_other:
             return ""
+        else:
+            func = map_category_2_other[self.category]
+            return getattr(zkillboard, func)(self.id)
 
     @property
-    def zkb_link(self) -> str:
-        url = self.zkb_url
-        if url:
-            return f"[{self.name}]({url})"
+    def dotlan_url(self) -> str:
+        """return dotlan link for this entity if one exists, else empty string"""
+        if not self.name:
+            return ""
+
+        map_category_2_other = {
+            self.CATEGORY_ALLIANCE: "alliance_url",
+            self.CATEGORY_CORPORATION: "corporation_url",
+            self.CATEGORY_REGION: "region_url",
+            self.CATEGORY_SOLAR_SYSTEM: "solar_system_url",
+        }
+        if self.category not in map_category_2_other:
+            return ""
         else:
-            return f"{self.name}"
+            func = map_category_2_other[self.category]
+            return getattr(dotlan, func)(self.name)
 
     @transaction.atomic
     def update_from_esi(self):
-        EveEntity.objects.get(self.id).update_from_esi()
+        obj, _ = EveEntity.objects.update_or_create_esi(id=self.id)
+        return obj
 
     def icon_url(self, size: int = EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
-        if self.category == self.CATEGORY_ALLIANCE:
-            return eveimageserver.alliance_logo_url(self.id, size=size)
-        elif self.category == self.CATEGORY_CHARACTER:
-            return eveimageserver.character_portrait_url(self.id, size=size)
-        elif self.category == self.CATEGORY_CORPORATION:
-            return eveimageserver.corporation_logo_url(self.id, size=size)
-        elif self.category == self.CATEGORY_INVENTORY_TYPE:
-            return eveimageserver.type_icon_url(self.id, size=size)
+        map_category_2_other = {
+            self.CATEGORY_ALLIANCE: "alliance_logo_url",
+            self.CATEGORY_CHARACTER: "character_portrait_url",
+            self.CATEGORY_CORPORATION: "corporation_logo_url",
+            self.CATEGORY_INVENTORY_TYPE: "type_icon_url",
+        }
+        if self.category not in map_category_2_other:
+            return ""
         else:
-            raise NotImplementedError()
+            func = map_category_2_other[self.category]
+            return getattr(eveimageserver, func)(self.id, size=size)
 
-    def get_or_create_pendant_object(self) -> tuple:
+    def get_or_create_pendant_object(
+        self, *, include_children: bool = False, wait_for_children: bool = True,
+    ) -> tuple:
         """returns the pendant object for this entity along with a created flag,
         e.g. EveSolarSystem for an entity with category "solar system"
         """
-        map_category_2_path = {
+        map_category_2_other = {
             self.CATEGORY_ALLIANCE: (EveAllianceInfo, "create_alliance"),
             self.CATEGORY_CHARACTER: (EveCharacter, "create_character"),
             self.CATEGORY_CORPORATION: (EveCorporationInfo, "create_corporation"),
@@ -1247,10 +1268,10 @@ class EveEntity(EveUniverseEntityModel):
             self.CATEGORY_REGION: (EveRegion, None),
             self.CATEGORY_SOLAR_SYSTEM: (EveSolarSystem, None),
         }
-        if self.category not in map_category_2_path:
+        if self.category not in map_category_2_other:
             raise NotImplementedError()
         else:
-            MyModel, func = map_category_2_path[self.category]
+            MyModel, func = map_category_2_other[self.category]
             if func:
                 try:
                     obj = MyModel.objects.get(id=self.id)
@@ -1260,4 +1281,9 @@ class EveEntity(EveUniverseEntityModel):
                     created = True
                 return obj, created
             else:
-                return MyModel.objects.get_or_create_esi(id=self.id)
+                return MyModel.objects.get_or_create_esi(
+                    id=self.id,
+                    include_children=include_children,
+                    wait_for_children=wait_for_children,
+                )
+

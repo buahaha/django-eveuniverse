@@ -1083,7 +1083,7 @@ class TestEveEntity(NoSocketsTestCase):
     def test_can_bulk_create_from_esi_1(self, mock_esi):
         mock_esi.client = EsiMockClient()
 
-        result = EveEntity.objects.bulk_create_from_esi(ids=[1001, 2001])
+        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
         self.assertEqual(result, 2)
 
         obj = EveEntity.objects.get(id=1001)
@@ -1102,7 +1102,7 @@ class TestEveEntity(NoSocketsTestCase):
         EveEntity.objects.create(
             id=1001, name="John Doe", category=EveEntity.CATEGORY_CORPORATION
         )
-        result = EveEntity.objects.bulk_create_from_esi(ids=[1001, 2001])
+        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
         self.assertEqual(result, 2)
 
         obj = EveEntity.objects.get(id=1001)
@@ -1125,7 +1125,7 @@ class TestEveEntity(NoSocketsTestCase):
         EveEntity.objects.create(id=1001)
         EveEntity.objects.create(id=2001)
 
-        result = EveEntity.objects.bulk_update_new_from_esi()
+        result = EveEntity.objects.bulk_update_new_esi()
         self.assertEqual(result, 2)
         obj = EveEntity.objects.get(id=1001)
         self.assertEqual(obj.id, 1001)
@@ -1159,6 +1159,56 @@ class TestEveEntity(NoSocketsTestCase):
         obj, _ = EveEntity.objects.get_or_create_esi(id=603)
         expected = "https://images.evetech.net/types/603/icon?size=128"
         self.assertEqual(obj.icon_url(128), expected)
+
+    def test_can_create_zkb_url(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        # alliance
+        obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
+        expected = "https://zkillboard.com/alliance/3001/"
+        self.assertEqual(obj.zkb_url, expected)
+
+        # character
+        obj, _ = EveEntity.objects.get_or_create_esi(id=1001)
+        expected = "https://zkillboard.com/character/1001/"
+        self.assertEqual(obj.zkb_url, expected)
+
+        # corporation
+        obj, _ = EveEntity.objects.get_or_create_esi(id=2001)
+        expected = "https://zkillboard.com/corporation/2001/"
+        self.assertEqual(obj.zkb_url, expected)
+
+        # region
+        obj, _ = EveEntity.objects.get_or_create_esi(id=10000069)
+        expected = "https://zkillboard.com/region/10000069/"
+        self.assertEqual(obj.zkb_url, expected)
+
+        # solar system
+        obj, _ = EveEntity.objects.get_or_create_esi(id=30004984)
+        expected = "https://zkillboard.com/system/30004984/"
+        self.assertEqual(obj.zkb_url, expected)
+
+    def test_can_create_dotlan_url(self, mock_esi):
+        mock_esi.client = EsiMockClient()
+
+        # alliance
+        obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
+        expected = "http://evemaps.dotlan.net/alliance/Wayne_Enterprises"
+        self.assertEqual(obj.dotlan_url, expected)
+
+        # corporation
+        obj, _ = EveEntity.objects.get_or_create_esi(id=2001)
+        expected = "http://evemaps.dotlan.net/corp/Wayne_Technologies"
+
+        # region
+        obj, _ = EveEntity.objects.get_or_create_esi(id=10000069)
+        expected = "http://evemaps.dotlan.net/map/Black_Rise"
+        self.assertEqual(obj.dotlan_url, expected)
+
+        # solar system
+        obj, _ = EveEntity.objects.get_or_create_esi(id=30004984)
+        expected = "http://evemaps.dotlan.net/system/Abune"
+        self.assertEqual(obj.dotlan_url, expected)
 
     def test_can_get_or_create_pendant_object_type(self, mock_esi):
         mock_esi.client = EsiMockClient()
