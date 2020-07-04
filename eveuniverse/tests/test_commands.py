@@ -4,7 +4,7 @@ from io import StringIO
 from django.test import override_settings
 
 from ..utils import NoSocketsTestCase
-from .my_test_data import EsiMockClient
+from .my_test_data import EsiClientStub
 
 from ..management.commands.eveuniverse_load import Command
 
@@ -42,7 +42,7 @@ PACKAGE_PATH = "eveuniverse.management.commands"
 @patch("eveuniverse.managers.esi")
 class TestEveAncestry(NoSocketsTestCase):
     def test_minimal(self, mock_esi, mock_get_input):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
         mock_get_input.return_value = "Y"
 
         # my_command = Command()

@@ -33,7 +33,7 @@ from ..models import (
     EveEntity,
 )
 from ..utils import NoSocketsTestCase
-from .my_test_data import EsiMockClient
+from .my_test_data import EsiClientStub
 
 unittest.util._MAX_LENGTH = 1000
 MODULE_PATH = "eveuniverse.models"
@@ -42,7 +42,7 @@ MODULE_PATH = "eveuniverse.models"
 @patch("eveuniverse.managers.esi")
 class TestEveAncestry(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveAncestry.objects.update_or_create_esi(id=8)
         self.assertTrue(created)
@@ -56,7 +56,7 @@ class TestEveAncestry(NoSocketsTestCase):
         )
 
     def test_raise_404_exception_when_object_not_found(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         with self.assertRaises(HTTPNotFound):
             EveAncestry.objects.update_or_create_esi(id=1)
@@ -65,7 +65,7 @@ class TestEveAncestry(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveAsteroidBelt(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveAsteroidBelt.objects.update_or_create_esi(id=40349487)
         self.assertTrue(created)
@@ -81,7 +81,7 @@ class TestEveAsteroidBelt(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveCategory(NoSocketsTestCase):
     def test_when_not_exists_load_object_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveCategory.objects.get_or_create_esi(id=6)
         self.assertTrue(created)
@@ -90,7 +90,7 @@ class TestEveCategory(NoSocketsTestCase):
         self.assertTrue(obj.published)
 
     def test_when_exists_just_return_object(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         EveCategory.objects.update_or_create_esi(id=6)
 
@@ -101,7 +101,7 @@ class TestEveCategory(NoSocketsTestCase):
         self.assertTrue(obj.published)
 
     def test_when_exists_can_reload_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, _ = EveCategory.objects.update_or_create_esi(id=6)
         obj.name = "xxx"
@@ -114,7 +114,7 @@ class TestEveCategory(NoSocketsTestCase):
         self.assertTrue(obj.published)
 
     def test_can_load_from_esi_including_children(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveCategory.objects.get_or_create_esi(
             id=6, include_children=True, wait_for_children=True
@@ -128,7 +128,7 @@ class TestEveCategory(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveConstellation(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveConstellation.objects.update_or_create_esi(id=20000785)
         self.assertTrue(created)
@@ -144,7 +144,7 @@ class TestEveConstellation(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveDogmaAttribute(NoSocketsTestCase):
     def test_can_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveDogmaAttribute.objects.update_or_create_esi(id=271)
         self.assertTrue(created)
@@ -162,7 +162,7 @@ class TestEveDogmaAttribute(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveDogmaEffect(NoSocketsTestCase):
     def test_can_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveDogmaEffect.objects.update_or_create_esi(id=1816)
         self.assertTrue(created)
@@ -186,7 +186,7 @@ class TestEveDogmaEffect(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveFaction(NoSocketsTestCase):
     def test_can_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveFaction.objects.update_or_create_esi(id=500001)
         self.assertTrue(created)
@@ -203,7 +203,7 @@ class TestEveFaction(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveGraphic(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveGraphic.objects.update_or_create_esi(id=314)
         self.assertTrue(created)
@@ -217,7 +217,7 @@ class TestEveGraphic(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveGroup(NoSocketsTestCase):
     def test_can_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveGroup.objects.update_or_create_esi(id=10)
         self.assertTrue(created)
@@ -230,14 +230,14 @@ class TestEveGroup(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveMarketGroup(NoSocketsTestCase):
     def test_can_fetch_parent_group(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveMarketGroup.objects.get_or_create_esi(id=4)
         self.assertTrue(created)
         self.assertEqual(obj.name, "Ships")
 
     def test_can_fetch_group_and_all_parents(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveMarketGroup.objects.get_or_create_esi(id=61)
         self.assertTrue(created)
@@ -253,7 +253,7 @@ class TestEveMarketGroup(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveMoon(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveMoon.objects.update_or_create_esi(id=40349468)
         self.assertTrue(created)
@@ -268,7 +268,7 @@ class TestEveMoon(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEvePlanet(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(id=40349467)
         self.assertTrue(created)
@@ -282,7 +282,7 @@ class TestEvePlanet(NoSocketsTestCase):
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MOONS", True)
     def test_create_from_esi_with_children_1(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(
             id=40349467, include_children=True,
@@ -301,7 +301,7 @@ class TestEvePlanet(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_ASTEROID_BELTS", True)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MOONS", True)
     def test_create_from_esi_with_children_2(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(
             id=40349471, include_children=True,
@@ -319,7 +319,7 @@ class TestEvePlanet(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_ASTEROID_BELTS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MOONS", False)
     def test_create_from_esi_with_children_2_when_disabled(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(
             id=40349471, include_children=True,
@@ -338,7 +338,7 @@ class TestEvePlanet(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveRace(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveRace.objects.update_or_create_esi(id=1)
         self.assertTrue(created)
@@ -347,7 +347,7 @@ class TestEveRace(NoSocketsTestCase):
         self.assertEqual(obj.alliance_id, 500001)
 
     def test_create_all_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         EveRace.objects.update_or_create_all_esi()
         self.assertTrue(EveRace.objects.filter(id=1).exists())
@@ -357,7 +357,7 @@ class TestEveRace(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveRegion(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveRegion.objects.update_or_create_esi(id=10000069)
         self.assertTrue(created)
@@ -365,7 +365,7 @@ class TestEveRegion(NoSocketsTestCase):
         self.assertEqual(obj.name, "Black Rise")
 
     def test_create_all_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         EveRegion.objects.update_or_create_all_esi()
         self.assertTrue(EveRegion.objects.filter(id=10000002).exists())
@@ -379,7 +379,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
     def test_create_from_esi_minimal(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveSolarSystem.objects.update_or_create_esi(id=30045339)
         self.assertTrue(created)
@@ -398,7 +398,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARS", True)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
     def test_create_from_esi_with_stars(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveSolarSystem.objects.update_or_create_esi(id=30045339)
         self.assertTrue(created)
@@ -410,7 +410,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STATIONS", True)
     def test_create_from_esi_with_stations(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveSolarSystem.objects.update_or_create_esi(
             id=30045339, include_children=True
@@ -421,14 +421,14 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertTrue(EveStation.objects.filter(id=60015068).exists())
 
     def test_distance_to(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         enaluri, _ = EveSolarSystem.objects.get_or_create_esi(id=30045339)
         akidagi, _ = EveSolarSystem.objects.get_or_create_esi(id=30045342)
         self.assertEqual(meters_to_ly(enaluri.distance_to(akidagi)), 1.947802326920925)
 
     def test_can_identify_highsec_system(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         jita, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142)
         self.assertTrue(jita.is_high_sec)
@@ -437,7 +437,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertFalse(jita.is_w_space)
 
     def test_can_identify_lowsec_system(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         enaluri, _ = EveSolarSystem.objects.get_or_create_esi(id=30045339)
         self.assertTrue(enaluri.is_low_sec)
@@ -446,7 +446,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertFalse(enaluri.is_w_space)
 
     def test_can_identify_nullsec_system(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         hed_gp, _ = EveSolarSystem.objects.get_or_create_esi(id=30001161)
         self.assertTrue(hed_gp.is_null_sec)
@@ -455,7 +455,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertFalse(hed_gp.is_w_space)
 
     def test_can_identify_ws_system(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         thera, _ = EveSolarSystem.objects.get_or_create_esi(id=31000005)
         self.assertTrue(thera.is_w_space)
@@ -469,7 +469,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
         def my_get_or_set(key, func, timeout):
             return func()
 
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
         mock_cache.get.return_value = None
         mock_cache.get_or_set.side_effect = my_get_or_set
 
@@ -487,7 +487,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveStar(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveStar.objects.update_or_create_esi(id=40349466)
         self.assertTrue(created)
@@ -506,7 +506,7 @@ class TestEveStar(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveStargate(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveStargate.objects.get_or_create_esi(id=50016284)
         self.assertTrue(created)
@@ -521,7 +521,7 @@ class TestEveStargate(NoSocketsTestCase):
         self.assertIsNone(obj.destination_eve_solar_system)
 
     def test_create_from_esi_2nd_gate(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         akidagi, _ = EveStargate.objects.get_or_create_esi(id=50016284)
         self.assertEqual(akidagi.id, 50016284)
@@ -548,7 +548,7 @@ class TestEveStargate(NoSocketsTestCase):
 @patch("eveuniverse.managers.esi")
 class TestEveStation(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveStation.objects.update_or_create_esi(id=60015068)
         self.assertTrue(created)
@@ -595,7 +595,7 @@ class TestEveType(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
     def test_can_create_type_from_esi_excluding_all(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
@@ -618,7 +618,7 @@ class TestEveType(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
     def test_can_create_type_from_esi_including_dogmas(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         eve_type, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
@@ -647,7 +647,7 @@ class TestEveType(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_when_disabled_can_create_type_from_esi_excluding_dogmas(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
@@ -661,7 +661,7 @@ class TestEveType(NoSocketsTestCase):
     def test_when_disabled_can_create_type_from_esi_excluding_market_groups(
         self, mock_esi
     ):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         eve_type, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
@@ -689,7 +689,7 @@ class TestEveType(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         eve_type, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
@@ -700,7 +700,7 @@ class TestEveType(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_render_url(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         eve_type, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
@@ -1005,7 +1005,7 @@ class TestEveEntityQuerySet(NoSocketsTestCase):
         self.e3 = EveEntity.objects.create(id=2001)
 
     def test_can_update_one(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
         entities = EveEntity.objects.filter(id=1001)
 
         result = entities.update_from_esi()
@@ -1015,7 +1015,7 @@ class TestEveEntityQuerySet(NoSocketsTestCase):
         self.assertEqual(self.e1.category, EveEntity.CATEGORY_CHARACTER)
 
     def test_can_update_many(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
         entities = EveEntity.objects.filter(id__in=[1001, 1002, 2001])
 
         result = entities.update_from_esi()
@@ -1034,7 +1034,7 @@ class TestEveEntityQuerySet(NoSocketsTestCase):
         self.assertEqual(self.e3.category, EveEntity.CATEGORY_CORPORATION)
 
     def test_can_divide_and_conquer(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
         EveEntity.objects.create(id=9999)
         entities = EveEntity.objects.filter(id__in=[1001, 1002, 2001, 9999])
 
@@ -1060,7 +1060,7 @@ class TestEveEntity(NoSocketsTestCase):
         EveEntity.objects.all().delete()
 
     def test_can_create_new_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj, created = EveEntity.objects.update_or_create_esi(id=1001)
         self.assertTrue(created)
@@ -1069,7 +1069,7 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
 
     def test_can_update_existing_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         EveEntity.objects.create(
             id=1001, name="John Doe", category=EveEntity.CATEGORY_CORPORATION
@@ -1081,7 +1081,7 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
 
     def test_can_bulk_create_from_esi_1(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
         self.assertEqual(result, 2)
@@ -1097,7 +1097,7 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
 
     def test_can_bulk_create_from_esi_2(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         EveEntity.objects.create(
             id=1001, name="John Doe", category=EveEntity.CATEGORY_CORPORATION
@@ -1120,7 +1120,7 @@ class TestEveEntity(NoSocketsTestCase):
             EveEntity.objects.update_or_create_all_esi()
 
     def test_can_bulk_update_new_from_esi(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         EveEntity.objects.create(id=1001)
         EveEntity.objects.create(id=2001)
@@ -1138,7 +1138,7 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
 
     def test_can_create_icon_urls(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         # alliance
         obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
@@ -1161,7 +1161,7 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.icon_url(128), expected)
 
     def test_can_create_zkb_url(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         # alliance
         obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
@@ -1189,7 +1189,7 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.zkb_url, expected)
 
     def test_can_create_dotlan_url(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         # alliance
         obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
@@ -1211,7 +1211,7 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.dotlan_url, expected)
 
     def test_can_get_or_create_pendant_object_type(self, mock_esi):
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
 
         obj_1, _ = EveEntity.objects.get_or_create_esi(id=603)
         obj_2, created = obj_1.get_or_create_pendant_object()
@@ -1233,7 +1233,7 @@ class TestEveEntity(NoSocketsTestCase):
                 executor_corp_id=2001,
             )
 
-        mock_esi.client = EsiMockClient()
+        mock_esi.client = EsiClientStub()
         mock_create_alliance.side_effect = func_create_alliance
 
         obj_1, _ = EveEntity.objects.get_or_create_esi(id=3001)

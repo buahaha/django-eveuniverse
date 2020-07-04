@@ -11,7 +11,35 @@ from .. import models as eveuniverse_models
 _currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 
-"""ESI mock client"""
+"""
+Helpers for stubbing ESI calls
+"""
+
+
+class BravadoOperationStub:
+    """Stub to simulate the operation object return from bravado via django-esi"""
+
+    class RequestConfig:
+        def __init__(self, also_return_response):
+            self.also_return_response = also_return_response
+
+    class ResponseStub:
+        def __init__(self, headers):
+            self.headers = headers
+
+    def __init__(self, data, headers: dict = None, also_return_response: bool = False):
+        self._data = data
+        self._headers = headers if headers else {"x-pages": 1}
+        self.request_config = BravadoOperationStub.RequestConfig(also_return_response)
+
+    def result(self, **kwargs):
+        if self.request_config.also_return_response:
+            return [self._data, self.ResponseStub(self._headers)]
+        else:
+            return self._data
+
+    def results(self, **kwargs):
+        return self.result(**kwargs)
 
 
 class EsiRoute:
@@ -53,10 +81,10 @@ class EsiRoute:
                 f"{self._primary_key} = {pk_value}"
             ) from None
 
-        return Mock(**{"results.return_value": result, "result.return_value": result})
+        return BravadoOperationStub(result)
 
 
-class EsiMockClient:
+class EsiClientStub:
     @classmethod
     def _generate(cls):
         """dnamically generates the client class with all attributes based on definition
@@ -115,7 +143,7 @@ class EsiMockClient:
                 )
 
 
-EsiMockClient._generate()
+EsiClientStub._generate()
 
 
 def _load_esi_data():
