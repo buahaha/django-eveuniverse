@@ -1,3 +1,4 @@
+# pylint: skip-file
 # flake8: noqa
 """script for testing client with live requests to ESI
 

@@ -25,10 +25,14 @@ class Command(BaseCommand):
             "regions, constellations and solar systems from ESI and store it locally. "
         )
         self.stdout.write(
-            f"It will also load the following additional entities when related to "
-            f"the map: {','.join(_eve_object_names_to_be_loaded())}",
+            f"It will also load the following additional entities related to "
+            f"the the above mentioned entities: "
+            f"{','.join(_eve_object_names_to_be_loaded())}",
         )
-        self.stdout.write("Note that this process can take a while to complete.")
+        self.stdout.write(
+            "Note that this process can take a while to complete "
+            "and may cause some significant load to your system."
+        )
         user_input = get_input("Are you sure you want to proceed? (Y/n)?")
         if user_input == "Y":
             self.stdout.write("Starting update. Please stand by.")

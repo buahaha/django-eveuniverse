@@ -133,6 +133,11 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                         include_children=include_children,
                         wait_for_children=wait_for_children,
                     )
+            else:
+                raise HTTPNotFound(
+                    FakeResponse(status_code=404),
+                    message=f"{self.model.__name__} object with id {id} not found",
+                )
 
         except Exception as ex:
             logger.warn(
@@ -185,6 +190,9 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             ):
                 InlineModel = getattr(eveuniverse_models, model_name)
                 esi_mapping = InlineModel.esi_mapping()
+                parent_fk = None
+                other_pk = None
+                ParentClass2 = None
                 for field_name, mapping in esi_mapping.items():
                     if mapping.is_pk:
                         if mapping.is_parent_fk:
@@ -192,6 +200,12 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                         else:
                             other_pk = (field_name, mapping)
                             ParentClass2 = mapping.related_model
+
+                if not parent_fk or not other_pk:
+                    raise ValueError(
+                        "ESI Mapping for %s not valid: %s, %s"
+                        % (model_name, parent_fk, other_pk,)
+                    )
 
                 for eve_data_obj in parent_eve_data_obj[inline_field]:
                     args = {parent_fk: parent_obj}
@@ -427,8 +441,6 @@ class EveEntityQuerySet(models.QuerySet):
                 )
                 resolved_counter = self._resolve_entities_from_esi(chunk_ids)
             return resolved_counter
-
-        return resolved_counter
 
     def _resolve_entities_from_esi(self, ids: list, depth: int = 1):
         resolved_counter = 0

@@ -2,6 +2,8 @@ import logging
 
 from celery import shared_task
 
+from allianceauth.services.tasks import QueueOnce
+
 from . import __title__
 from . import models
 from .app_settings import (
@@ -30,7 +32,7 @@ def _get_model_class(model_name: str) -> object:
     return getattr(models, model_name)
 
 
-@shared_task
+@shared_task(base=QueueOnce)
 def load_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
@@ -60,7 +62,7 @@ def _eve_object_names_to_be_loaded() -> list:
     return sorted(names_to_be_loaded)
 
 
-@shared_task
+@shared_task(base=QueueOnce)
 def load_map() -> None:
     logger.info(
         "Loading map with regions, constellations, solarsystems "
@@ -71,5 +73,8 @@ def load_map() -> None:
     all_ids = getattr(getattr(esi.client, category), method)().results()
     for id in all_ids:
         load_eve_object.delay(
-            "EveRegion", id, include_children=True, wait_for_children=False
+            model_name="EveRegion",
+            id=id,
+            include_children=True,
+            wait_for_children=False,
         )

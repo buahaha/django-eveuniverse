@@ -1156,8 +1156,6 @@ class EveUnit(EveUniverseEntityModel):
 class EveEntity(EveUniverseEntityModel):
     """An entity object if Eve Online like a character or a corporation"""
 
-    ZKB_ENTITY_URL_BASE = "https://zkillboard.com/"
-
     CATEGORY_ALLIANCE = "alliance"
     CATEGORY_CHARACTER = "character"
     CATEGORY_CONSTELLATION = "constellation"
