@@ -1,0 +1,134 @@
+{
+    "EveCategory": [
+        {
+            "id": 2,
+            "name": "Celestial",
+            "published": true
+        },
+        {
+            "id": 6,
+            "name": "Ship",
+            "published": true
+        }
+    ],
+    "EveConstellation": [
+        {
+            "eve_region_id": 10000069,
+            "id": 20000785,
+            "name": "Ishaga",
+            "position_x": -2.2268706803473363e+17,
+            "position_y": 1.0836835134649451e+17,
+            "position_z": 1.3602959608230848e+17
+        }
+    ],
+    "EveGroup": [
+        {
+            "eve_category_id": 2,
+            "id": 10,
+            "name": "Stargate",
+            "published": false
+        },
+        {
+            "eve_category_id": 6,
+            "id": 25,
+            "name": "Frigate",
+            "published": true
+        },
+        {
+            "eve_category_id": 6,
+            "id": 26,
+            "name": "Cruiser",
+            "published": true
+        }
+    ],
+    "EveRegion": [
+        {
+            "description": "For centuries, this volume of space remained inexplicably impenetrable to investigation. It possesses no apparent mass or dimension, but the abrupt disappearance of every expedition into the zone made it an effective bulwark against flanking attacks during the first Gallente-Caldari war, and the subsequent uneasy peace.<br><br>Several decades ago, a coalition of like-minded Caldari megacorps discovered ways to traverse Black Rise safely, and began a secret programme of colonization. The start of the Empyrean War forced them to show their hand, and the region soon became a key front in the conflict between Caldari and Gallente forces.<br><br>Today the region remains somewhat underdeveloped, but rich in raw materials. The poorly-understood phenomena that still manifest can make life awkward, but fluid router networks and jump travel permit unrestricted travel and communications. Of the many early expeditions, though, no trace has yet been found.",
+            "id": 10000069,
+            "name": "Black Rise"
+        }
+    ],
+    "EveSolarSystem": [
+        {
+            "eve_constellation_id": 20000785,
+            "eve_star_id": null,
+            "id": 30045339,
+            "name": "Enaluri",
+            "position_x": -2.2787517331394458e+17,
+            "position_y": 1.0468838569953179e+17,
+            "position_z": 1.2027941769265027e+17,
+            "security_status": 0.3277980387210846
+        }
+    ],
+    "EveStargate": [
+        {
+            "destination_eve_solar_system_id": null,
+            "destination_eve_stargate_id": null,
+            "eve_solar_system_id": 30045339,
+            "eve_type_id": 16,
+            "id": 50016284,
+            "name": "Stargate (Akidagi)",
+            "position_x": 4845263708160.0,
+            "position_y": 97343692800.0,
+            "position_z": 3689037127680.0
+        },
+        {
+            "destination_eve_solar_system_id": null,
+            "destination_eve_stargate_id": null,
+            "eve_solar_system_id": 30045339,
+            "eve_type_id": 16,
+            "id": 50016286,
+            "name": "Stargate (Nennamaila)",
+            "position_x": -211363553280.0,
+            "position_y": -41140101120.0,
+            "position_z": 216507555840.0
+        }
+    ],
+    "EveType": [
+        {
+            "capacity": 0.0,
+            "eve_graphic_id": null,
+            "eve_group_id": 10,
+            "eve_market_group_id": null,
+            "icon_id": null,
+            "id": 16,
+            "mass": 100000000000.0,
+            "name": "Stargate (Caldari System)",
+            "packaged_volume": 10000000.0,
+            "portion_size": 1,
+            "published": false,
+            "radius": 3532.0,
+            "volume": 10000000.0
+        },
+        {
+            "capacity": 150.0,
+            "eve_graphic_id": null,
+            "eve_group_id": 25,
+            "eve_market_group_id": null,
+            "icon_id": null,
+            "id": 603,
+            "mass": 997000.0,
+            "name": "Merlin",
+            "packaged_volume": 2500.0,
+            "portion_size": 1,
+            "published": true,
+            "radius": 39.0,
+            "volume": 16500.0
+        },
+        {
+            "capacity": 450.0,
+            "eve_graphic_id": null,
+            "eve_group_id": 26,
+            "eve_market_group_id": null,
+            "icon_id": null,
+            "id": 621,
+            "mass": 11910000.0,
+            "name": "Caracal",
+            "packaged_volume": 10000.0,
+            "portion_size": 1,
+            "published": true,
+            "radius": 202.0,
+            "volume": 92000.0
+        }
+    ]
+}

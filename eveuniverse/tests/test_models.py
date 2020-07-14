@@ -5,6 +5,7 @@ from bravado.exception import HTTPNotFound
 
 from allianceauth.eveonline.models import EveAllianceInfo
 
+from .my_test_data import EsiClientStub
 from ..helpers import meters_to_ly
 from ..models import (
     EsiMapping,
@@ -33,7 +34,6 @@ from ..models import (
     EveEntity,
 )
 from ..utils import NoSocketsTestCase
-from .my_test_data import EsiClientStub
 
 unittest.util._MAX_LENGTH = 1000
 MODULE_PATH = "eveuniverse.models"

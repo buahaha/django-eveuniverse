@@ -7,7 +7,6 @@ from bravado.exception import HTTPNotFound
 
 from . import __title__
 from .providers import esi
-from .tasks import load_eve_object
 from .utils import chunks, LoggerAddTag, make_logger_prefix
 
 
@@ -238,6 +237,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
     ) -> None:
         """updates or creates child objects specified in eve mapping"""
         from . import models as eveuniverse_models
+        from .tasks import load_eve_object
 
         if not parent_eve_data_obj:
             raise ValueError(
@@ -272,6 +272,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         (if any)
         wait_for_children: when false all objects will be loaded async, else blocking
         """
+        from .tasks import load_eve_object
+
         add_prefix = make_logger_prefix(f"{self.model.__name__}")
         if self.model.is_list_only_endpoint():
             try:

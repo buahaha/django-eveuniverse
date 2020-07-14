@@ -17,6 +17,7 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
 )
+from .models import EveUniverseEntityModel
 from .providers import esi
 from .utils import LoggerAddTag
 
@@ -25,18 +26,11 @@ logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 # logging.getLogger("esi").setLevel(logging.INFO)
 
 
-def _get_model_class(model_name: str) -> object:
-    if not hasattr(models, model_name):
-        raise ValueError("Unknown model_name: %s" % model_name)
-
-    return getattr(models, model_name)
-
-
 @shared_task(base=QueueOnce)
 def load_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
-    ModelClass = _get_model_class(model_name)
+    ModelClass = EveUniverseEntityModel.get_model_class(model_name)
     ModelClass.objects.update_or_create_esi(
         id=id, include_children=include_children, wait_for_children=wait_for_children,
     )

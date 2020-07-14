@@ -1,6 +1,8 @@
 from collections import namedtuple
+import inspect
 import logging
 import math
+import sys
 
 import networkx as nx
 from networkx.exception import NetworkXNoPath, NodeNotFound
@@ -224,6 +226,34 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         esi_path_object = cls._eve_universe_meta_attr("esi_path_object")
         return esi_path_list and esi_path_object and esi_path_list == esi_path_object
 
+    @classmethod
+    def all_models(cls) -> list:
+        """returns a list of all Eve Universe model classes sorted by load order"""
+        mappings = list()
+        for _, ModelClass in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+            if issubclass(ModelClass, cls) and ModelClass != cls:
+                mappings.append(
+                    {
+                        "model": ModelClass,
+                        "load_order": ModelClass._eve_universe_meta_attr(
+                            "load_order", is_mandatory=True
+                        ),
+                    }
+                )
+
+        return [y["model"] for y in sorted(mappings, key=lambda x: x["load_order"])]
+
+    @classmethod
+    def get_model_class(cls, model_name: str) -> object:
+        """returns the model class for the given name"""
+        for name, ModelClass in inspect.getmembers(
+            sys.modules[__name__], inspect.isclass
+        ):
+            if model_name == name and issubclass(ModelClass, cls):
+                return ModelClass
+
+        raise ValueError("Unknown model_name: %s" % model_name)
+
 
 class EveUniverseInlineModel(EveUniverseBaseModel):
     """Eve Universe Inline model
@@ -253,6 +283,7 @@ class EveAncestry(EveUniverseEntityModel):
         esi_path_list = "Universe.get_universe_ancestries"
         esi_path_object = "Universe.get_universe_ancestries"
         field_mappings = {"eve_bloodline": "bloodline_id"}
+        load_order = 180
 
 
 class EveAsteroidBelt(EveUniverseEntityModel):
@@ -282,6 +313,7 @@ class EveAsteroidBelt(EveUniverseEntityModel):
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
         }
+        load_order = 200
 
 
 class EveBloodline(EveUniverseEntityModel):
@@ -310,6 +342,7 @@ class EveBloodline(EveUniverseEntityModel):
         esi_path_list = "Universe.get_universe_bloodlines"
         esi_path_object = "Universe.get_universe_bloodlines"
         field_mappings = {"eve_race": "race_id", "eve_ship_type": "ship_type_id"}
+        load_order = 170
 
 
 class EveCategory(EveUniverseEntityModel):
@@ -322,6 +355,7 @@ class EveCategory(EveUniverseEntityModel):
         esi_path_list = "Universe.get_universe_categories"
         esi_path_object = "Universe.get_universe_categories_category_id"
         children = {"groups": "EveGroup"}
+        load_order = 130
 
 
 class EveConstellation(EveUniverseEntityModel):
@@ -351,6 +385,7 @@ class EveConstellation(EveUniverseEntityModel):
             "position_z": ("position", "z"),
         }
         children = {"systems": "EveSolarSystem"}
+        load_order = 192
 
 
 class EveDogmaAttribute(EveUniverseEntityModel):
@@ -376,6 +411,7 @@ class EveDogmaAttribute(EveUniverseEntityModel):
         esi_path_list = "Dogma.get_dogma_attributes"
         esi_path_object = "Dogma.get_dogma_attributes_attribute_id"
         field_mappings = {"eve_unit": "unit_id"}
+        load_order = 140
 
 
 class EveDogmaEffect(EveUniverseEntityModel):
@@ -444,6 +480,7 @@ class EveDogmaEffect(EveUniverseEntityModel):
         inline_objects = {
             "modifiers": "EveDogmaEffectModifier",
         }
+        load_order = 142
 
 
 class EveDogmaEffectModifier(EveUniverseInlineModel):
@@ -496,6 +533,7 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
             "modifying_attribute": "modifying_attribute_id",
             "modifying_effect": "effect_id",
         }
+        load_order = 144
 
     def __repr__(self) -> str:
         return (
@@ -529,6 +567,7 @@ class EveFaction(EveUniverseEntityModel):
         esi_path_list = "Universe.get_universe_factions"
         esi_path_object = "Universe.get_universe_factions"
         field_mappings = {"eve_solar_system": "solar_system_id"}
+        load_order = 210
 
 
 class EveGraphic(EveUniverseEntityModel):
@@ -548,6 +587,7 @@ class EveGraphic(EveUniverseEntityModel):
         esi_pk = "graphic_id"
         esi_path_list = "Universe.get_universe_graphics"
         esi_path_object = "Universe.get_universe_graphics_graphic_id"
+        load_order = 120
 
 
 class EveGroup(EveUniverseEntityModel):
@@ -564,6 +604,7 @@ class EveGroup(EveUniverseEntityModel):
         esi_path_object = "Universe.get_universe_groups_group_id"
         field_mappings = {"eve_category": "category_id"}
         children = {"types": "EveType"}
+        load_order = 132
 
 
 class EveMarketGroup(EveUniverseEntityModel):
@@ -584,6 +625,7 @@ class EveMarketGroup(EveUniverseEntityModel):
         esi_path_object = "Market.get_markets_groups_market_group_id"
         field_mappings = {"parent_market_group": "parent_group_id"}
         children = {"types": "EveType"}
+        load_order = 230
 
 
 class EveMoon(EveUniverseEntityModel):
@@ -613,6 +655,7 @@ class EveMoon(EveUniverseEntityModel):
             "position_y": ("position", "y"),
             "position_z": ("position", "z"),
         }
+        load_order = 220
 
 
 class EvePlanet(EveUniverseEntityModel):
@@ -647,6 +690,7 @@ class EvePlanet(EveUniverseEntityModel):
             "position_z": ("position", "z"),
         }
         children = {"moons": "EveMoon", "asteroid_belts": "EveAsteroidBelt"}
+        load_order = 160
 
     @classmethod
     def children(cls) -> dict:
@@ -671,6 +715,7 @@ class EveRace(EveUniverseEntityModel):
         esi_pk = "race_id"
         esi_path_list = "Universe.get_universe_races"
         esi_path_object = "Universe.get_universe_races"
+        load_order = 150
 
 
 class EveRegion(EveUniverseEntityModel):
@@ -683,6 +728,7 @@ class EveRegion(EveUniverseEntityModel):
         esi_path_list = "Universe.get_universe_regions"
         esi_path_object = "Universe.get_universe_regions_region_id"
         children = {"constellations": "EveConstellation"}
+        load_order = 190
 
     @property
     def dotlan_url(self):
@@ -729,6 +775,7 @@ class EveSolarSystem(EveUniverseEntityModel):
             "position_z": ("position", "z"),
         }
         children = {}
+        load_order = 194
 
     @property
     def is_high_sec(self):
@@ -886,6 +933,7 @@ class EveStar(EveUniverseEntityModel):
         esi_pk = "star_id"
         esi_path_object = "Universe.get_universe_stars_star_id"
         field_mappings = {"eve_type": "type_id"}
+        load_order = 222
 
 
 class EveStargate(EveUniverseEntityModel):
@@ -936,6 +984,7 @@ class EveStargate(EveUniverseEntityModel):
             "destination_eve_stargate",
             "destination_eve_solar_system",
         }
+        load_order = 224
 
 
 class EveStation(EveUniverseEntityModel):
@@ -985,6 +1034,7 @@ class EveStation(EveUniverseEntityModel):
             "position_z": ("position", "z"),
         }
         inline_objects = {"services": "EveStationService"}
+        load_order = 165
 
 
 class EveStationService(models.Model):
@@ -1035,6 +1085,7 @@ class EveType(EveUniverseEntityModel):
             "dogma_attributes": "EveTypeDogmaAttribute",
             "dogma_effects": "EveTypeDogmaEffect",
         }
+        load_order = 134
 
     def icon_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """return an image URL to this type as icon"""
@@ -1090,6 +1141,7 @@ class EveTypeDogmaAttribute(EveUniverseInlineModel):
             "eve_dogma_attribute",
         ]
         field_mappings = {"eve_dogma_attribute": "attribute_id"}
+        load_order = 148
 
     def __repr__(self) -> str:
         return (
@@ -1126,6 +1178,7 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
             "eve_dogma_effect",
         ]
         field_mappings = {"eve_dogma_effect": "effect_id"}
+        load_order = 146
 
     def __repr__(self) -> str:
         return (
@@ -1151,6 +1204,7 @@ class EveUnit(EveUniverseEntityModel):
             "unit_id": "id",
             "unit_name": "name",
         }
+        load_order = 100
 
 
 class EveEntity(EveUniverseEntityModel):
@@ -1187,6 +1241,7 @@ class EveEntity(EveUniverseEntityModel):
     class EveUniverseMeta:
         esi_pk = "ids"
         esi_path_object = "Universe.post_universe_names"
+        load_order = 110
 
     def __str__(self):
         if self.name:
