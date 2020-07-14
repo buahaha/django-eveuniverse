@@ -1,6 +1,5 @@
 from collections import namedtuple
 import inspect
-import logging
 import math
 import sys
 
@@ -16,6 +15,7 @@ from allianceauth.eveonline.models import (
     EveCorporationInfo,
     EveCharacter,
 )
+from allianceauth.services.hooks import get_extension_logger
 
 from . import __title__
 from .app_settings import (
@@ -42,7 +42,7 @@ from .managers import (
 from .utils import LoggerAddTag
 
 
-logger = LoggerAddTag(logging.getLogger(__name__), __title__)
+logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 
 NAMES_MAX_LENGTH = 100
 ROUTE_CACHE_DURATION = 86_400

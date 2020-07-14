@@ -10,9 +10,11 @@ from eveuniverse.models import EveUniverseEntityModel
 from .. import __title__
 from ..utils import LoggerAddTag
 
-ModelSpec = namedtuple("ModelSpec", ["ids", "include_children"])
 
 logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+
+
+ModelSpec = namedtuple("ModelSpec", ["ids", "include_children"])
 
 
 def create_testdata(spec: dict, filepath: str) -> None:

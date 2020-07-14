@@ -1,7 +1,6 @@
-import logging
-
 from celery import shared_task
 
+from allianceauth.services.hooks import get_extension_logger
 from allianceauth.services.tasks import QueueOnce
 
 from . import __title__
@@ -22,7 +21,7 @@ from .providers import esi
 from .utils import LoggerAddTag
 
 
-logger = LoggerAddTag(logging.getLogger(__name__), __title__)
+logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 # logging.getLogger("esi").setLevel(logging.INFO)
 
 
