@@ -88,6 +88,7 @@ class TestEveCategory(NoSocketsTestCase):
         self.assertEqual(obj.id, 6)
         self.assertEqual(obj.name, "Ship")
         self.assertTrue(obj.published)
+        self.assertEqual(obj.eve_entity_category(), "")
 
     def test_when_exists_just_return_object(self, mock_esi):
         mock_esi.client = EsiClientStub()
@@ -138,6 +139,7 @@ class TestEveConstellation(NoSocketsTestCase):
         self.assertEqual(obj.position_y, 108368351346494510)
         self.assertEqual(obj.position_z, 136029596082308480)
         self.assertEqual(obj.eve_region, EveRegion.objects.get(id=10000069))
+        self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_CONSTELLATION)
 
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
@@ -198,6 +200,7 @@ class TestEveFaction(NoSocketsTestCase):
         self.assertEqual(obj.size_factor, 5)
         self.assertEqual(obj.station_count, 1503)
         self.assertEqual(obj.station_system_count, 503)
+        self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_FACTION)
 
 
 @patch("eveuniverse.managers.esi")
@@ -363,6 +366,7 @@ class TestEveRegion(NoSocketsTestCase):
         self.assertTrue(created)
         self.assertEqual(obj.id, 10000069)
         self.assertEqual(obj.name, "Black Rise")
+        self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_REGION)
 
     def test_create_all_from_esi(self, mock_esi):
         mock_esi.client = EsiClientStub()
@@ -392,6 +396,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertEqual(obj.position_y, 104688385699531790)
         self.assertEqual(obj.position_z, 120279417692650270)
         self.assertEqual(obj.security_status, 0.3277980387210846)
+        self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_SOLAR_SYSTEM)
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
@@ -519,6 +524,7 @@ class TestEveStargate(NoSocketsTestCase):
         self.assertEqual(obj.eve_type, EveType.objects.get(id=16))
         self.assertIsNone(obj.destination_eve_stargate)
         self.assertIsNone(obj.destination_eve_solar_system)
+        self.assertEqual(obj.eve_entity_category(), "")
 
     def test_create_from_esi_2nd_gate(self, mock_esi):
         mock_esi.client = EsiClientStub()
@@ -565,6 +571,7 @@ class TestEveStation(NoSocketsTestCase):
         self.assertEqual(obj.eve_race, EveRace.objects.get(id=1))
         self.assertEqual(obj.eve_type, EveType.objects.get(id=1529))
         self.assertEqual(obj.eve_solar_system, EveSolarSystem.objects.get(id=30045339))
+        self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_STATION)
 
         self.assertEqual(
             set(obj.services.values_list("name", flat=True)),
@@ -613,6 +620,7 @@ class TestEveType(NoSocketsTestCase):
         self.assertIsNone(obj.eve_market_group)
         self.assertEqual(obj.dogma_attributes.count(), 0)
         self.assertEqual(obj.dogma_effects.count(), 0)
+        self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_INVENTORY_TYPE)
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", True)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
