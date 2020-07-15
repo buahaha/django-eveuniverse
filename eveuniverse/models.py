@@ -390,6 +390,7 @@ class EveEntity(EveUniverseEntityModel):
             self.CATEGORY_SOLAR_SYSTEM: (EveSolarSystem, None),
         }
         if self.category not in map_category_2_other:
+            logger.error("Invalid category %s for EveEntity", self.category)
             raise NotImplementedError()
         else:
             MyModel, func = map_category_2_other[self.category]

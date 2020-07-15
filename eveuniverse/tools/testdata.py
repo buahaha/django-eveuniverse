@@ -1,3 +1,4 @@
+from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import json
 
@@ -5,7 +6,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from allianceauth.services.hooks import get_extension_logger
 
-from eveuniverse.models import EveUniverseEntityModel
+from eveuniverse.models import EveUniverseEntityModel, EveSolarSystem, EveStargate
 
 from .. import __title__
 from ..utils import LoggerAddTag
@@ -22,7 +23,8 @@ def create_testdata(spec: dict, filepath: str) -> None:
 
     # clear database
     for MyModel in EveUniverseEntityModel.all_models():
-        MyModel.objects.all().delete()
+        if MyModel.__name__ != "EveUnit":
+            MyModel.objects.all().delete()
 
     # load data per definition
     for model_name, model_spec in spec.items():
@@ -57,8 +59,31 @@ def load_testdata_from_dict(testdata: dict):
     for MyModel in EveUniverseEntityModel.all_models():
         model_name = MyModel.__name__
         if model_name in testdata:
-            for obj in testdata[model_name]:
-                MyModel.objects.create(**obj)
+            if MyModel.__name__ == "EveStargate":
+                for _ in range(2):
+                    for obj in deepcopy(testdata[model_name]):
+                        try:
+                            EveStargate.objects.get(
+                                id=obj["destination_eve_stargate_id"]
+                            )
+                        except EveStargate.DoesNotExist:
+                            del obj["destination_eve_stargate_id"]
+                            obj["destination_eve_stargate"] = None
+
+                        try:
+                            EveSolarSystem.objects.get(
+                                id=obj["destination_eve_solar_system_id"]
+                            )
+                        except EveSolarSystem.DoesNotExist:
+                            del obj["destination_eve_solar_system_id"]
+                            obj["destination_eve_solar_system"] = None
+
+                        id = obj["id"]
+                        del obj["id"]
+                        MyModel.objects.update_or_create(id=id, defaults=obj)
+            else:
+                for obj in testdata[model_name]:
+                    MyModel.objects.create(**obj)
 
 
 def load_testdata_from_file(filepath: str):

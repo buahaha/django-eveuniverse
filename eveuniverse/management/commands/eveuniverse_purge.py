@@ -1,32 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from ...models import (
-    EveAncestry,
-    EveAsteroidBelt,
-    EveBloodline,
-    EveCategory,
-    EveConstellation,
-    EveDogmaAttribute,
-    EveDogmaEffect,
-    EveDogmaEffectModifier,
-    EveEntity,
-    EveFaction,
-    EveGraphic,
-    EveGroup,
-    EveMarketGroup,
-    EveMoon,
-    EvePlanet,
-    EveRace,
-    EveRegion,
-    EveSolarSystem,
-    EveStar,
-    EveStargate,
-    EveStation,
-    EveType,
-    EveTypeDogmaAttribute,
-    EveTypeDogmaEffect,
-)
+from ...models import EveUniverseEntityModel
 
 
 def get_input(text):
@@ -43,34 +18,8 @@ class Command(BaseCommand):
 
     def _purge_all_data(self):
         """updates all SDE models from ESI and provides progress output"""
-        models = [
-            EveEntity,
-            EveGraphic,
-            EveCategory,
-            EveGroup,
-            EveType,
-            EveDogmaAttribute,
-            EveDogmaEffect,
-            EveDogmaEffectModifier,
-            EveTypeDogmaEffect,
-            EveTypeDogmaAttribute,
-            EveRace,
-            EvePlanet,
-            EveStation,
-            EveBloodline,
-            EveAncestry,
-            EveRegion,
-            EveConstellation,
-            EveSolarSystem,
-            EveAsteroidBelt,
-            EveFaction,
-            EveMoon,
-            EveStar,
-            EveStargate,
-            EveMarketGroup,
-        ]
         with transaction.atomic():
-            for MyModel in models:
+            for MyModel in EveUniverseEntityModel.all_models():
                 self.stdout.write(
                     "Deleting {:,} objects from {}".format(
                         MyModel.objects.count(), MyModel.__name__,

@@ -29,6 +29,20 @@ logger = LoggerAddTag(get_extension_logger(__name__), __title__)
 def load_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
+    """Task for loading an eve object. 
+    Will only be created from ESI if it does not exist
+    """
+    ModelClass = EveUniverseEntityModel.get_model_class(model_name)
+    ModelClass.objects.get_or_create_esi(
+        id=id, include_children=include_children, wait_for_children=wait_for_children
+    )
+
+
+@shared_task(base=QueueOnce)
+def update_or_create_eve_object(
+    model_name: str, id: int, include_children=False, wait_for_children=True
+) -> None:
+    """Task for updating or creating an eve object from ESI"""
     ModelClass = EveUniverseEntityModel.get_model_class(model_name)
     ModelClass.objects.update_or_create_esi(
         id=id, include_children=include_children, wait_for_children=wait_for_children,

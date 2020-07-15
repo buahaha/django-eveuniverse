@@ -337,6 +337,56 @@ class TestEvePlanet(NoSocketsTestCase):
         self.assertFalse(EveMoon.objects.filter(id=40349472).exists())
         self.assertFalse(EveMoon.objects.filter(id=40349473).exists())
 
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MOONS", True)
+    def test_does_not_update_children_on_get_by_default(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        # create scenario
+        obj, created = EvePlanet.objects.update_or_create_esi(
+            id=40349467, include_children=True,
+        )
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 40349467)
+        self.assertEqual(obj.eve_type, EveType.objects.get(id=2016))
+        self.assertEqual(obj.eve_solar_system, EveSolarSystem.objects.get(id=30045339))
+        self.assertTrue(EveMoon.objects.filter(id=40349468).exists())
+        moon = EveMoon.objects.get(id=40349468)
+        moon.name = "Dummy"
+        moon.save()
+
+        # action
+        EvePlanet.objects.get_or_create_esi(
+            id=40349467, include_children=True,
+        )
+
+        # validate
+        moon.refresh_from_db()
+        self.assertEqual(moon.name, "Dummy")
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MOONS", True)
+    def test_does_not_update_children_on_update(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        # create scenario
+        obj, created = EvePlanet.objects.update_or_create_esi(
+            id=40349467, include_children=True,
+        )
+        self.assertTrue(created)
+        self.assertEqual(obj.id, 40349467)
+        self.assertEqual(obj.eve_type, EveType.objects.get(id=2016))
+        self.assertEqual(obj.eve_solar_system, EveSolarSystem.objects.get(id=30045339))
+        self.assertTrue(EveMoon.objects.filter(id=40349468).exists())
+        moon = EveMoon.objects.get(id=40349468)
+        moon.name = "Dummy"
+        moon.save()
+
+        # action
+        EvePlanet.objects.update_or_create_esi(id=40349467, include_children=True)
+
+        # validate
+        moon.refresh_from_db()
+        self.assertNotEqual(moon.name, "Dummy")
+
 
 @patch("eveuniverse.managers.esi")
 class TestEveRace(NoSocketsTestCase):
