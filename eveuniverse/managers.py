@@ -79,8 +79,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         Will always get/create parent objects.
         
         id: Eve Online ID of object
-        include_children: if child objects should be loaded as well. They will be created if they don't exist, but not updated
-        wait_for_children: when true child objects will be loaded blocking (if any), 
+        include_children: when needed to updated/created if child objects should be updated/created as well (if any)
+        wait_for_children: when true child objects will be updated/created blocking (if any), 
         else async
 
         Returns: object, created        
@@ -93,7 +93,6 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 id=id,
                 include_children=include_children,
                 wait_for_children=wait_for_children,
-                update_children=False,
             )
 
         return obj, created
@@ -104,14 +103,13 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
-        update_children: bool = True,
     ) -> tuple:
         """updates or creates Eve Universe object with data fetched from ESI. 
         Will always get/create parent objects.
 
         id: Eve Online ID of object
         include_children: if child objects should be updated/created as well (if any)
-        wait_for_children: when true child objects will be created blocking (if any), 
+        wait_for_children: when true child objects will be updated/created blocking (if any), 
         else async
 
         Returns: object, created
@@ -134,7 +132,6 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                         parent_eve_data_obj=eve_data_obj,
                         include_children=include_children,
                         wait_for_children=wait_for_children,
-                        update_children=update_children,
                     )
             else:
                 raise HTTPNotFound(
@@ -238,11 +235,10 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         parent_eve_data_obj: dict,
         include_children: bool,
         wait_for_children: bool,
-        update_children: bool,
     ) -> None:
         """updates or creates child objects specified in eve mapping"""
         from . import models as eveuniverse_models
-        from .tasks import load_eve_object, update_or_create_eve_object
+        from .tasks import update_or_create_eve_object
 
         if not parent_eve_data_obj:
             raise ValueError(
@@ -255,33 +251,19 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 for id in parent_eve_data_obj[key]:
                     if wait_for_children:
                         ChildClass = getattr(eveuniverse_models, child_class)
-                        if update_children:
-                            ChildClass.objects.update_or_create_esi(
-                                id=id,
-                                include_children=include_children,
-                                wait_for_children=wait_for_children,
-                            )
-                        else:
-                            ChildClass.objects.get_or_create_esi(
-                                id=id,
-                                include_children=include_children,
-                                wait_for_children=wait_for_children,
-                            )
+                        ChildClass.objects.update_or_create_esi(
+                            id=id,
+                            include_children=include_children,
+                            wait_for_children=wait_for_children,
+                        )
+
                     else:
-                        if update_children:
-                            update_or_create_eve_object.delay(
-                                child_class,
-                                id,
-                                include_children=include_children,
-                                wait_for_children=wait_for_children,
-                            )
-                        else:
-                            load_eve_object.delay(
-                                child_class,
-                                id,
-                                include_children=include_children,
-                                wait_for_children=wait_for_children,
-                            )
+                        update_or_create_eve_object.delay(
+                            child_class,
+                            id,
+                            include_children=include_children,
+                            wait_for_children=wait_for_children,
+                        )
 
     def update_or_create_all_esi(
         self, *, include_children: bool = False, wait_for_children: bool = True,
@@ -292,7 +274,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         (if any)
         wait_for_children: when false all objects will be loaded async, else blocking
         """
-        from .tasks import load_eve_object
+        from .tasks import update_or_create_eve_object
 
         add_prefix = make_logger_prefix(f"{self.model.__name__}")
         if self.model.is_list_only_endpoint():
@@ -320,7 +302,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             wait_for_children=wait_for_children,
                         )
                     else:
-                        load_eve_object.delay(
+                        update_or_create_eve_object.delay(
                             model_name=self.model.__name__,
                             entity_id=id,
                             include_children=include_children,
@@ -405,7 +387,6 @@ class EveStargateManager(EveUniverseEntityModelManager):
         *,
         include_children: bool = False,
         wait_for_children: bool = True,
-        update_children: bool = True,
     ) -> tuple:
         """If our destination is not null, then we also need to update 
         the other stargate's relation to us
@@ -414,7 +395,6 @@ class EveStargateManager(EveUniverseEntityModelManager):
             id=id,
             include_children=include_children,
             wait_for_children=wait_for_children,
-            update_children=update_children,
         )
         if obj:
             if obj.destination_eve_stargate is not None:
@@ -506,7 +486,6 @@ class EveEntityManager(EveUniverseEntityModelManager):
         id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
-        update_children: bool = True,
     ) -> tuple:
         """updated or creates object from ESI and returns it with created flag"""
         obj, created = self.update_or_create(id=id)

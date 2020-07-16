@@ -30,7 +30,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(
             "This command will delete all app related data in the database. "
-            "This can not be undone. Use with caution."
+            "This can not be undone. Note that this can disrupt other apps "
+            "that relate to this data. Use with caution."
         )
         user_input = get_input("Are you sure you want to proceed? (Y/n)?")
         if user_input == "Y":

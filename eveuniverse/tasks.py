@@ -71,15 +71,18 @@ def _eve_object_names_to_be_loaded() -> list:
 
 @shared_task(base=QueueOnce)
 def load_map() -> None:
+    """loads the complete Eve map with all regions, constellation and solarsystems
+    and additional related entities if they are enabled
+    """
     logger.info(
-        "Loading map with regions, constellations, solarsystems "
+        "Loading complete map with all regions, constellations, solarsystems "
         "and the following additional entities if related to the map: %s",
         ", ".join(_eve_object_names_to_be_loaded()),
     )
     category, method = models.EveRegion.esi_path_list()
     all_ids = getattr(getattr(esi.client, category), method)().results()
     for id in all_ids:
-        load_eve_object.delay(
+        update_or_create_eve_object.delay(
             model_name="EveRegion",
             id=id,
             include_children=True,

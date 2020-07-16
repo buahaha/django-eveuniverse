@@ -7,7 +7,7 @@ import networkx as nx
 from networkx.exception import NetworkXNoPath, NodeNotFound
 
 from django.core.cache import cache
-from django.db import models, transaction
+from django.db import models
 
 from allianceauth.eveonline.evelinks import eveimageserver, dotlan, zkillboard
 from allianceauth.eveonline.models import (
@@ -162,7 +162,10 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 
     id = models.PositiveIntegerField(primary_key=True, help_text="Eve Online ID")
     name = models.CharField(
-        max_length=NAMES_MAX_LENGTH, default="", help_text="Eve Online name"
+        max_length=NAMES_MAX_LENGTH,
+        default="",
+        db_index=True,
+        help_text="Eve Online name",
     )
     last_updated = models.DateTimeField(
         auto_now=True,
@@ -357,7 +360,6 @@ class EveEntity(EveUniverseEntityModel):
             func = map_category_2_other[self.category]
             return getattr(dotlan, func)(self.name)
 
-    @transaction.atomic
     def update_from_esi(self):
         obj, _ = EveEntity.objects.update_or_create_esi(id=self.id)
         return obj
