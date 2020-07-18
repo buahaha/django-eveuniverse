@@ -1068,7 +1068,7 @@ class EveSolarSystem(EveUniverseEntityModel):
                 g.add_edge(jump[0], jump[1])
 
             try:
-                path = nx.shortest_path(g, self.id, destination.id)
+                path = nx.shortest_path(G=g, source=self.id, target=destination.id)
             except (NetworkXNoPath, NodeNotFound):
                 path = []
 

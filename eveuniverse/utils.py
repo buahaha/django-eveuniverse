@@ -23,8 +23,8 @@ format_html_lazy = lazy(format_html, str)
 class LoggerAddTag(logging.LoggerAdapter):
     """add custom tag to a logger"""
 
-    def __init__(self, logger, prefix):
-        super(LoggerAddTag, self).__init__(logger, {})
+    def __init__(self, my_logger, prefix):
+        super(LoggerAddTag, self).__init__(my_logger, {})
         self.prefix = prefix
 
     def process(self, msg, kwargs):
@@ -205,11 +205,11 @@ def set_test_logger(logger_name: str, name: str) -> object:
     )
     f_handler = logging.FileHandler("{}.log".format(os.path.splitext(name)[0]), "w+")
     f_handler.setFormatter(f_format)
-    logger = logging.getLogger(logger_name)
-    logger.level = logging.DEBUG
-    logger.addHandler(f_handler)
-    logger.propagate = False
-    return logger
+    my_logger = logging.getLogger(logger_name)
+    my_logger.level = logging.DEBUG
+    my_logger.addHandler(f_handler)
+    my_logger.propagate = False
+    return my_logger
 
 
 def timeuntil_str(duration: timedelta) -> str:
