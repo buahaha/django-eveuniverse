@@ -49,8 +49,8 @@ class EsiRoute:
         self._primary_key = primary_key
 
     def call(self, **kwargs):
+        pk_value = None
         try:
-            pk_value = None
             if self._primary_key:
                 if self._primary_key not in kwargs:
                     raise ValueError(

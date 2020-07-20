@@ -8,6 +8,7 @@ from bravado.exception import HTTPNotFound
 from allianceauth.services.hooks import get_extension_logger
 
 from . import __title__
+from .helpers import EveEntityNameResolver
 from .providers import esi
 from .utils import chunks, LoggerAddTag, make_logger_prefix
 
@@ -493,11 +494,17 @@ class EveEntityManager(EveUniverseEntityModelManager):
         obj.refresh_from_db()
         return obj, created
 
-    def bulk_create_esi(self, *, ids: list):
+    def bulk_create_esi(self, ids: set) -> int:
         """bulk create multiple entities from ESI. Returns count of updated entities"""
-        objects = [self.model(id=id) for id in ids]
-        self.bulk_create(objects, ignore_conflicts=True)
-        return self.filter(id__in=ids).update_from_esi()
+        ids = set(ids)
+        existing_ids = set(self.filter(id__in=ids).values_list("id", flat=True))
+        new_ids = ids.difference(existing_ids)
+        if new_ids:
+            objects = [self.model(id=id) for id in new_ids]
+            self.bulk_create(objects, ignore_conflicts=True)
+            return self.filter(id__in=ids).update_from_esi()
+        else:
+            return 0
 
     def update_or_create_all_esi(
         self, *, include_children: bool = False, wait_for_children: bool = True,
@@ -512,3 +519,22 @@ class EveEntityManager(EveUniverseEntityModelManager):
     def bulk_update_all_esi(self):
         """updates all existing entities from ESI. Returns count of updated entities."""
         return self.all().update_from_esi()
+
+    def resolve_name(self, id) -> str:
+        if id is not None:
+            obj, _ = self.get_or_create_esi(id=id)
+            if obj:
+                return obj.name
+
+        return ""
+
+    def bulk_resolve_names(self, ids: list) -> EveEntityNameResolver:
+        """returns a map of IDs to names in a resolver object for given IDs"""
+        ids = set(ids)
+        self.bulk_create_esi(ids)
+        return EveEntityNameResolver(
+            {
+                row[0]: row[1]
+                for row in self.filter(id__in=ids).values_list("id", "name")
+            }
+        )
