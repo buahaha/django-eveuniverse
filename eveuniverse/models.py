@@ -5,12 +5,8 @@ import math
 import sys
 from typing import Any, List, Optional, Tuple
 
-# import networkx as nx
-# from networkx.exception import NetworkXNoPath, NodeNotFound
-
 from bravado.exception import HTTPNotFound
 
-# from django.core.cache import cache
 from django.db import models
 
 
@@ -44,8 +40,6 @@ from .utils import LoggerAddTag
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 NAMES_MAX_LENGTH = 100
-ROUTE_CACHE_DURATION = 86_400
-
 
 EsiMapping = namedtuple(
     "EsiMapping",
@@ -600,7 +594,7 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["eve_dogma_effect", "func"], name="functional PK"
+                fields=["eve_dogma_effect", "func"], name="fpk_evedogmaeffectmodifier",
             )
         ]
 
@@ -930,7 +924,7 @@ class EveSolarSystem(EveUniverseEntityModel):
         path_ids = self._calc_route_esi(self.id, destination.id)
         if path_ids is not None:
             return [
-                EveSolarSystem.objects.get(id=solar_system_id)
+                EveSolarSystem.objects.get_or_create_esi(id=solar_system_id)
                 for solar_system_id in path_ids
             ]
         else:
@@ -945,63 +939,7 @@ class EveSolarSystem(EveUniverseEntityModel):
         return len(path_ids) - 1 if path_ids is not None else None
 
     """
-    def _shortest_path_to(
-        self, destination: "EveSolarSystem", exclude_high_sec: bool
-    ) -> list:
-        #return shortest patch as list of IDs to given solar system
-        # or empty list if not path exists
-        
-
-        def jumps() -> models.QuerySet:
-            return EveStargate.objects.filter(
-                destination_eve_solar_system__isnull=False
-            ).values_list("eve_solar_system_id", "destination_eve_solar_system_id")
-
-        def jumps_excluding_high_sec() -> models.QuerySet:
-            return (
-                EveStargate.objects.filter(
-                    destination_eve_solar_system__isnull=False,
-                    eve_solar_system__security_status__lt=0.5,
-                    destination_eve_solar_system__security_status__lt=0.5,
-                )
-                .select_related("eve_solar_system", "destination_eve_solar_system")
-                .values_list("eve_solar_system_id", "destination_eve_solar_system_id")
-            )
-
-        cache_route_key = (
-            f"EVESDE_ROUTE_{self.id}_{destination.id}_" f"{exclude_high_sec}"
-        )
-        if self.is_w_space or destination.is_w_space:
-            return []
-
-        path = cache.get(cache_route_key)
-        if path is not None:
-            return path
-
-        else:
-            g = nx.Graph()
-            if exclude_high_sec:
-                jumps_qs = cache.get_or_set(
-                    "EVESDE_STARGATES_NO_HIGHSEC",
-                    jumps_excluding_high_sec,
-                    ROUTE_CACHE_DURATION,
-                )
-            else:
-                jumps_qs = cache.get_or_set(
-                    "EVESDE_STARGATES", jumps, ROUTE_CACHE_DURATION
-                )
-
-            for jump in jumps_qs:
-                g.add_edge(jump[0], jump[1])
-
-            try:
-                path = nx.shortest_path(G=g, source=self.id, target=destination.id)
-            except (NetworkXNoPath, NodeNotFound):
-                path = []
-
-            cache.set(key=cache_route_key, value=path, timeout=ROUTE_CACHE_DURATION)
-
-        return path
+    
     """
 
     @staticmethod
@@ -1242,7 +1180,8 @@ class EveTypeDogmaAttribute(EveUniverseInlineModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["eve_type", "eve_dogma_attribute"], name="functional PK"
+                fields=["eve_type", "eve_dogma_attribute"],
+                name="fpk_evetypedogmaattribute",
             )
         ]
 
@@ -1279,7 +1218,7 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["eve_type", "eve_dogma_effect"], name="functional PK"
+                fields=["eve_type", "eve_dogma_effect"], name="fpk_evetypedogmaeffect",
             )
         ]
 

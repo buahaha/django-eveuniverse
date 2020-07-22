@@ -526,7 +526,7 @@
         "get_universe_regions_region_id": {
             "10000002": {
                 "constellations": [
-                    20000017
+                    20000020
                 ],
                 "description": "\"The greater the State becomes, the greater humanity under it flourishes.\"",
                 "name": "The Forge",
@@ -795,10 +795,7 @@
                 "security_class": "I",
                 "security_status": -0.14632222056388855,
                 "star_id": 40073893,
-                "stargates": [
-                    50002104,
-                    50013604
-                ],
+                "stargates": [],
                 "system_id": 30001161
             },
             "30045339": {

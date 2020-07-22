@@ -527,7 +527,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
             raise HTTPNotFound(Mock(**{"response.status_code": 404}))
 
     @patch("eveuniverse.models.esi")
-    def test_can_calculate_route(self, mock_esi_2, mock_esi):
+    def test_can_calculate_jumps(self, mock_esi_2, mock_esi):
         mock_esi.client = EsiClientStub()
         mock_esi_2.client.Routes.get_route_origin_destination.side_effect = (
             self.esi_get_route_origin_destination

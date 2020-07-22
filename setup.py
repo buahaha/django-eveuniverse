@@ -13,28 +13,30 @@ with open(os.path.join(this_directory, "README.md"), encoding="utf-8") as f:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name="aa-eveuniverse",
+    name="django-eveuniverse",
     version=__version__,
     packages=find_packages(),
     include_package_data=True,
     license="MIT",
-    description="Eveuniverse plugin app for Alliance Auth",
+    description="Complete set of Eve Universe models with on-demand loading from ESI",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="John Doe",
-    author_email="john.doe@eveuniverse.com",
+    author="Erik Kalkoken",
+    author_email="kalkoken87@gmail.com",
     classifiers=[
         "Environment :: Web Environment",
         "Framework :: Django",
         "Framework :: Django :: 2.2",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",  # eveuniverse license
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
     python_requires="~=3.6",
-    install_requires=["networkx>=2,<3",],
+    install_requires=["django-esi>=2,<3", "django>=2.2", "celery>=4.0.2"],
 )
