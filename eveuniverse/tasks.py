@@ -1,7 +1,6 @@
-from celery import shared_task
+import logging
 
-from allianceauth.services.hooks import get_extension_logger
-from allianceauth.services.tasks import QueueOnce
+from celery import shared_task
 
 from . import __title__
 from . import models
@@ -21,11 +20,11 @@ from .providers import esi
 from .utils import LoggerAddTag
 
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 # logging.getLogger("esi").setLevel(logging.INFO)
 
 
-@shared_task(base=QueueOnce)
+@shared_task
 def load_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
@@ -38,7 +37,7 @@ def load_eve_object(
     )
 
 
-@shared_task(base=QueueOnce)
+@shared_task
 def update_or_create_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
@@ -69,7 +68,7 @@ def _eve_object_names_to_be_loaded() -> list:
     return sorted(names_to_be_loaded)
 
 
-@shared_task(base=QueueOnce)
+@shared_task
 def load_map() -> None:
     """loads the complete Eve map with all regions, constellation and solarsystems
     and additional related entities if they are enabled

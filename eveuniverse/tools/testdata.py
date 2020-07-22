@@ -1,10 +1,9 @@
 from copy import deepcopy
 from collections import OrderedDict, namedtuple
+import logging
 import json
 
 from django.core.serializers.json import DjangoJSONEncoder
-
-from allianceauth.services.hooks import get_extension_logger
 
 from eveuniverse.models import EveUniverseEntityModel, EveSolarSystem, EveStargate
 
@@ -12,7 +11,7 @@ from .. import __title__
 from ..utils import LoggerAddTag
 
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 
 ModelSpec = namedtuple("ModelSpec", ["ids", "include_children"])

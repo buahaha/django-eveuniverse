@@ -1,11 +1,9 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from bravado.exception import HTTPNotFound
 
-from allianceauth.eveonline.models import EveAllianceInfo
-
-from .my_test_data import EsiClientStub
+from .my_test_data import EsiClientStub, BravadoOperationStub
 from ..helpers import meters_to_ly
 from ..models import (
     EsiMapping,
@@ -518,6 +516,39 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertFalse(thera.is_low_sec)
         self.assertFalse(thera.is_high_sec)
 
+    @staticmethod
+    def esi_get_route_origin_destination(origin, destination, **kwargs) -> list:
+        routes = {
+            30045339: {30045342: [30045339, 30045342]},
+        }
+        if origin in routes and destination in routes[origin]:
+            return BravadoOperationStub(routes[origin][destination])
+        else:
+            raise HTTPNotFound(Mock(**{"response.status_code": 404}))
+
+    @patch("eveuniverse.models.esi")
+    def test_can_calculate_route(self, mock_esi_2, mock_esi):
+        mock_esi.client = EsiClientStub()
+        mock_esi_2.client.Routes.get_route_origin_destination.side_effect = (
+            self.esi_get_route_origin_destination
+        )
+
+        enaluri, _ = EveSolarSystem.objects.get_or_create_esi(id=30045339)
+        akidagi, _ = EveSolarSystem.objects.get_or_create_esi(id=30045342)
+        self.assertEqual(enaluri.jumps_to(akidagi), 1)
+
+    @patch("eveuniverse.models.esi")
+    def test_route_calc_returns_none_if_no_route_found(self, mock_esi_2, mock_esi):
+        mock_esi.client = EsiClientStub()
+        mock_esi_2.client.Routes.get_route_origin_destination.side_effect = (
+            self.esi_get_route_origin_destination
+        )
+
+        enaluri, _ = EveSolarSystem.objects.get_or_create_esi(id=30045339)
+        jita, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142)
+        self.assertIsNone(enaluri.jumps_to(jita))
+
+    """
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", True)
     @patch(MODULE_PATH + ".cache")
     def test_can_calculate_route(self, mock_cache, mock_esi):
@@ -535,6 +566,7 @@ class TestEveSolarSystem(NoSocketsTestCase):
             id=30045342, include_children=True
         )
         self.assertEqual(enaluri.jumps_to(akidagi), 1)
+    """
 
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
@@ -1217,87 +1249,3 @@ class TestEveEntity(NoSocketsTestCase):
         obj, _ = EveEntity.objects.get_or_create_esi(id=603)
         expected = "https://images.evetech.net/types/603/icon?size=128"
         self.assertEqual(obj.icon_url(128), expected)
-
-    def test_can_create_zkb_url(self, mock_esi):
-        mock_esi.client = EsiClientStub()
-
-        # alliance
-        obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
-        expected = "https://zkillboard.com/alliance/3001/"
-        self.assertEqual(obj.zkb_url, expected)
-
-        # character
-        obj, _ = EveEntity.objects.get_or_create_esi(id=1001)
-        expected = "https://zkillboard.com/character/1001/"
-        self.assertEqual(obj.zkb_url, expected)
-
-        # corporation
-        obj, _ = EveEntity.objects.get_or_create_esi(id=2001)
-        expected = "https://zkillboard.com/corporation/2001/"
-        self.assertEqual(obj.zkb_url, expected)
-
-        # region
-        obj, _ = EveEntity.objects.get_or_create_esi(id=10000069)
-        expected = "https://zkillboard.com/region/10000069/"
-        self.assertEqual(obj.zkb_url, expected)
-
-        # solar system
-        obj, _ = EveEntity.objects.get_or_create_esi(id=30004984)
-        expected = "https://zkillboard.com/system/30004984/"
-        self.assertEqual(obj.zkb_url, expected)
-
-    def test_can_create_dotlan_url(self, mock_esi):
-        mock_esi.client = EsiClientStub()
-
-        # alliance
-        obj, _ = EveEntity.objects.get_or_create_esi(id=3001)
-        expected = "http://evemaps.dotlan.net/alliance/Wayne_Enterprises"
-        self.assertEqual(obj.dotlan_url, expected)
-
-        # corporation
-        obj, _ = EveEntity.objects.get_or_create_esi(id=2001)
-        expected = "http://evemaps.dotlan.net/corp/Wayne_Technologies"
-
-        # region
-        obj, _ = EveEntity.objects.get_or_create_esi(id=10000069)
-        expected = "http://evemaps.dotlan.net/map/Black_Rise"
-        self.assertEqual(obj.dotlan_url, expected)
-
-        # solar system
-        obj, _ = EveEntity.objects.get_or_create_esi(id=30004984)
-        expected = "http://evemaps.dotlan.net/system/Abune"
-        self.assertEqual(obj.dotlan_url, expected)
-
-    def test_can_get_or_create_pendant_object_type(self, mock_esi):
-        mock_esi.client = EsiClientStub()
-
-        obj_1, _ = EveEntity.objects.get_or_create_esi(id=603)
-        obj_2, created = obj_1.get_or_create_pendant_object()
-
-        self.assertTrue(created)
-        self.assertIsInstance(obj_2, EveType)
-        self.assertEqual(obj_2.id, 603)
-        self.assertEqual(obj_2.name, "Merlin")
-
-    @patch(MODULE_PATH + ".EveAllianceInfo.objects.create_alliance")
-    def test_can_get_or_create_pendant_object_alliance(
-        self, mock_create_alliance, mock_esi
-    ):
-        def func_create_alliance(*args, **kwargs):
-            return EveAllianceInfo.objects.create(
-                alliance_id=3001,
-                alliance_name="Wayne Enterprises",
-                alliance_ticker="WYE",
-                executor_corp_id=2001,
-            )
-
-        mock_esi.client = EsiClientStub()
-        mock_create_alliance.side_effect = func_create_alliance
-
-        obj_1, _ = EveEntity.objects.get_or_create_esi(id=3001)
-        obj_2, created = obj_1.get_or_create_pendant_object()
-
-        self.assertTrue(created)
-        self.assertIsInstance(obj_2, EveAllianceInfo)
-        self.assertEqual(obj_2.alliance_id, 3001)
-        self.assertEqual(obj_2.alliance_name, "Wayne Enterprises")

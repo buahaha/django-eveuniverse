@@ -1,21 +1,18 @@
 from collections import namedtuple
 import inspect
+import logging
 import math
 import sys
+from typing import List, Optional
 
-import networkx as nx
-from networkx.exception import NetworkXNoPath, NodeNotFound
+# import networkx as nx
+# from networkx.exception import NetworkXNoPath, NodeNotFound
 
-from django.core.cache import cache
+from bravado.exception import HTTPNotFound
+
+# from django.core.cache import cache
 from django.db import models
 
-from allianceauth.eveonline.evelinks import eveimageserver, dotlan, zkillboard
-from allianceauth.eveonline.models import (
-    EveAllianceInfo,
-    EveCorporationInfo,
-    EveCharacter,
-)
-from allianceauth.services.hooks import get_extension_logger
 
 from . import __title__
 from .app_settings import (
@@ -29,6 +26,7 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
 )
+from .core import eveimageserver
 
 from .managers import (
     EveUniverseBaseModelManager,
@@ -39,10 +37,11 @@ from .managers import (
     EveStationManager,
     EveEntityManager,
 )
+from .providers import esi
 from .utils import LoggerAddTag
 
 
-logger = LoggerAddTag(get_extension_logger(__name__), __title__)
+logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 NAMES_MAX_LENGTH = 100
 ROUTE_CACHE_DURATION = 86_400
@@ -326,40 +325,6 @@ class EveEntity(EveUniverseEntityModel):
             f"category='{self.category}')"
         )
 
-    @property
-    def zkb_url(self) -> str:
-        """return zkb link for this entity if one exists, else empty string"""
-        map_category_2_other = {
-            self.CATEGORY_ALLIANCE: "alliance_url",
-            self.CATEGORY_CHARACTER: "character_url",
-            self.CATEGORY_CORPORATION: "corporation_url",
-            self.CATEGORY_REGION: "region_url",
-            self.CATEGORY_SOLAR_SYSTEM: "solar_system_url",
-        }
-        if self.category not in map_category_2_other:
-            return ""
-        else:
-            func = map_category_2_other[self.category]
-            return getattr(zkillboard, func)(self.id)
-
-    @property
-    def dotlan_url(self) -> str:
-        """return dotlan link for this entity if one exists, else empty string"""
-        if not self.name:
-            return ""
-
-        map_category_2_other = {
-            self.CATEGORY_ALLIANCE: "alliance_url",
-            self.CATEGORY_CORPORATION: "corporation_url",
-            self.CATEGORY_REGION: "region_url",
-            self.CATEGORY_SOLAR_SYSTEM: "solar_system_url",
-        }
-        if self.category not in map_category_2_other:
-            return ""
-        else:
-            func = map_category_2_other[self.category]
-            return getattr(dotlan, func)(self.name)
-
     def update_from_esi(self):
         obj, _ = EveEntity.objects.update_or_create_esi(id=self.id)
         return obj
@@ -369,6 +334,7 @@ class EveEntity(EveUniverseEntityModel):
             self.CATEGORY_ALLIANCE: "alliance_logo_url",
             self.CATEGORY_CHARACTER: "character_portrait_url",
             self.CATEGORY_CORPORATION: "corporation_logo_url",
+            self.CATEGORY_FACTION: "faction_logo_url",
             self.CATEGORY_INVENTORY_TYPE: "type_icon_url",
         }
         if self.category not in map_category_2_other:
@@ -376,40 +342,6 @@ class EveEntity(EveUniverseEntityModel):
         else:
             func = map_category_2_other[self.category]
             return getattr(eveimageserver, func)(self.id, size=size)
-
-    def get_or_create_pendant_object(
-        self, *, include_children: bool = False, wait_for_children: bool = True,
-    ) -> tuple:
-        """returns the pendant object for this entity along with a created flag,
-        e.g. EveSolarSystem for an entity with category "solar system"
-        """
-        map_category_2_other = {
-            self.CATEGORY_ALLIANCE: (EveAllianceInfo, "create_alliance"),
-            self.CATEGORY_CHARACTER: (EveCharacter, "create_character"),
-            self.CATEGORY_CORPORATION: (EveCorporationInfo, "create_corporation"),
-            self.CATEGORY_INVENTORY_TYPE: (EveType, None),
-            self.CATEGORY_REGION: (EveRegion, None),
-            self.CATEGORY_SOLAR_SYSTEM: (EveSolarSystem, None),
-        }
-        if self.category not in map_category_2_other:
-            logger.error("Invalid category %s for EveEntity", self.category)
-            raise NotImplementedError()
-        else:
-            MyModel, func = map_category_2_other[self.category]
-            if func:
-                try:
-                    obj = MyModel.objects.get(id=self.id)
-                    created = False
-                except MyModel.DoesNotExist:
-                    obj = getattr(MyModel.objects, func)(self.id)
-                    created = True
-                return obj, created
-            else:
-                return MyModel.objects.get_or_create_esi(
-                    id=self.id,
-                    include_children=include_children,
-                    wait_for_children=wait_for_children,
-                )
 
 
 class EveAncestry(EveUniverseEntityModel):
@@ -717,6 +649,10 @@ class EveFaction(EveUniverseEntityModel):
         field_mappings = {"eve_solar_system": "solar_system_id"}
         load_order = 210
 
+    def logo_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
+        """return an image URL for this faction"""
+        return eveimageserver.faction_logo_url(self.id, size=size)
+
     @classmethod
     def eve_entity_category(cls) -> str:
         return EveEntity.CATEGORY_FACTION
@@ -882,14 +818,6 @@ class EveRegion(EveUniverseEntityModel):
         children = {"constellations": "EveConstellation"}
         load_order = 190
 
-    @property
-    def dotlan_url(self):
-        return dotlan.region_url(self.name)
-
-    @property
-    def zkb_url(self):
-        return zkillboard.region_url(self.id)
-
     @classmethod
     def eve_entity_category(cls) -> str:
         return EveEntity.CATEGORY_REGION
@@ -949,14 +877,6 @@ class EveSolarSystem(EveUniverseEntityModel):
     def is_w_space(self):
         return 31000000 <= self.id < 32000000
 
-    @property
-    def dotlan_url(self):
-        return dotlan.solar_system_url(self.name)
-
-    @property
-    def zkb_url(self):
-        return zkillboard.solar_system_url(self.id)
-
     @classmethod
     def children(cls) -> dict:
         children = dict()
@@ -997,14 +917,16 @@ class EveSolarSystem(EveUniverseEntityModel):
                 + (destination.position_z - self.position_z) ** 2
             )
 
-    def route_to(self, destination: object, exclude_high_sec: bool = False) -> list:
+    def route_to(
+        self, destination: "EveSolarSystem", exclude_high_sec: bool = False
+    ) -> Optional[List["EveSolarSystem"]]:
         """returns the shortest route to given solar system in jumps
 
         Result returned as list of solar systems incl. origin and destination
         or None if there is no route
         """
-        path_ids = self._shortest_path_to(destination, exclude_high_sec)
-        if path_ids:
+        path_ids = self._calc_route_esi(self.id, destination.id)
+        if path_ids is not None:
             return [
                 EveSolarSystem.objects.get(id=solar_system_id)
                 for solar_system_id in path_ids
@@ -1012,18 +934,23 @@ class EveSolarSystem(EveUniverseEntityModel):
         else:
             return None
 
-    def jumps_to(self, destination: object, exclude_high_sec: bool = False) -> int:
+    def jumps_to(
+        self, destination: "EveSolarSystem", exclude_high_sec: bool = False
+    ) -> Optional[int]:
         """returns the shortest number of jumps to given solar system
 
         return None if there is no route
         """
-        path_ids = self._shortest_path_to(destination, exclude_high_sec)
-        return len(path_ids) - 1 if path_ids else None
+        path_ids = self._calc_route_esi(self.id, destination.id)
+        return len(path_ids) - 1 if path_ids is not None else None
 
-    def _shortest_path_to(self, destination: object, exclude_high_sec: bool) -> list:
-        """return shortest patch as list of IDs to given solar system
-        or empty list if not path exists
-        """
+    """
+    def _shortest_path_to(
+        self, destination: "EveSolarSystem", exclude_high_sec: bool
+    ) -> list:
+        #return shortest patch as list of IDs to given solar system
+        # or empty list if not path exists
+        
 
         def jumps() -> models.QuerySet:
             return EveStargate.objects.filter(
@@ -1075,6 +1002,23 @@ class EveSolarSystem(EveUniverseEntityModel):
             cache.set(key=cache_route_key, value=path, timeout=ROUTE_CACHE_DURATION)
 
         return path
+    """
+
+    @staticmethod
+    def _calc_route_esi(origin_id: int, destination_id: int) -> Optional[List[int]]:
+        """returns the route between two given solar systems.
+        
+        Route is calculated by ESI and returned as list of solar system IDs
+
+        Returns None if no route can be found
+        """
+
+        try:
+            return esi.client.Routes.get_route_origin_destination(
+                origin=origin_id, destination=destination_id
+            ).results()
+        except HTTPNotFound:
+            return None
 
 
 class EveStar(EveUniverseEntityModel):
