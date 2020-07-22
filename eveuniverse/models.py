@@ -3,7 +3,7 @@ import inspect
 import logging
 import math
 import sys
-from typing import List, Optional
+from typing import Any, List, Optional, Tuple
 
 # import networkx as nx
 # from networkx.exception import NetworkXNoPath, NodeNotFound
@@ -134,7 +134,9 @@ class EveUniverseBaseModel(models.Model):
         return {}
 
     @classmethod
-    def _eve_universe_meta_attr(cls, attr_name: str, is_mandatory: bool = False):
+    def _eve_universe_meta_attr(
+        cls, attr_name: str, is_mandatory: bool = False
+    ) -> Optional[Any]:
         """returns value of an attribute from EveUniverseMeta or None"""
         if not hasattr(cls, "EveUniverseMeta"):
             raise ValueError("EveUniverseMeta not defined for class %s" % cls.__name__)
@@ -210,7 +212,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return cls._esi_path("object")
 
     @classmethod
-    def _esi_path(cls, variant: str) -> tuple:
+    def _esi_path(cls, variant: str) -> Tuple[str, str]:
         attr_name = f"esi_path_{str(variant)}"
         path = cls._eve_universe_meta_attr(attr_name, is_mandatory=True)
         if len(path.split(".")) != 2:
@@ -253,7 +255,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return [y["model"] for y in sorted(mappings, key=lambda x: x["load_order"])]
 
     @classmethod
-    def get_model_class(cls, model_name: str) -> object:
+    def get_model_class(cls, model_name: str) -> models.Model:
         """returns the model class for the given name"""
         for name, ModelClass in inspect.getmembers(
             sys.modules[__name__], inspect.isclass
@@ -325,7 +327,7 @@ class EveEntity(EveUniverseEntityModel):
             f"category='{self.category}')"
         )
 
-    def update_from_esi(self):
+    def update_from_esi(self) -> "EveEntity":
         obj, _ = EveEntity.objects.update_or_create_esi(id=self.id)
         return obj
 
@@ -862,19 +864,19 @@ class EveSolarSystem(EveUniverseEntityModel):
         load_order = 194
 
     @property
-    def is_high_sec(self):
+    def is_high_sec(self) -> bool:
         return self.security_status > 0.5
 
     @property
-    def is_low_sec(self):
+    def is_low_sec(self) -> bool:
         return 0 < self.security_status <= 0.5
 
     @property
-    def is_null_sec(self):
+    def is_null_sec(self) -> bool:
         return self.security_status <= 0 and not self.is_w_space
 
     @property
-    def is_w_space(self):
+    def is_w_space(self) -> bool:
         return 31000000 <= self.id < 32000000
 
     @classmethod
@@ -903,7 +905,7 @@ class EveSolarSystem(EveUniverseEntityModel):
     def eve_entity_category(cls) -> str:
         return EveEntity.CATEGORY_SOLAR_SYSTEM
 
-    def distance_to(self, destination: object) -> float:
+    def distance_to(self, destination: "EveSolarSystem") -> Optional[float]:
         """return the distance in meters to the given solar system
         
         Will return None if one of the systems is in WH space
@@ -918,7 +920,7 @@ class EveSolarSystem(EveUniverseEntityModel):
             )
 
     def route_to(
-        self, destination: "EveSolarSystem", exclude_high_sec: bool = False
+        self, destination: "EveSolarSystem"
     ) -> Optional[List["EveSolarSystem"]]:
         """returns the shortest route to given solar system in jumps
 
@@ -934,9 +936,7 @@ class EveSolarSystem(EveUniverseEntityModel):
         else:
             return None
 
-    def jumps_to(
-        self, destination: "EveSolarSystem", exclude_high_sec: bool = False
-    ) -> Optional[int]:
+    def jumps_to(self, destination: "EveSolarSystem") -> Optional[int]:
         """returns the shortest number of jumps to given solar system
 
         return None if there is no route
