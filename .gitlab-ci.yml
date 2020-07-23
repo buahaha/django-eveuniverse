@@ -9,20 +9,35 @@ before_script:
 - python -V
 - pip install tox
 
-test-3.6:
+test-py36-dj22:
   image: python:3.6-buster
   script:  
-  - tox -e py36
+  - tox -e py36-django22
 
-test-3.7:
+test-py37-dj22:
   image: python:3.7-buster
   script:  
-  - tox -e py37
+  - tox -e py37-django22
 
-test-3.8:
+test-py38-dj22:
   image: python:3.8-buster
   script:  
-  - tox -e py38
+  - tox -e py38-django22
+
+test-py36-dj30:
+  image: python:3.6-buster
+  script:  
+  - tox -e py36-django30
+
+test-py37-dj30:
+  image: python:3.7-buster
+  script:  
+  - tox -e py37-django30
+
+test-py38-dj30:
+  image: python:3.8-buster
+  script:  
+  - tox -e py38-django30
 
 test-linter:
   image: python:3.8-buster

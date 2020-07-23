@@ -75,7 +75,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         include_children: bool = False,
         wait_for_children: bool = True,
     ) -> tuple:
-        """gets or creates eve universe object fetched from ESI if needed. 
+        """ gets or creates an eve universe object. 
+        The object is automatically fetched from ESI if it does not exist (blocking).
         Will always get/create parent objects.
         
         id: Eve Online ID of object
@@ -104,8 +105,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         include_children: bool = False,
         wait_for_children: bool = True,
     ) -> tuple:
-        """updates or creates Eve Universe object with data fetched from ESI. 
-        Will always get/create parent objects.
+        """updates or creates an Eve universe object by fetching it from ESI (blocking).
+        Will always get/create parent objects
 
         id: Eve Online ID of object
         include_children: if child objects should be updated/created as well (if any)

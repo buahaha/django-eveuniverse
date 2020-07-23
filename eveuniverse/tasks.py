@@ -23,6 +23,9 @@ from .utils import LoggerAddTag
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 # logging.getLogger("esi").setLevel(logging.INFO)
 
+EVE_CATEGORY_ID_SHIP = 6
+EVE_CATEGORY_ID_STRUCTURE = 65
+
 
 @shared_task
 def load_eve_object(
@@ -87,3 +90,27 @@ def load_map() -> None:
             include_children=True,
             wait_for_children=False,
         )
+
+
+def _load_category(category_id: int) -> None:
+    """Loads a category incl. all it's children from ESI"""
+    update_or_create_eve_object.delay(
+        model_name="EveCategory",
+        id=category_id,
+        include_children=True,
+        wait_for_children=False,
+    )
+
+
+@shared_task
+def load_ship_types() -> None:
+    """Loads all ship types"""
+    logger.info("Started loading all ship types into eveuniverse")
+    _load_category(EVE_CATEGORY_ID_SHIP)
+
+
+@shared_task
+def load_structure_types() -> None:
+    """Loads all structure types"""
+    logger.info("Started loading all structure types into eveuniverse")
+    _load_category(EVE_CATEGORY_ID_STRUCTURE)

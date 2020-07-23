@@ -246,6 +246,14 @@
                 ],
                 "name": "Ship",
                 "published": true
+            },
+            "65": {
+                "category_id": 65,
+                "groups": [
+                    1404
+                ],
+                "name": "Structure",
+                "published": true
             }
         },
         "get_universe_constellations_constellation_id": {
@@ -439,6 +447,15 @@
                 "types": [
                     621,
                     626
+                ]
+            },
+            "1404": {
+                "category_id": 65,
+                "group_id": 1404,
+                "name": "Engineering Complex",
+                "published": true,
+                "types": [
+                    35825
                 ]
             }
         },
@@ -1094,6 +1111,20 @@
                 "radius": 4499,
                 "type_id": 29627,
                 "volume": 10000000
+            },
+            "35825": {
+                "capacity": 0,
+                "description": "Named after Tyma Raitaru, who pioneered the development of modern day missile technology, the Raitaru Engineering Complex is a medium-sized structure from the Upwell Consortium and is specialized in manufacturing and research operations.\r\n\r\nThe Raitaru is the entry-level Engineering Complex in the Upwell Consortium’s new line of structures, and is able to use Upwell's Standup Service modules, allowing flexibility and customization of its functions. This dedicated industrial structure also provides access to Upwell’s M-Set line of rigs designed to improve productivity and optimization of various aspects of manufacturing and research.\r\n\r\nThe Raitaru provides tethering technology and has docking capabilities for subcapital ships and freighters.",
+                "graphic_id": 235,
+                "group_id": 1404,
+                "mass": 3000000000,
+                "name": "Raitaru",
+                "packaged_volume": 8000,
+                "portion_size": 1,
+                "published": true,
+                "radius": 45000,
+                "type_id": 35825,
+                "volume": 8000
             },
             "45038": {
                 "capacity": 0,

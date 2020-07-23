@@ -4,8 +4,21 @@ from django.test import TestCase
 from django.test.utils import override_settings
 
 from .my_test_data import EsiClientStub
-from ..models import EveRegion, EveConstellation, EveSolarSystem
-from ..tasks import load_eve_object, load_map, update_or_create_eve_object
+from ..models import (
+    EveCategory,
+    EveGroup,
+    EveRegion,
+    EveConstellation,
+    EveSolarSystem,
+    EveType,
+)
+from ..tasks import (
+    load_eve_object,
+    load_map,
+    load_ship_types,
+    load_structure_types,
+    update_or_create_eve_object,
+)
 from ..utils import NoSocketsTestCase, set_test_logger
 
 MODULE_PATH = "eveuniverse.tasks"
@@ -38,10 +51,10 @@ class TestTasks(NoSocketsTestCase):
         self.assertNotEqual(obj.name, "Dummy")
 
 
-class TestLoadMap(TestCase):
-    @override_settings(CELERY_ALWAYS_EAGER=True)
-    @patch(MODULE_PATH + ".esi")
-    @patch("eveuniverse.managers.esi")
+@override_settings(CELERY_ALWAYS_EAGER=True)
+@patch(MODULE_PATH + ".esi")
+@patch("eveuniverse.managers.esi")
+class TestLoadData(TestCase):
     def test_load_map(self, mock_esi_1, mock_esi_2):
         mock_esi_1.client = EsiClientStub()
         mock_esi_2.client = EsiClientStub()
@@ -55,3 +68,27 @@ class TestLoadMap(TestCase):
 
         for id in [30001161, 30045339, 31000005]:
             self.assertTrue(EveSolarSystem.objects.filter(id=id).exists())
+
+    def test_load_ship_types(self, mock_esi_1, mock_esi_2):
+        mock_esi_1.client = EsiClientStub()
+        mock_esi_2.client = EsiClientStub()
+        load_ship_types()
+
+        self.assertTrue(EveCategory.objects.filter(id=6).exists())
+        for id in [25, 26]:
+            self.assertTrue(EveGroup.objects.filter(id=id).exists())
+
+        for id in [603, 608, 621, 626]:
+            self.assertTrue(EveType.objects.filter(id=id).exists())
+
+    def test_load_structure_types(self, mock_esi_1, mock_esi_2):
+        mock_esi_1.client = EsiClientStub()
+        mock_esi_2.client = EsiClientStub()
+        load_structure_types()
+
+        self.assertTrue(EveCategory.objects.filter(id=65).exists())
+        for id in [1404]:
+            self.assertTrue(EveGroup.objects.filter(id=id).exists())
+
+        for id in [35825]:
+            self.assertTrue(EveType.objects.filter(id=id).exists())
