@@ -8,11 +8,13 @@ Complete set of Eve Online Universe models in Django with on-demand loading from
 
 - [Overview](#overview)
 - [Installation](#installation)
+- [Models](#models)
 - [Examples](#examples)
 - [API](#api)
-- [Models](#models)
+- [Test data](#test-data)
 - [Settings](#settings)
 - [Management commands](#Management-commands)
+- [Database tools](#database-tools)
 - [Change Log](CHANGELOG.md)
 
 ## Overview
@@ -81,15 +83,6 @@ print(jita.is_high_sec)
 print(jita.eve_constellation.name)
 ```
 
-## API
-
-Every eve model has an `id` and `name` property and comes with a set of basic methods:
-
-- `get_or_create_esi(id=12345678)`: gets or creates an Eve universe object. The object is automatically fetched from ESI if it does not exist (blocking). Will always get/create parent objects.
-- `update_or_create_esi(id=12345678)`: updates or creates an Eve universe object by fetching it from ESI (blocking). Will always get/create parent objects.
-
-Please see each model for a list of additional methods and properties.
-
 ## Models
 
 The following graph shows all models and how they are interrelated:
@@ -121,6 +114,105 @@ Here is a list of the main models, each representing and Eve object:
 - EveType
 - EveUnit
 
+
+## API
+
+Every eve model has an `id` and `name` property and comes with a set of basic methods:
+
+- `get_or_create_esi(id=12345678)`: gets or creates an Eve universe object. The object is automatically fetched from ESI if it does not exist (blocking). Will always get/create parent objects.
+- `update_or_create_esi(id=12345678)`: updates or creates an Eve universe object by fetching it from ESI (blocking). Will always get/create parent objects.
+
+Please see each model for a list of additional methods and properties.
+
+## Test data
+
+django-eveuniverse comes with tools that help you generate and use test data for your own apps.
+
+### Generate test data
+
+To generate your testdata create a script within your projects and run that scrip as a Django test. That is important to ensure that the database on which the scripts operates is empty. That script will then create a JSON file that contains freshly retrieved Eve objects from ESI based on your specification.
+
+#### create_eveuniverse.py
+
+Here is an example script for generating test data (taken from aa-killtracker):
+
+```Python
+from django.test import TestCase
+
+from eveuniverse.tools.testdata import create_testdata, ModelSpec
+
+from . import test_data_filename
+
+
+class CreateEveUniverseTestData(TestCase):
+    def test_create_testdata(self):
+        testdata_spec = {
+            "EveFaction": ModelSpec(ids=[500001], include_children=False),
+            "EveType": ModelSpec(
+                ids=[603, 621, 638, 2488, 2977, 3756, 11379, 16238, 34562, 37483],
+                include_children=False,
+            ),
+            "EveSolarSystem": ModelSpec(
+                ids=[30001161, 30004976, 30004984, 30045349, 31000005],
+                include_children=False,
+            ),
+            "EveRegion": ModelSpec(ids=[10000038], include_children=True,),
+        }
+        create_testdata(testdata_spec, test_data_filename())
+
+```
+
+### Using generated testdata in your tests
+
+To user the generated testdata file in your test you need another script that creates objects from your generated JSON file.
+
+#### load_eveuniverse.py
+
+Here is an example script that creates objects from the JSON file.
+
+```Python
+import json
+
+from eveuniverse.tools.testdata import load_testdata_from_dict
+
+from . import test_data_filename
+
+
+def _load_eveuniverse_from_file():
+    with open(test_data_filename(), "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    return data
+
+
+eveuniverse_testdata = _load_eveuniverse_from_file()
+
+
+def load_eveuniverse():
+    load_testdata_from_dict(eveuniverse_testdata)
+
+```
+
+You can then load all Eve objects in your own test script like so:
+
+#### test_example.py
+
+```Python
+from django.test import TestCase
+from .load_eveuniverse import load_eveuniverse
+
+class MyTest(TestCase):
+
+  @classmethod
+  def setUpClass(cls):
+      super().setUpClass()
+      load_eveuniverse()
+
+  def test_my_test(self):
+    svipul = EveType.objects.get(id=34562)
+    # ...
+```
+
 ## Settings
 
 Here is a list of available settings for this app. They can be configured by adding them to your local Django settings file.
@@ -150,3 +242,12 @@ The following management commands are available:
   - **ships**: All ship types
   - **structures**: All structures types
 - **structures_purge_all**: This command will purge ALL data of your models.
+
+## Database tools
+
+On some DBMSs like MySQL it is not possible to reset the database and remove all eveuniverse tables with the standard "migrate zero" command. The reason is that eveuniverse is using composite primary keys and Django seams to have problems dealing with that correctly, when trying to roll back migrations.
+
+As workaround you will need remove all tables with SQL commands. To make this easier we are providing a SQL script that contains all commands to drop the tables. The full process for "migrating to zero" is as follows:
+
+1. Run SQL script `drop_tables.sql` on your database
+2. Run `python manage.py migrate eveuniverse zero --fake`

@@ -64,6 +64,36 @@ class EveUniverseBaseModel(models.Model):
     class Meta:
         abstract = True
 
+    def __repr__(self):
+        """General purpose __repr__ that works for all model classes"""
+        fields = sorted(
+            [
+                f
+                for f in self._meta.get_fields()
+                if isinstance(f, models.Field) and f.name != "last_updated"
+            ],
+            key=lambda x: x.name,
+        )
+        fields_2 = list()
+        for f in fields:
+            if f.is_relation:
+                name = f"{f.name}_id"
+                value = getattr(self, name)
+            else:
+                name = f.name
+                value = getattr(self, f.name)
+
+            if isinstance(value, str):
+                if isinstance(f, models.TextField) and len(value) > 32:
+                    value = f"{value[:32]}..."
+                text = f"{name}='{value}'"
+            else:
+                text = f"{name}={value}"
+
+            fields_2.append(text)
+
+        return f"{self.__class__.__name__}({', '.join(fields_2)})"
+
     @classmethod
     def esi_mapping(cls) -> dict:
         field_mappings = cls._eve_universe_meta_attr("field_mappings")
@@ -172,11 +202,6 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 
     class Meta:
         abstract = True
-
-    def __repr__(self):
-        return "{}(id={}, name='{}')".format(
-            self.__class__.__name__, self.id, self.name
-        )
 
     def __str__(self):
         return self.name
@@ -314,12 +339,6 @@ class EveEntity(EveUniverseEntityModel):
             return self.name
         else:
             return f"ID:{self.id}"
-
-    def __repr__(self):
-        return (
-            f"{type(self).__name__}(id={self.id}, name='{self.name}', "
-            f"category='{self.category}')"
-        )
 
     def update_from_esi(self) -> "EveEntity":
         obj, _ = EveEntity.objects.update_or_create_esi(id=self.id)
@@ -610,12 +629,6 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
             "modifying_effect": "effect_id",
         }
         load_order = 144
-
-    def __repr__(self) -> str:
-        return (
-            f"EveEffectModifier(eve_type='{self.eve_type}', "
-            f"effect_id={self.effect_id})"
-        )
 
 
 class EveFaction(EveUniverseEntityModel):
@@ -1194,13 +1207,6 @@ class EveTypeDogmaAttribute(EveUniverseInlineModel):
         field_mappings = {"eve_dogma_attribute": "attribute_id"}
         load_order = 148
 
-    def __repr__(self) -> str:
-        return (
-            f"EveTypeDogmaAttributes(eve_type='{self.eve_type}', "
-            f"eve_dogma_attribute={self.eve_dogma_attribute}, "
-            f"value={self.value})"
-        )
-
 
 class EveTypeDogmaEffect(EveUniverseInlineModel):
     """Dogma effect in Eve Online"""
@@ -1230,14 +1236,6 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
         ]
         field_mappings = {"eve_dogma_effect": "effect_id"}
         load_order = 146
-
-    def __repr__(self) -> str:
-        return (
-            f"EveTypeDogmaEffect("
-            f"eve_type='{self.eve_type}', "
-            f"eve_dogma_effect={self.eve_dogma_effect}, "
-            f"is_default={self.is_default})"
-        )
 
 
 class EveUnit(EveUniverseEntityModel):

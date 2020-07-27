@@ -512,7 +512,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         """not implemented"""
         raise NotImplementedError()
 
-    def bulk_update_new_esi(self):
+    def bulk_update_new_esi(self) -> int:
         """updates all new entities from ESI. Returns count of updated entities."""
         return self.filter(name="").update_from_esi()
 
@@ -520,7 +520,10 @@ class EveEntityManager(EveUniverseEntityModelManager):
         """updates all existing entities from ESI. Returns count of updated entities."""
         return self.all().update_from_esi()
 
-    def resolve_name(self, id) -> str:
+    def resolve_name(self, id: int) -> str:
+        """return the name for the given Eve entity ID 
+        or an empty string if ID is not valid
+        """
         if id is not None:
             obj, _ = self.get_or_create_esi(id=id)
             if obj:

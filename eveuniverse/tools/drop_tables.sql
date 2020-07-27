@@ -1,4 +1,3 @@
-USE aa_dev_3;
 SET FOREIGN_KEY_CHECKS=0;
 DROP TABLE IF EXISTS eveuniverse_eveancestry;
 DROP TABLE IF EXISTS eveuniverse_eveasteroidbelt ;

@@ -182,6 +182,20 @@ class TestEveDogmaEffect(NoSocketsTestCase):
         )
         self.assertEqual(modifiers.operator, 6)
 
+    def test_repr(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveDogmaEffect.objects.update_or_create_esi(id=1816)
+        self.assertEqual(
+            repr(obj),
+            "EveDogmaEffect(description='', disallow_auto_repeat=None, discharge_attribute_id=None, display_name='', duration_attribute_id=None, effect_category=0, electronic_chance=None, falloff_attribute_id=None, icon_id=0, id=1816, is_assistance=None, is_offensive=None, is_warp_safe=None, name='shipShieldEMResistanceCF2', post_expression=None, pre_expression=None, published=None, range_attribute_id=None, range_chance=None, tracking_speed_attribute_id=None)",
+        )
+        modifier = obj.modifiers.first()
+        self.assertEqual(
+            repr(modifier),
+            f"EveDogmaEffectModifier(domain='shipID', eve_dogma_effect_id=1816, func='ItemModifier', id={modifier.id}, modified_attribute_id=271, modifying_attribute_id=463, modifying_effect_id=None, operator=6)",
+        )
+
 
 @patch("eveuniverse.managers.esi")
 class TestEveFaction(NoSocketsTestCase):
@@ -445,6 +459,19 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertEqual(obj.position_z, 120279417692650270)
         self.assertEqual(obj.security_status, 0.3277980387210846)
         self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_SOLAR_SYSTEM)
+
+    def test_repr(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveSolarSystem.objects.update_or_create_esi(id=30045339)
+        expected = "EveSolarSystem(eve_constellation_id=20000785, eve_star_id=None, id=30045339, name='Enaluri', position_x=-227875173313944580, position_y=104688385699531790, position_z=120279417692650270, security_status=0.3277980387210846)"
+        self.assertEqual(repr(obj), expected)
+
+    def test_str(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveSolarSystem.objects.update_or_create_esi(id=30045339)
+        self.assertEqual(str(obj), "Enaluri")
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
@@ -1149,6 +1176,14 @@ class TestEveEntity(NoSocketsTestCase):
     def setUp(self):
         EveEntity.objects.all().delete()
 
+    def test_repr(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)
+        self.assertEqual(
+            repr(obj), "EveEntity(category='character', id=1001, name='Bruce Wayne')"
+        )
+
     def test_can_create_new_from_esi(self, mock_esi):
         mock_esi.client = EsiClientStub()
 
@@ -1205,6 +1240,9 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.name, "Wayne Technologies")
         self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
 
+        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
+        self.assertEqual(result, 0)
+
     def test_update_or_create_all_esi_raises_exception(self, mock_esi):
         with self.assertRaises(NotImplementedError):
             EveEntity.objects.update_or_create_all_esi()
@@ -1249,3 +1287,28 @@ class TestEveEntity(NoSocketsTestCase):
         obj, _ = EveEntity.objects.get_or_create_esi(id=603)
         expected = "https://images.evetech.net/types/603/icon?size=128"
         self.assertEqual(obj.icon_url(128), expected)
+
+    def test_bulk_update_all_esi(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+        e1 = EveEntity.objects.create(id=1001)
+        e2 = EveEntity.objects.create(id=2001)
+        EveEntity.objects.bulk_update_all_esi()
+        e1.refresh_from_db()
+        self.assertEqual(e1.name, "Bruce Wayne")
+        e2.refresh_from_db()
+        self.assertEqual(e2.name, "Wayne Technologies")
+
+    def test_can_resolve_name(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+        self.assertEqual(EveEntity.objects.resolve_name(1001), "Bruce Wayne")
+        self.assertEqual(EveEntity.objects.resolve_name(2001), "Wayne Technologies")
+        self.assertEqual(EveEntity.objects.resolve_name(3001), "Wayne Enterprises")
+        self.assertEqual(EveEntity.objects.resolve_name(999), "")
+        self.assertEqual(EveEntity.objects.resolve_name(None), "")
+
+    def test_can_bulk_resolve_name(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+        resolver = EveEntity.objects.bulk_resolve_names([1001, 2001, 3001])
+        self.assertEqual(resolver.to_name(1001), "Bruce Wayne")
+        self.assertEqual(resolver.to_name(2001), "Wayne Technologies")
+        self.assertEqual(resolver.to_name(3001), "Wayne Enterprises")
