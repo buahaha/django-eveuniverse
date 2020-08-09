@@ -9,14 +9,10 @@ from ...tasks import (
     _eve_object_names_to_be_loaded,
 )
 from ...utils import LoggerAddTag
+from . import get_input
 
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
-
-
-def get_input(text):
-    """wrapped input to enable unit testing / patching"""
-    return input(text)
 
 
 class Command(BaseCommand):
@@ -26,7 +22,7 @@ class Command(BaseCommand):
         parser.add_argument("area", choices=["map", "ships", "structures"])
 
     def handle(self, *args, **options):
-        self.stdout.write("Eve Universe Loader")
+        self.stdout.write("Eve Universe - Data Loader - A")
         self.stdout.write("")
 
         if options["area"] == "map":
@@ -52,7 +48,7 @@ class Command(BaseCommand):
 
         self.stdout.write(
             "It will also load the following additional entities when related to "
-            "the the above mentioned entities: "
+            "the above mentioned entities: "
             f"{','.join(_eve_object_names_to_be_loaded())}"
         )
         self.stdout.write(

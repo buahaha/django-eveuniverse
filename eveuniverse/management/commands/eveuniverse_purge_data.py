@@ -1,12 +1,14 @@
+import logging
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
+from ... import __title__
 from ...models import EveUniverseEntityModel
+from . import get_input
+from ...utils import LoggerAddTag
 
-
-def get_input(text):
-    """wrapped input to enable unit testing / patching"""
-    return input(text)
+logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 
 class Command(BaseCommand):

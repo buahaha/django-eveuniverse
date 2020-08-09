@@ -89,7 +89,7 @@ The following graph shows all models and how they are interrelated:
 
 ![models](https://i.imgur.com/FYYihzt.png)
 
-Here is a list of the main models, each representing and Eve object:
+Here is a list of the main models, each representing and Eve entity (entity models):
 
 - EveAncestry
 - EveAsteroidBelt
@@ -114,15 +114,47 @@ Here is a list of the main models, each representing and Eve object:
 - EveType
 - EveUnit
 
-
 ## API
 
-Every eve model has an `id` and `name` property and comes with a set of basic methods:
+### Entity Models
 
-- `get_or_create_esi(id=12345678)`: gets or creates an Eve universe object. The object is automatically fetched from ESI if it does not exist (blocking). Will always get/create parent objects.
-- `update_or_create_esi(id=12345678)`: updates or creates an Eve universe object by fetching it from ESI (blocking). Will always get/create parent objects.
+Every entity model has an `id` and `name` property and comes with a set of basic methods:
+
+- `get_or_create_esi(id)`: gets or creates an Eve universe object. The object is automatically fetched from ESI if it does not exist (blocking). Will always get/create parent objects.
+- `update_or_create_esi(id)`: updates or creates an Eve universe object by fetching it from ESI (blocking). Will always get/create parent objects.
 
 Please see each model for a list of additional methods and properties.
+
+### Preloading data
+
+While all models support loading eve objects on demand from ESI, some apps might need specific data sets to be preloaded. For example an app might want to provide a drop down list of all structure types, and loading that list on demand would not be fast enough to guarantee acceptable UI response times.
+
+The solution is to provide the user with a management command, so he an preload the needed data sets - for example all ship types - during app installation. Since this is a command use case django-eveuniverse offers a management helper command with all the needed functionality for loading data and which can be easily utilized with just a very small and simple management command ine the app.
+
+Here is an example for creating such a management command in the app. We want to load all kinds of structures to show to the user in a drop down list. We therefore want to preload all structure types (category_id = 65), all control towers (group_id = 365) and the customs office (type_id = 2233):
+
+```Python
+from django.core.management import call_command
+from django.core.management.base import BaseCommand
+
+
+class Command(BaseCommand):
+    help = "Preloads data required for this app from ESI"
+
+    def handle(self, *args, **options):
+        call_command(
+            "eveuniverse_load_types",
+            __title__,
+            "--category_id",
+            "65",
+            "--group_id",
+            "365",
+            "--type_id",
+            "2233",
+        )
+```
+
+For more details on how to use `eveuniverse_load_types` just call it with `--help` from a console.
 
 ## Test data
 
@@ -130,7 +162,7 @@ django-eveuniverse comes with tools that help you generate and use test data for
 
 ### Generate test data
 
-To generate your testdata create a script within your projects and run that scrip as a Django test. That is important to ensure that the database on which the scripts operates is empty. That script will then create a JSON file that contains freshly retrieved Eve objects from ESI based on your specification.
+To generate your test data create a script within your projects and run that scrip as a Django test. That is important to ensure that the database on which the scripts operates is empty. That script will then create a JSON file that contains freshly retrieved Eve objects from ESI based on your specification.
 
 #### create_eveuniverse.py
 
@@ -241,11 +273,12 @@ The following management commands are available:
   - **map**: All regions, constellations and solar systems
   - **ships**: All ship types
   - **structures**: All structures types
-- **structures_purge_all**: This command will purge ALL data of your models.
+- **eveuniverse_purge_all**: This command will purge ALL data of your models.
+- **eveuniverse_load_type**: This command can load a specific set of types. This is a helper command meant to be called from other apps only.
 
 ## Database tools
 
-On some DBMSs like MySQL it is not possible to reset the database and remove all eveuniverse tables with the standard "migrate zero" command. The reason is that eveuniverse is using composite primary keys and Django seams to have problems dealing with that correctly, when trying to roll back migrations.
+On some DBMS like MySQL it is not possible to reset the database and remove all eveuniverse tables with the standard "migrate zero" command. The reason is that eveuniverse is using composite primary keys and Django seams to have problems dealing with that correctly, when trying to roll back migrations.
 
 As workaround you will need remove all tables with SQL commands. To make this easier we are providing a SQL script that contains all commands to drop the tables. The full process for "migrating to zero" is as follows:
 
