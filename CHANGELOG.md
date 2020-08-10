@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - New management command `eveuniverse_load_types` making it easier for apps to preload the eve objects they need
+- New manager method `bulk_get_or_create_esi()` for bulk loading of new eve objects.
 - Type hints for all methods
 - Spinx docs
 

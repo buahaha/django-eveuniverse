@@ -136,6 +136,22 @@ class TestEveCategory(NoSocketsTestCase):
 
 
 @patch("eveuniverse.managers.esi")
+class TestBulkGetOrCreateEsi(NoSocketsTestCase):
+    def test_can_load_all_from_esi(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        result = EveCategory.objects.bulk_get_or_create_esi(ids=[2, 3])
+        self.assertEqual({x.id for x in result}, {2, 3})
+
+    def test_can_load_parts_from_esi(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        EveCategory.objects.get_or_create_esi(id=2)
+        result = EveCategory.objects.bulk_get_or_create_esi(ids=[2, 3])
+        self.assertEqual({x.id for x in result}, {2, 3})
+
+
+@patch("eveuniverse.managers.esi")
 class TestEveConstellation(NoSocketsTestCase):
     def test_create_from_esi(self, mock_esi):
         mock_esi.client = EsiClientStub()

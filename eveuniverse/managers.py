@@ -1,6 +1,6 @@
 from collections import namedtuple
 import logging
-from typing import Tuple, Iterable
+from typing import List, Iterable, Tuple
 
 from django.db import models
 from django.db.utils import IntegrityError
@@ -284,7 +284,9 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
     def update_or_create_all_esi(
         self, *, include_children: bool = False, wait_for_children: bool = True,
     ) -> None:
-        """updates or creates all objects of this class from ESI
+        """updates or creates all objects of this class from ESI.
+        
+        Loading all objects can take a long time. Use with care!
         
         Args:
             include_children: if child objects should be updated/created as well (if any)
@@ -328,6 +330,37 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 raise TypeError(
                     f"ESI does not provide a list endpoint for {self.model.__name__}"
                 )
+
+    def bulk_get_or_create_esi(
+        self,
+        *,
+        ids: List[int],
+        include_children: bool = False,
+        wait_for_children: bool = True,
+    ) -> models.QuerySet:
+        """Gets or creates objects in bulk.
+        
+        Nonexisting objects will be fetched from ESI (blocking). 
+        Will always get/create parent objects.
+        
+        Args:
+            ids: List of valid IDs of Eve objects
+            include_children: when needed to updated/created if child objects should be updated/created as well (if any)
+            wait_for_children: when true child objects will be updated/created blocking (if any), else async
+        
+        Returns:
+            Queryset with all requested eve objects
+        """
+        ids = set(ids)
+        existing_ids = set(self.filter(id__in=ids).values_list("id", flat=True))
+        for id in ids.difference(existing_ids):
+            self.update_or_create_esi(
+                id=id,
+                include_children=include_children,
+                wait_for_children=wait_for_children,
+            )
+
+        return self.filter(id__in=ids)
 
 
 class EvePlanetManager(EveUniverseEntityModelManager):

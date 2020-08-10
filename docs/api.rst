@@ -150,8 +150,7 @@ EveEntity comes with some additional manager methods.
     :members:
 
 .. autoclass:: eveuniverse.managers.EveEntityManager
-    :members:
-    :exclude-members: get_queryset, update_or_create_all_esi
+    :members: get_or_create_esi, update_or_create_esi, bulk_create_esi, bulk_update_new_esi, bulk_update_all_esi, resolve_name, bulk_resolve_names
 
 Helpers
 ====================

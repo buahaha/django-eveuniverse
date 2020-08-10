@@ -6,6 +6,8 @@
 
 The name of all models start with `Eve` and then the name of the object class. For example the model for solar systems is called `EveSolarSystem`.
 
+Please see the API for a list of all implemented Eve models.
+
 ### Properties
 
 All Eve model share the following basic properties:
@@ -25,7 +27,7 @@ All Eve models have the following magic methods implemented:
 
 ### Fetching eve objects
 
-All Eve models support on-demand loading of eve objects from ESI. This functionality is is available through manager methods. One of these methods is `get_or_create_esi()`, which works similar to Django's `get_or_create()` method and will return the requested object along with a boolean flag showing if the object was created or not.
+All Eve models support on-demand loading of eve objects from ESI. This functionality is available through manager methods. One of these methods is `get_or_create_esi()`, which works similar to Django's `get_or_create()` method and will return the requested object along with a boolean flag showing if the object was created or not.
 
 For example for getting the solar system of Jita you could do the following:
 
@@ -34,7 +36,7 @@ For example for getting the solar system of Jita you could do the following:
 (EveSolarSystem(eve_constellation_id=20000020, eve_star_id=None, id=30000142, name='Jita', position_x=-1.2906486173487826e+17, position_y=6.075530690996363e+16, position_z=1.1746922706009029e+17, security_status=0.9459131360054016), True)
 ```
 
-Once loaded the object will be automatically stored in the database and the next time the same command would return the local copy.
+Once loaded the object will be automatically stored in the database and the next time that same command would return the local copy.
 
 Sometimes you may want to always fetch a fresh Eve objects from Esi. For that you can call `update_or_create_esi()`, which will always retrieve a new Eve objects and update the local copy.
 
@@ -45,21 +47,21 @@ Our example for Jita would then look like this:
 (EveSolarSystem(eve_constellation_id=20000020, eve_star_id=None, id=30000142, name='Jita', position_x=-1.2906486173487826e+17, position_y=6.075530690996363e+16, position_z=1.1746922706009029e+17, security_status=0.9459131360054016), False)
 ```
 
-Alternatively, a set of eve objects can be preloaded, e.g. during installation of an app, so the app can later rely those eve objects to already be in the database. For details please see [Preloading data](#preloading-data)
+Alternatively, a set of eve objects can be preloaded, e.g. during installation of an app. For details please see [Preloading data](#preloading-data)
 
 ### Fetching parent and child objects
 
-Most Eve models have relations with both parent and child models. When fetching an Eve objects for the first time from ESI, the related parent objects will automatically be loaded too to ensure the integrity of the database. For example if you are fetching Jita for the first time, the objects for Jita's constellation (parent of solar system) and Jita's region (parent of constellation) will be fetched too.
+Many Eve models have parent and child models. For example a `EveSolarSystem` has `EveConstellation` as parent, and `EvePlanet` as one of its many children. When fetching an Eve objects for the first time from ESI, the related parent objects will automatically be loaded to preserve the integrity of the database. For example if you are fetching Jita for the first time, the objects for Jita's constellation (parent of solar system) and Jita's region (parent of constellation) will be fetched too.
 
-In addition it is possible to automatically fetch all children of an object. This can be vry useful for loading larger sets of data. For example if you want to load all ship types, you can just fetch the inventory category for ships with all it's children. (Please see the method's API for more details.)
+In addition it is possible to automatically fetch all children of an object. This can be very useful for loading larger sets of data. For example, if you want to load all ship types, you can just fetch the inventory category for ships (id = 6) and include children. (Please see the method's API for all arguments.)
 
-### Selecting which models are loaded
+### Selecting which related models are loaded
 
-Eve models are heavily interrelated and trying to load just a small subset of objects can quickly cascade to loading large parts of the whole universe. However, not all of those related models are needed by every app and always loading them would only increase overall response times without any real benefit.
+Eve models are heavily interrelated and trying to load just a small subset of objects can quickly cascade to loading large parts of the whole universe. However, not all of those related models are needed by every app and always loading them would only increase overall response times and fill up the database without adding much value for the app.
 
-For example the dogma consists of 4 models that relate to inventory types and contain specifics for type objects like the rate of fire for some ship modules. Not every app may need that additional information in their database.
+For example the "dogma" consists of 4 models that relate to inventory types and contain specifics for type objects like the rate of fire for some ship modules. Not every app may need that additional information in their database.
 
-Our solution is to offer developers control over which models are loaded and which are not through settings. By default the following eve models are not loaded automatically and need to be turned on explicitly (see also Settings for details):
+Our solution here is to offer developers control over which related models are loaded through configuration. By default the following eve models are not loaded by relation and need to be turned on explicitly (see also Settings for details):
 
 - EveAsteroidBelt
 - EveDogmaAttribute
@@ -74,12 +76,12 @@ Our solution is to offer developers control over which models are loaded and whi
 
 ```eval_rst
 .. note::
-    You can still load objects from disabled models directly - e.g. with get_or_create_esi() - but be mindful that relations will not be created automatically, which can lead to inconsistencies in your database.
+    You can still load objects from disabled models directly - e.g. with ``get_or_create_esi()`` - but be mindful that relations will not be created automatically, which can lead to inconsistencies in your database.
 ```
 
 ```eval_rst
 .. hint::
-    When turning on models you usually will want to reload your related eve objects to make sure all relations are created correctly. e.g. after turning on "EveStargate" you want to reload the map, so that all stargates are loaded.
+    When turning on loading of related models you usually want to reload related eve objects that already exist in the database to make sure all relations are created correctly. e.g. after turning on ``EveStargate`` you want to reload all solar systems.
 ```
 
 ### Additional functionality
