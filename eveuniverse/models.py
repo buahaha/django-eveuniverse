@@ -3,7 +3,7 @@ import inspect
 import logging
 import math
 import sys
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from bravado.exception import HTTPNotFound
 
@@ -64,7 +64,7 @@ class EveUniverseBaseModel(models.Model):
     class Meta:
         abstract = True
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """General purpose __repr__ that works for all model classes"""
         fields = sorted(
             [
@@ -203,12 +203,12 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
     class Meta:
         abstract = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     @classmethod
     def eve_entity_category(cls) -> str:
-        """returns the category if this model is also valid as category in EveEntity
+        """returns the EveEntity category of this model if one exists
         else and empty string
         """
         return ""
@@ -257,7 +257,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return esi_path_list and esi_path_object and esi_path_list == esi_path_object
 
     @classmethod
-    def all_models(cls) -> list:
+    def all_models(cls) -> List[Dict[models.Model, int]]:
         """returns a list of all Eve Universe model classes sorted by load order"""
         mappings = list()
         for _, ModelClass in inspect.getmembers(sys.modules[__name__], inspect.isclass):
@@ -299,7 +299,14 @@ class EveUniverseInlineModel(EveUniverseBaseModel):
 
 
 class EveEntity(EveUniverseEntityModel):
-    """An entity object if Eve Online like a character or a corporation"""
+    """An Eve object from one of the categories supported by ESI's 
+    `/universe/names/` endpoint:
+
+    alliance, character, constellation, faction, type, region, solar system, station
+    
+    
+    This is a special model model dedicated to quick resolution of Eve IDs to names and their categories, e.g. for characters. See also manager methods.
+    """
 
     CATEGORY_ALLIANCE = "alliance"
     CATEGORY_CHARACTER = "character"
@@ -334,17 +341,30 @@ class EveEntity(EveUniverseEntityModel):
         esi_path_object = "Universe.post_universe_names"
         load_order = 110
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.name:
             return self.name
         else:
             return f"ID:{self.id}"
 
     def update_from_esi(self) -> "EveEntity":
+        """Update the current object from ESI
+        
+        Returns:
+            itself after update
+        """
         obj, _ = EveEntity.objects.update_or_create_esi(id=self.id)
         return obj
 
     def icon_url(self, size: int = EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
+        """Create image URL for related EVE icon
+        
+        Args:
+            size: size of image file in pixels, allowed values: 32, 64, 128, 256, 512
+
+        Return:
+            strings with image URL
+        """
         map_category_2_other = {
             self.CATEGORY_ALLIANCE: "alliance_logo_url",
             self.CATEGORY_CHARACTER: "character_portrait_url",
@@ -659,7 +679,11 @@ class EveFaction(EveUniverseEntityModel):
         load_order = 210
 
     def logo_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
-        """return an image URL for this faction"""
+        """returns an image URL for this faction
+        
+        Args:
+            size: optional size of the image
+        """
         return eveimageserver.faction_logo_url(self.id, size=size)
 
     @classmethod
@@ -872,18 +896,22 @@ class EveSolarSystem(EveUniverseEntityModel):
 
     @property
     def is_high_sec(self) -> bool:
+        """returns True if this solar system is in high sec, else False"""
         return self.security_status > 0.5
 
     @property
     def is_low_sec(self) -> bool:
+        """returns True if this solar system is in low sec, else False"""
         return 0 < self.security_status <= 0.5
 
     @property
     def is_null_sec(self) -> bool:
+        """returns True if this solar system is in null sec, else False"""
         return self.security_status <= 0 and not self.is_w_space
 
     @property
     def is_w_space(self) -> bool:
+        """returns True if this solar system is in wormhole space, else False"""
         return 31000000 <= self.id < 32000000
 
     @classmethod
@@ -913,9 +941,13 @@ class EveSolarSystem(EveUniverseEntityModel):
         return EveEntity.CATEGORY_SOLAR_SYSTEM
 
     def distance_to(self, destination: "EveSolarSystem") -> Optional[float]:
-        """return the distance in meters to the given solar system
-        
-        Will return None if one of the systems is in WH space
+        """Calculates the distance in meters between the current and the given solar system
+
+        Args:
+            destination: Other solar system to use in calculation
+                
+        Returns:
+            Distance in meters or None if one of the systems is in WH space
         """
         if self.is_w_space or destination.is_w_space:
             return None
@@ -929,10 +961,13 @@ class EveSolarSystem(EveUniverseEntityModel):
     def route_to(
         self, destination: "EveSolarSystem"
     ) -> Optional[List["EveSolarSystem"]]:
-        """returns the shortest route to given solar system in jumps
+        """Calculates the shortest route between the current and the given solar system
 
-        Result returned as list of solar systems incl. origin and destination
-        or None if there is no route
+        Args:
+            destination: Other solar system to use in calculation
+                
+        Returns:
+            List of solar system objects incl. origin and destination or None if no route can be found (e.g. if one system is in WH space)
         """
         path_ids = self._calc_route_esi(self.id, destination.id)
         if path_ids is not None:
@@ -944,24 +979,28 @@ class EveSolarSystem(EveUniverseEntityModel):
             return None
 
     def jumps_to(self, destination: "EveSolarSystem") -> Optional[int]:
-        """returns the shortest number of jumps to given solar system
+        """Calculates the shortest route between the current and the given solar system
 
-        return None if there is no route
+        Args:
+            destination: Other solar system to use in calculation
+                
+        Returns:
+            Number of total jumps or None if no route can be found (e.g. if one system is in WH space)
         """
         path_ids = self._calc_route_esi(self.id, destination.id)
         return len(path_ids) - 1 if path_ids is not None else None
 
-    """
-    
-    """
-
     @staticmethod
     def _calc_route_esi(origin_id: int, destination_id: int) -> Optional[List[int]]:
-        """returns the route between two given solar systems.
+        """returns the shortest route between two given solar systems.
         
-        Route is calculated by ESI and returned as list of solar system IDs
-
-        Returns None if no route can be found
+        Route is calculated by ESI
+        
+        Args:
+            destination_id: ID of the other solar system to use in calculation
+                
+        Returns:
+            List of solar system IDs incl. origin and destination or None if no route can be found (e.g. if one system is in WH space)
         """
 
         try:
