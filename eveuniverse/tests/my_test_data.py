@@ -155,13 +155,13 @@ def _load_esi_data():
         x
         for x in [x[1] for x in inspect.getmembers(eveuniverse_models, inspect.isclass)]
         if hasattr(x, "EveUniverseMeta")
-        and hasattr(x, "is_list_only_endpoint")
-        and not x.is_list_only_endpoint()
-        and x.has_esi_path_list()
+        and hasattr(x, "_is_list_only_endpoint")
+        and not x._is_list_only_endpoint()
+        and x._has_esi_path_list()
     ]
     for EntityClass in entity_classes:
-        list_category, list_method = EntityClass.esi_path_list()
-        object_category, object_method = EntityClass.esi_path_object()
+        list_category, list_method = EntityClass._esi_path_list()
+        object_category, object_method = EntityClass._esi_path_object()
         data[list_category][list_method] = [
             int(x) for x in data[object_category][object_method].keys()
         ]

@@ -6,6 +6,7 @@ from bravado.exception import HTTPNotFound
 from .my_test_data import EsiClientStub, BravadoOperationStub
 from ..helpers import meters_to_ly
 from ..models import (
+    EveUniverseEntityModel,
     EsiMapping,
     EveAncestry,
     EveAsteroidBelt,
@@ -35,6 +36,16 @@ from ..utils import NoSocketsTestCase
 
 unittest.util._MAX_LENGTH = 1000
 MODULE_PATH = "eveuniverse.models"
+
+
+class TestEveUniverseEntityModel(NoSocketsTestCase):
+    def test_get_model_class(self):
+        self.assertIs(
+            EveUniverseEntityModel.get_model_class("EveSolarSystem"), EveSolarSystem
+        )
+
+        with self.assertRaises(ValueError):
+            EveUniverseEntityModel.get_model_class("Unknown Class")
 
 
 @patch("eveuniverse.managers.esi")
@@ -839,7 +850,7 @@ class TestEsiMapping(NoSocketsTestCase):
     maxDiff = None
 
     def test_single_pk(self):
-        mapping = EveCategory.esi_mapping()
+        mapping = EveCategory._esi_mapping()
         self.assertEqual(len(mapping.keys()), 3)
         self.assertEqual(
             mapping["id"],
@@ -882,7 +893,7 @@ class TestEsiMapping(NoSocketsTestCase):
         )
 
     def test_with_fk(self):
-        mapping = EveConstellation.esi_mapping()
+        mapping = EveConstellation._esi_mapping()
         self.assertEqual(len(mapping.keys()), 6)
         self.assertEqual(
             mapping["id"],
@@ -964,7 +975,7 @@ class TestEsiMapping(NoSocketsTestCase):
         )
 
     def test_optional_fields(self):
-        mapping = EveAncestry.esi_mapping()
+        mapping = EveAncestry._esi_mapping()
         self.assertEqual(len(mapping.keys()), 6)
         self.assertEqual(
             mapping["id"],
@@ -1046,7 +1057,7 @@ class TestEsiMapping(NoSocketsTestCase):
         )
 
     def test_inline_model(self):
-        mapping = EveTypeDogmaEffect.esi_mapping()
+        mapping = EveTypeDogmaEffect._esi_mapping()
         self.assertEqual(len(mapping.keys()), 3)
         self.assertEqual(
             mapping["eve_type"],
@@ -1092,7 +1103,7 @@ class TestEsiMapping(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
     def test_EveType_mapping(self):
-        mapping = EveType.esi_mapping()
+        mapping = EveType._esi_mapping()
         self.assertSetEqual(
             set(mapping.keys()),
             {

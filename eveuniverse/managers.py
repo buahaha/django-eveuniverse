@@ -22,7 +22,7 @@ class EveUniverseBaseModelManager(models.Manager):
     def _defaults_from_esi_obj(self, eve_data_obj: dict) -> dict:
         """compiles defaults from an esi data object for update/creating the model"""
         defaults = dict()
-        for field_name, mapping in self.model.esi_mapping().items():
+        for field_name, mapping in self.model._esi_mapping().items():
             if not mapping.is_pk:
                 if not isinstance(mapping.esi_name, tuple):
                     if mapping.esi_name in eve_data_obj:
@@ -127,7 +127,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             if eve_data_obj:
                 defaults = self._defaults_from_esi_obj(eve_data_obj)
                 obj, created = self.update_or_create(id=id, defaults=defaults)
-                inline_objects = self.model.inline_objects()
+                inline_objects = self.model._inline_objects()
                 if inline_objects:
                     self._update_or_create_inline_objects(
                         parent_eve_data_obj=eve_data_obj,
@@ -158,11 +158,11 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         """make request to ESI and return response data. 
         Can handle raw ESI response from both list and normal endpoints.
         """
-        if id and not self.model.is_list_only_endpoint():
-            args = {self.model.esi_pk(): id}
+        if id and not self.model._is_list_only_endpoint():
+            args = {self.model._esi_pk(): id}
         else:
             args = dict()
-        category, method = self.model.esi_path_object()
+        category, method = self.model._esi_path_object()
         esi_data = getattr(getattr(esi.client, category), method,)(**args).results()
         return esi_data
 
@@ -170,11 +170,11 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         """Transforms raw ESI response from list endpoints if this is one
         else just passes the ESI response through
         """
-        if not self.model.is_list_only_endpoint():
+        if not self.model._is_list_only_endpoint():
             return esi_data
 
         else:
-            esi_pk = self.model.esi_pk()
+            esi_pk = self.model._esi_pk()
             for row in esi_data:
                 if esi_pk in row and row[esi_pk] == id:
                     return row
@@ -194,8 +194,6 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         """updates_or_creates eve objects that are returns "inline" from ESI
         for the parent eve objects as defined for this parent model (if any)
         """
-        from . import models as eveuniverse_models
-
         if not parent_eve_data_obj or not parent_obj:
             raise ValueError(
                 "%s: Tried to create inline object from empty parent object"
@@ -207,8 +205,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 inline_field in parent_eve_data_obj
                 and parent_eve_data_obj[inline_field]
             ):
-                InlineModel = getattr(eveuniverse_models, model_name)
-                esi_mapping = InlineModel.esi_mapping()
+                InlineModel = self.model.get_model_class(model_name)
+                esi_mapping = InlineModel._esi_mapping()
                 parent_fk = None
                 other_pk = None
                 ParentClass2 = None
@@ -256,7 +254,6 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         wait_for_children: bool,
     ) -> None:
         """updates or creates child objects as defined for this parent model (if any)"""
-        from . import models as eveuniverse_models
         from .tasks import update_or_create_eve_object
 
         if not parent_eve_data_obj:
@@ -265,11 +262,11 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 % self.model.__name__,
             )
 
-        for key, child_class in self.model.children().items():
+        for key, child_class in self.model._children().items():
             if key in parent_eve_data_obj and parent_eve_data_obj[key]:
                 for id in parent_eve_data_obj[key]:
                     if wait_for_children:
-                        ChildClass = getattr(eveuniverse_models, child_class)
+                        ChildClass = self.model.get_model_class(child_class)
                         ChildClass.objects.update_or_create_esi(
                             id=id,
                             include_children=include_children,
@@ -296,9 +293,9 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         from .tasks import update_or_create_eve_object
 
         add_prefix = make_logger_prefix(f"{self.model.__name__}")
-        if self.model.is_list_only_endpoint():
+        if self.model._is_list_only_endpoint():
             try:
-                esi_pk = self.model.esi_pk()
+                esi_pk = self.model._esi_pk()
                 for eve_data_obj in self._fetch_from_esi():
                     args = {"id": eve_data_obj[esi_pk]}
                     args["defaults"] = self._defaults_from_esi_obj(eve_data_obj)
@@ -310,8 +307,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 )
                 raise ex
         else:
-            if self.model.has_esi_path_list():
-                category, method = self.model.esi_path_list()
+            if self.model._has_esi_path_list():
+                category, method = self.model._esi_path_list()
                 ids = getattr(getattr(esi.client, category), method,)().results()
                 for id in ids:
                     if wait_for_children:
@@ -339,7 +336,7 @@ class EvePlanetManager(EveUniverseEntityModelManager):
 
         esi_data = super()._fetch_from_esi(id)
         # no need to proceed if all children have been disabled
-        if not self.model.children():
+        if not self.model._children():
             return esi_data
 
         if "system_id" not in esi_data:

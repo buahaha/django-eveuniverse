@@ -95,7 +95,7 @@ class EveUniverseBaseModel(models.Model):
         return f"{self.__class__.__name__}({', '.join(fields_2)})"
 
     @classmethod
-    def esi_mapping(cls) -> dict:
+    def _esi_mapping(cls) -> dict:
         field_mappings = cls._eve_universe_meta_attr("field_mappings")
         functional_pk = cls._eve_universe_meta_attr("functional_pk")
         parent_fk = cls._eve_universe_meta_attr("parent_fk")
@@ -116,7 +116,7 @@ class EveUniverseBaseModel(models.Model):
 
             if field.primary_key is True:
                 is_pk = True
-                esi_name = cls.esi_pk()
+                esi_name = cls._esi_pk()
             elif functional_pk and field.name in functional_pk:
                 is_pk = True
             else:
@@ -214,20 +214,20 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return ""
 
     @classmethod
-    def esi_pk(cls) -> str:
+    def _esi_pk(cls) -> str:
         """returns the name of the pk column on ESI that must exist"""
         return cls._eve_universe_meta_attr("esi_pk", is_mandatory=True)
 
     @classmethod
-    def has_esi_path_list(cls) -> str:
+    def _has_esi_path_list(cls) -> str:
         return bool(cls._eve_universe_meta_attr("esi_path_list"))
 
     @classmethod
-    def esi_path_list(cls) -> str:
+    def _esi_path_list(cls) -> str:
         return cls._esi_path("list")
 
     @classmethod
-    def esi_path_object(cls) -> str:
+    def _esi_path_object(cls) -> str:
         return cls._esi_path("object")
 
     @classmethod
@@ -239,19 +239,19 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return path.split(".")
 
     @classmethod
-    def children(cls) -> dict:
+    def _children(cls) -> dict:
         """returns the mapping of children for this class"""
         mappings = cls._eve_universe_meta_attr("children")
         return mappings if mappings else dict()
 
     @classmethod
-    def inline_objects(cls) -> dict:
+    def _inline_objects(cls) -> dict:
         """returns a dict of inline objects if any"""
         inline_objects = cls._eve_universe_meta_attr("inline_objects")
         return inline_objects if inline_objects else dict()
 
     @classmethod
-    def is_list_only_endpoint(cls) -> bool:
+    def _is_list_only_endpoint(cls) -> bool:
         esi_path_list = cls._eve_universe_meta_attr("esi_path_list")
         esi_path_object = cls._eve_universe_meta_attr("esi_path_object")
         return esi_path_list and esi_path_object and esi_path_list == esi_path_object
@@ -276,13 +276,15 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
     @classmethod
     def get_model_class(cls, model_name: str) -> models.Model:
         """returns the model class for the given name"""
-        for name, ModelClass in inspect.getmembers(
-            sys.modules[__name__], inspect.isclass
-        ):
-            if model_name == name and issubclass(ModelClass, cls):
-                return ModelClass
-
-        raise ValueError("Unknown model_name: %s" % model_name)
+        classes = {
+            x[0]: x[1]
+            for x in inspect.getmembers(sys.modules[__name__], inspect.isclass)
+            if issubclass(x[1], EveUniverseBaseModel)
+        }
+        try:
+            return classes[model_name]
+        except KeyError:
+            raise ValueError("Unknown model_name: %s" % model_name)
 
 
 class EveUniverseInlineModel(EveUniverseBaseModel):
@@ -380,7 +382,7 @@ class EveEntity(EveUniverseEntityModel):
 
 
 class EveAncestry(EveUniverseEntityModel):
-    """"Ancestry in Eve Online"""
+    """An ancestry in Eve Online"""
 
     eve_bloodline = models.ForeignKey(
         "EveBloodline", on_delete=models.CASCADE, related_name="eve_bloodlines"
@@ -398,7 +400,7 @@ class EveAncestry(EveUniverseEntityModel):
 
 
 class EveAsteroidBelt(EveUniverseEntityModel):
-    """"Asteroid belt in Eve Online"""
+    """An asteroid belt in Eve Online"""
 
     eve_planet = models.ForeignKey(
         "EvePlanet", on_delete=models.CASCADE, related_name="eve_asteroid_belts"
@@ -428,7 +430,7 @@ class EveAsteroidBelt(EveUniverseEntityModel):
 
 
 class EveBloodline(EveUniverseEntityModel):
-    """"Bloodline in Eve Online"""
+    """A bloodline in Eve Online"""
 
     eve_race = models.ForeignKey(
         "EveRace",
@@ -457,7 +459,7 @@ class EveBloodline(EveUniverseEntityModel):
 
 
 class EveCategory(EveUniverseEntityModel):
-    """category in Eve Online"""
+    """An inventory category in Eve Online"""
 
     published = models.BooleanField()
 
@@ -470,7 +472,7 @@ class EveCategory(EveUniverseEntityModel):
 
 
 class EveConstellation(EveUniverseEntityModel):
-    """constellation in Eve Online"""
+    """A star constellation in Eve Online"""
 
     eve_region = models.ForeignKey(
         "EveRegion", on_delete=models.CASCADE, related_name="eve_constellations"
@@ -504,7 +506,7 @@ class EveConstellation(EveUniverseEntityModel):
 
 
 class EveDogmaAttribute(EveUniverseEntityModel):
-    """"Dogma Attribute in Eve Online"""
+    """A dogma attribute in Eve Online"""
 
     eve_unit = models.ForeignKey(
         "EveUnit",
@@ -530,7 +532,7 @@ class EveDogmaAttribute(EveUniverseEntityModel):
 
 
 class EveDogmaEffect(EveUniverseEntityModel):
-    """"Dogma effect in Eve Online"""
+    """A dogma effect in Eve Online"""
 
     description = models.TextField(default="")
     disallow_auto_repeat = models.BooleanField(default=None, null=True)
@@ -599,7 +601,7 @@ class EveDogmaEffect(EveUniverseEntityModel):
 
 
 class EveDogmaEffectModifier(EveUniverseInlineModel):
-    """Modifier for a dogma effect in Eve Online"""
+    """A modifier for a dogma effect in Eve Online"""
 
     domain = models.CharField(max_length=NAMES_MAX_LENGTH, default="")
     eve_dogma_effect = models.ForeignKey(
@@ -652,7 +654,7 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
 
 
 class EveFaction(EveUniverseEntityModel):
-    """"faction in Eve Online"""
+    """A faction in Eve Online"""
 
     corporation_id = models.PositiveIntegerField(default=None, null=True, db_index=True)
     description = models.TextField()
@@ -692,7 +694,7 @@ class EveFaction(EveUniverseEntityModel):
 
 
 class EveGraphic(EveUniverseEntityModel):
-    """graphic in Eve Online"""
+    """A graphic in Eve Online"""
 
     FILENAME_MAX_CHARS = 255
 
@@ -712,7 +714,7 @@ class EveGraphic(EveUniverseEntityModel):
 
 
 class EveGroup(EveUniverseEntityModel):
-    """group in Eve Online"""
+    """An inventory group in Eve Online"""
 
     eve_category = models.ForeignKey(
         "EveCategory", on_delete=models.CASCADE, related_name="eve_groups"
@@ -729,7 +731,7 @@ class EveGroup(EveUniverseEntityModel):
 
 
 class EveMarketGroup(EveUniverseEntityModel):
-    """"Market Group in Eve Online"""
+    """A market group in Eve Online"""
 
     description = models.TextField()
     parent_market_group = models.ForeignKey(
@@ -750,7 +752,7 @@ class EveMarketGroup(EveUniverseEntityModel):
 
 
 class EveMoon(EveUniverseEntityModel):
-    """"moon in Eve Online"""
+    """A moon in Eve Online"""
 
     eve_planet = models.ForeignKey(
         "EvePlanet", on_delete=models.CASCADE, related_name="eve_moons"
@@ -780,7 +782,7 @@ class EveMoon(EveUniverseEntityModel):
 
 
 class EvePlanet(EveUniverseEntityModel):
-    """"planet in Eve Online"""
+    """A planet in Eve Online"""
 
     eve_solar_system = models.ForeignKey(
         "EveSolarSystem", on_delete=models.CASCADE, related_name="eve_planets"
@@ -814,7 +816,7 @@ class EvePlanet(EveUniverseEntityModel):
         load_order = 160
 
     @classmethod
-    def children(cls) -> dict:
+    def _children(cls) -> dict:
         children = dict()
 
         if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
@@ -827,7 +829,7 @@ class EvePlanet(EveUniverseEntityModel):
 
 
 class EveRace(EveUniverseEntityModel):
-    """"faction in Eve Online"""
+    """A race in Eve Online"""
 
     alliance_id = models.PositiveIntegerField(db_index=True)
     description = models.TextField()
@@ -840,7 +842,7 @@ class EveRace(EveUniverseEntityModel):
 
 
 class EveRegion(EveUniverseEntityModel):
-    """region in Eve Online"""
+    """A star region in Eve Online"""
 
     description = models.TextField(default="")
 
@@ -857,7 +859,7 @@ class EveRegion(EveUniverseEntityModel):
 
 
 class EveSolarSystem(EveUniverseEntityModel):
-    """solar system in Eve Online"""
+    """A solar system in Eve Online"""
 
     eve_constellation = models.ForeignKey(
         "EveConstellation", on_delete=models.CASCADE, related_name="eve_solarsystems"
@@ -915,7 +917,7 @@ class EveSolarSystem(EveUniverseEntityModel):
         return 31000000 <= self.id < 32000000
 
     @classmethod
-    def children(cls) -> dict:
+    def _children(cls) -> dict:
         children = dict()
 
         if EVEUNIVERSE_LOAD_PLANETS:
@@ -1012,7 +1014,7 @@ class EveSolarSystem(EveUniverseEntityModel):
 
 
 class EveStar(EveUniverseEntityModel):
-    """"Star in Eve Online"""
+    """A star in Eve Online"""
 
     age = models.BigIntegerField()
     eve_type = models.ForeignKey(
@@ -1031,7 +1033,7 @@ class EveStar(EveUniverseEntityModel):
 
 
 class EveStargate(EveUniverseEntityModel):
-    """"Stargate in Eve Online"""
+    """A stargate in Eve Online"""
 
     destination_eve_stargate = models.OneToOneField(
         "EveStargate", on_delete=models.SET_DEFAULT, null=True, default=None, blank=True
@@ -1082,7 +1084,7 @@ class EveStargate(EveUniverseEntityModel):
 
 
 class EveStation(EveUniverseEntityModel):
-    """"station in Eve Online"""
+    """A space station in Eve Online"""
 
     eve_race = models.ForeignKey(
         "EveRace",
@@ -1136,13 +1138,13 @@ class EveStation(EveUniverseEntityModel):
 
 
 class EveStationService(models.Model):
-    """A service in a station"""
+    """A service in a space station"""
 
     name = models.CharField(max_length=50, unique=True)
 
 
 class EveType(EveUniverseEntityModel):
-    """Type in Eve Online"""
+    """An inventory type in Eve Online"""
 
     capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey(
@@ -1205,9 +1207,9 @@ class EveType(EveUniverseEntityModel):
         return disabled_fields
 
     @classmethod
-    def inline_objects(cls) -> dict:
+    def _inline_objects(cls) -> dict:
         if EVEUNIVERSE_LOAD_DOGMAS:
-            return super().inline_objects()
+            return super()._inline_objects()
         else:
             return dict()
 
@@ -1217,7 +1219,7 @@ class EveType(EveUniverseEntityModel):
 
 
 class EveTypeDogmaAttribute(EveUniverseInlineModel):
-    """Dogma attribute in Eve Online"""
+    """A dogma attribute of on inventory type in Eve Online"""
 
     eve_dogma_attribute = models.ForeignKey(
         "EveDogmaAttribute",
@@ -1248,7 +1250,7 @@ class EveTypeDogmaAttribute(EveUniverseInlineModel):
 
 
 class EveTypeDogmaEffect(EveUniverseInlineModel):
-    """Dogma effect in Eve Online"""
+    """A dogma effect of on inventory type in Eve Online"""
 
     eve_dogma_effect = models.ForeignKey(
         "EveDogmaEffect",
@@ -1278,7 +1280,7 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
 
 
 class EveUnit(EveUniverseEntityModel):
-    """Units in Eve Online"""
+    """A unit in Eve Online"""
 
     display_name = models.CharField(max_length=50, default="")
     description = models.TextField(default="")

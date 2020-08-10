@@ -82,7 +82,7 @@ def load_map() -> None:
         "and the following additional entities if related to the map: %s",
         ", ".join(_eve_object_names_to_be_loaded()),
     )
-    category, method = models.EveRegion.esi_path_list()
+    category, method = models.EveRegion._esi_path_list()
     all_ids = getattr(getattr(esi.client, category), method)().results()
     for id in all_ids:
         update_or_create_eve_object.delay(
