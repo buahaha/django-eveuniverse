@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - Renamed methods that are supposed to be only used internally:
-  - EveUniverseBaseModel: _esi_mapping()
-  - EveUniverseEntityModel and inherited models: inline_objects(), children(), esi_pk(), has_esi_path_list(), esi_path_list(), esi_path_object(), is_list_only_endpoint()
+  - models.EveUniverseBaseModel: esi_mapping()
+  - models.EveUniverseEntityModel and inherited models: inline_objects(), children(), esi_pk(), has_esi_path_list(), esi_path_list(), esi_path_object(), is_list_only_endpoint()
+- Renamed entity_id parameter in helpers.EveEntityNameResolver.to_name()
 
 ### Fixed
 

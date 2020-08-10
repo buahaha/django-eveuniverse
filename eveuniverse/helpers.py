@@ -1,4 +1,4 @@
-"""helper functions for using Eve Universe"""
+from typing import Dict
 
 
 def meters_to_ly(value: float) -> float:
@@ -16,14 +16,20 @@ class EveEntityNameResolver:
     and a performant API
     """
 
-    def __init__(self, names_map: dict) -> None:
+    def __init__(self, names_map: Dict[int, str]) -> None:
         self._names_map = names_map
 
-    def to_name(self, entity_id: int) -> str:
-        """returns name for corresponding entity ID if known else returns ""
+    def to_name(self, id: int) -> str:
+        """Resolved an entity ID to a name
+
+        Args:
+            id: ID of the Eve entity to resolve
+
+        Returns:
+            name for corresponding entity ID if known else an empty string
         """
         try:
-            name = self._names_map[entity_id]
+            name = self._names_map[id]
         except KeyError:
             name = ""
 

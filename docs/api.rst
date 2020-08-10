@@ -152,3 +152,14 @@ EveEntity comes with some additional manager methods.
 .. autoclass:: eveuniverse.managers.EveEntityManager
     :members:
     :exclude-members: get_queryset, update_or_create_all_esi
+
+Helpers
+====================
+
+.. autoclass:: eveuniverse.helpers.EveEntityNameResolver
+    :members: to_name
+
+.. autofunction:: eveuniverse.helpers.meters_to_au
+
+.. autofunction:: eveuniverse.helpers.meters_to_ly
+    
