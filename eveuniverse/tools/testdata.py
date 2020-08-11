@@ -2,6 +2,7 @@ from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import logging
 import json
+from typing import Dict
 
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -17,8 +18,15 @@ logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 ModelSpec = namedtuple("ModelSpec", ["ids", "include_children"])
 
 
-def create_testdata(spec: dict, filepath: str) -> None:
-    """Loads eve data from ESI as defined by spec and dumps it to file as JSON"""
+def create_testdata(
+    spec: Dict[EveUniverseEntityModel, ModelSpec], filepath: str
+) -> None:
+    """Loads eve data from ESI as defined by spec and dumps it to file as JSON
+    
+    Args:
+        spec: Specification of which Eve objects to load
+        filepath: absolute path of where to store the resulting JSON file
+    """
 
     # clear database
     for MyModel in EveUniverseEntityModel.all_models():
@@ -53,8 +61,12 @@ def create_testdata(spec: dict, filepath: str) -> None:
         json.dump(data, f, cls=DjangoJSONEncoder, indent=4, sort_keys=True)
 
 
-def load_testdata_from_dict(testdata: dict):
-    """loads testdata from a dict"""
+def load_testdata_from_dict(testdata: dict) -> None:
+    """creates eve objects in the database from testdata dump given as dict
+    
+    Args:
+        testdata: The dict containing the testdata as created by `create_testdata()`
+    """
     for MyModel in EveUniverseEntityModel.all_models():
         model_name = MyModel.__name__
         if model_name in testdata:
@@ -85,8 +97,12 @@ def load_testdata_from_dict(testdata: dict):
                     MyModel.objects.create(**obj)
 
 
-def load_testdata_from_file(filepath: str):
-    """loads testdata from a JSON file"""
+def load_testdata_from_file(filepath: str) -> None:
+    """creates eve objects in the database from testdata dump given as JSON file   
+    
+    Args:
+        filepath: Absolute path to the JSON file containing the testdata created by `create_testdata()`
+    """
     with open(filepath, "r", encoding="utf-8") as f:
         testdata = json.load(f)
 

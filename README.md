@@ -2,11 +2,11 @@
 
 Complete set of Eve Online Universe models in Django with on-demand loading from ESI
 
-![release](https://img.shields.io/pypi/v/django-eveuniverse?label=release) ![python](https://img.shields.io/pypi/pyversions/django-eveuniverse) ![django](https://img.shields.io/pypi/djversions/django-eveuniverse?label=django) ![pipeline](https://gitlab.com/ErikKalkoken/django-eveuniverse/badges/master/pipeline.svg) ![coverage](https://gitlab.com/ErikKalkoken/django-eveuniverse/badges/master/coverage.svg) ![license](https://img.shields.io/badge/license-MIT-green) ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
+![release](https://img.shields.io/pypi/v/django-eveuniverse?label=release) ![python](https://img.shields.io/pypi/pyversions/django-eveuniverse) ![django](https://img.shields.io/pypi/djversions/django-eveuniverse?label=django) ![pipeline](https://gitlab.com/ErikKalkoken/django-eveuniverse/badges/master/pipeline.svg) ![coverage](https://gitlab.com/ErikKalkoken/django-eveuniverse/badges/master/coverage.svg) ![Documentation Status](https://readthedocs.org/projects/django-eveuniverse/badge/?version=latest)![license](https://img.shields.io/badge/license-MIT-green) ![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)
 
 ## Overview
 
-*django-eveuniverse* is a foundation app meant to help speed up the development of Django apps that are using data from ESI. It provides all Eve Universe classes as Django models, including all relationships between then, ready to be used in your project. Furthermore, all Eve models have an on-demand loading mechanism that allows you to load and store every eve objects ad-hoc.
+*django-eveuniverse* is a foundation app meant to help speed up the development of Django apps that are using data from ESI. It provides all Eve classes from the Universe category in ESI as Django models, including all relationships between then, ready to be used in your project. Furthermore, all Eve models have an on-demand loading mechanism with database caching that will load eve objects from ESI as needed.
 
 Here is an overview of the main features:
 
@@ -19,4 +19,4 @@ Here is an overview of the main features:
 
 ## Documentation
 
-For details on how to install and use *django-eveuniverse* please see the documentation.
+For details on how to install and use *django-eveuniverse* please see the [documentation](https://dhooks-lite.readthedocs.io/en/latest/?badge=latest).

@@ -1,5 +1,7 @@
 # Operations Guide
 
+The operations guide describes how to install, configure and maintain *django-eveuniverse*.
+
 ## Installation
 
 To install django-eveuniverse into your Django project please follow the these steps:
@@ -20,15 +22,15 @@ By default only the core models are automatically loaded on-demand. If you want 
 
 ### Setup celery
 
-This app uses celery for loading large sets of data, e.g. with the load commands. Please make sure celery is setup and working for your Django project.
+This app uses [Celery](https://docs.celeryproject.org/en/stable/index.html) for loading large sets of data, e.g. with the load commands. Please make sure celery is setup and working for your Django project.
 
 ```eval_rst
 .. note::
-    Note on celery worker setup
+    **Note on celery worker setup**
 
     For an efficient loading of large amounts of data from ESI we recommend a thread based setup of celery workers with at least 10 concurrent workers.
 
-    For example on our test system with 20 gevent threads the loading of the complete Eve Online map (with the command: **eveuniverse_load_data map**) consisting of all regions, constellation and solar systems took only about 5 minutes.
+    For example on our test system with 20 `gevent <http://www.gevent.org/>`_ threads the loading of the complete Eve Online map (with the command: **eveuniverse_load_data map**) consisting of all regions, constellation and solar systems took only about 15 minutes.
 ```
 
 ### Finalize installation
@@ -107,6 +109,10 @@ Most settings will enable the automatic loading of related models. Note that thi
 
 Note that all settings are optional and the app will use the documented default settings if they are not used.
 
+```eval_rst
+.. _operations-management-commands:
+```
+
 ## Management commands
 
 The following management commands are available:
@@ -122,7 +128,7 @@ The following management commands are available:
 
 On some DBMS like MySQL it is not possible to reset the database and remove all eveuniverse tables with the standard "migrate zero" command. The reason is that eveuniverse is using composite primary keys and Django seams to have problems dealing with that correctly, when trying to roll back migrations.
 
-As workaround you will need remove all tables with SQL commands. To make this easier we are providing a SQL script that contains all commands to drop the tables. The full process for "migrating to zero" is as follows:
+As workaround you will need remove all tables with SQL commands. To make this easier we are providing a SQL script that contains all commands to drop the tables. The process for "migrating to zero" is then as follows:
 
 1. Run SQL script `drop_tables.sql` on your database
 2. Run `python manage.py migrate eveuniverse zero --fake`

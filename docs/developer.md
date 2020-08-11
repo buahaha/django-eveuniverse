@@ -1,14 +1,32 @@
 # Developer Guide
 
-## Basics
+The developer guide describes how to develop apps with *django-eveuniverse*.
 
-*django-eveuniverse* implements Django models for all eve objects from the ESI Universe category plus some related objects. These models can then be used in queries or included as related models in your app's own models.
+## Models
 
-The name of all models start with `Eve` and then the name of the object class. For example the model for solar systems is called `EveSolarSystem`.
+*django-eveuniverse* provides you with ready-made Django models for all Eve Universe classes. These models can be used like any other Django model in queries or included as related models in your app's own models.
 
-Please see the API for a list of all implemented Eve models.
+```eval_rst
+.. note::
+    The "Eve Universe" classes are the classes from the Universe category in ESI plus the related classes for dogma and market groups. The objects of those classes change rarely and most changes are just adding new objects (e.g. new types). They are therefore well suited to be stored and cached locally for a longer period of time.
 
-### Properties
+    The Eve Universe classes consist mostly of the same objects as the `Static Data Export <https://wiki.eveuniversity.org/Static_Data_Export>`_ (SDE).
+```
+
+```eval_rst
+.. seealso::
+    Please see :ref:`api-eve-models` for the full documentation of all available models.
+```
+
+### Relationship diagram
+
+The following graph shows all models and how they are interrelated:
+
+[![Models](https://i.imgur.com/FYYihzt.png)](https://i.imgur.com/FYYihzt.png)
+
+### Naming of models and properties
+
+The name of all models start with `Eve`. For example the model for solar systems is called `EveSolarSystem`.
 
 All Eve model share the following basic properties:
 
@@ -16,29 +34,58 @@ All Eve model share the following basic properties:
 - `name`: The name of the eve objects
 - `last_updated`: The date & time this object was last updated from ESI
 
-Properties that reference other Eve models always have the name of the referenced model, just in snake case. e.g. a property references a EveSolarSystem object would be called `eve_solar_system`.
+Property names are mostly the same as in the ESI specification. The exceptions are:
+
+- The common properties `id` and `name` as described above
+- Boolean fields start with `is_`
+- Properties that reference other Eve models always have the name of the referenced model, just in snake case. e.g. a property references a EveSolarSystem object would be called `eve_solar_system`.
 
 ### Magic Methods
 
 All Eve models have the following magic methods implemented:
 
 - `__str__()`: returns the name of an object
-- `__repr__()`: returns the complete object with all properties as model instance
+- `__repr__()`: returns the complete object with all properties as model instance.
 
-### Fetching eve objects
+Examples:
 
-All Eve models support on-demand loading of eve objects from ESI. This functionality is available through manager methods. One of these methods is `get_or_create_esi()`, which works similar to Django's `get_or_create()` method and will return the requested object along with a boolean flag showing if the object was created or not.
+```Python
+>>> str(EveSolarSystem.objects.get(id=30000142))
+'Jita'
+```
 
-For example for getting the solar system of Jita you could do the following:
+```Python
+>>> repr(EveSolarSystem.objects.get(id=30000142))
+"EveSolarSystem(eve_constellation_id=20000020, eve_star_id=None, id=30000142, name='Jita', position_x=-1.2906486173487826e+17, position_y=6.075530690996363e+16, position_z=1.1746922706009029e+17, security_status=0.9459131360054016)"
+```
+
+### Additional functionality in Eve Models
+
+Some Eve models provide additional useful functionality, e.g. icon image URLs.
+
+For example the `EveSolarSystem` comes with a lot of additional features incl. a route finder:
+
+```Python
+>>> jita = EveSolarSystem.objects.get(id=30000142)
+>>> akidagi = EveSolarSystem.objects.get(id=30045342)
+>>> jita.jumps_to(akidagi)
+10
+```
+
+## Fetching eve objects from ESI
+
+### Fetching eve objects on-demand
+
+To fetch an eve object you can simply call it's manager method `get_or_create_esi()`. This will return the requested eve objects from the database if it exists, or else automatically load it from ESI:
+
+For example for getting the solar system of Jita on-demand you could do the following:
 
 ```python
 >>> EveSolarSystem.objects.get_or_create_esi(id=30000142)
 (EveSolarSystem(eve_constellation_id=20000020, eve_star_id=None, id=30000142, name='Jita', position_x=-1.2906486173487826e+17, position_y=6.075530690996363e+16, position_z=1.1746922706009029e+17, security_status=0.9459131360054016), True)
 ```
 
-Once loaded the object will be automatically stored in the database and the next time that same command would return the local copy.
-
-Sometimes you may want to always fetch a fresh Eve objects from Esi. For that you can call `update_or_create_esi()`, which will always retrieve a new Eve objects and update the local copy.
+Or if want to fetch a fresh Eve object from ESI you can call the manager method `update_or_create_esi()`. This which will always retrieve a new Eve objects from ESI and update the local copy.
 
 Our example for Jita would then look like this:
 
@@ -47,13 +94,32 @@ Our example for Jita would then look like this:
 (EveSolarSystem(eve_constellation_id=20000020, eve_star_id=None, id=30000142, name='Jita', position_x=-1.2906486173487826e+17, position_y=6.075530690996363e+16, position_z=1.1746922706009029e+17, security_status=0.9459131360054016), False)
 ```
 
-Alternatively, a set of eve objects can be preloaded, e.g. during installation of an app. For details please see [Preloading data](#preloading-data)
+```eval_rst
+.. hint::
+    Please see :ref:`api-manager-methods` for an overview of all available methods.
+```
 
 ### Fetching parent and child objects
 
-Many Eve models have parent and child models. For example a `EveSolarSystem` has `EveConstellation` as parent, and `EvePlanet` as one of its many children. When fetching an Eve objects for the first time from ESI, the related parent objects will automatically be loaded to preserve the integrity of the database. For example if you are fetching Jita for the first time, the objects for Jita's constellation (parent of solar system) and Jita's region (parent of constellation) will be fetched too.
+Many Eve models have parent and child models. For example `EveSolarSystem` has `EveConstellation` as parent model, and `EvePlanet` is one of its child models. When fetching an Eve objects for the first time from ESI, the related parent objects will automatically be loaded to preserve the integrity of the database.
 
-In addition it is possible to automatically fetch all children of an object. This can be very useful for loading larger sets of data. For example, if you want to load all ship types, you can just fetch the inventory category for ships (id = 6) and include children. (Please see the method's API for all arguments.)
+For example if you are fetching Jita for the first time, the objects for Jita's constellation (parent of solar system) and Jita's region (parent of constellation) will be fetched too.
+
+In addition it is possible to automatically fetch all children of an object. This can be very useful for loading larger sets of data. For example, if you want to load all ship types, you can just fetch the inventory category for ships and include children by setting `include_children` to `True`.
+
+Example:
+
+```python
+>>> EveCategory.objects.get_or_create_esi(id=6, include_children=True)
+(EveCategory(id=6, name='Ship', published=True), False)
+```
+
+This will load all children blocking, which can take quite some time. For large sets of data it is often is better to load children async (via Celery). This can be done by setting `wait_for_children` to `False`.
+
+```python
+>>> EveCategory.objects.get_or_create_esi(id=6, include_children=True, wait_for_children=False)
+(EveCategory(id=6, name='Ship', published=True), False)
+```
 
 ### Selecting which related models are loaded
 
@@ -84,19 +150,57 @@ Our solution here is to offer developers control over which related models are l
     When turning on loading of related models you usually want to reload related eve objects that already exist in the database to make sure all relations are created correctly. e.g. after turning on ``EveStargate`` you want to reload all solar systems.
 ```
 
-### Additional functionality
+### Preloading data
 
-Some Eve models provide additional useful functionality, e.g. icon image URLs. Especially `EveSolarSystem` comes with a lot of additional features incl. a route finder. Please see the API for details.
+While all models support loading eve objects on demand from ESI, some apps might need specific data sets to be preloaded. For example an app might want to provide a drop down list of all structure types, and loading that list on demand would not be fast enough to guarantee acceptable UI response times.
 
-### Name resolution
+The solution is to provide the user with a management command, so he an preload the needed data sets - for example all ship types - during app installation. Since this is a command use case *django-eveuniverse* offers a management helper command with all the needed functionality for loading data and which can be easily utilized with just a very small and simple management command in your own app.
 
-A common problem when working with data from ESI is the need to resolve IDs to names / objects. To make this easier *django-eveuniverse* provides a dedicated model called `EveEntity`. `EveEntity` allows you to quickly resolve large amounts of IDs to objects, which include their respective names and categories in bulk. Resolved objects are automatically stored locally and used to speed up subsequent ID resolving.
+Here is an example for creating such a management command. We want to load all kinds of structures to show to the user in a drop down list. We therefore want to preload all structure types (`category_id = 65`), all control towers (`group_id = 365`) and the customs office (`type_id = 2233`):
 
-Here is a simple example for resolving one ID:
+```Python
+from django.core.management import call_command
+from django.core.management.base import BaseCommand
+
+
+class Command(BaseCommand):
+    help = "Preloads data required for this app from ESI"
+
+    def handle(self, *args, **options):
+        call_command(
+            "eveuniverse_load_types",
+            __title__,
+            "--category_id",
+            "65",
+            "--group_id",
+            "365",
+            "--type_id",
+            "2233",
+        )
+```
+
+For more details on how to use `eveuniverse_load_types` just call it with `--help` from a console.
+
+```eval_rst
+.. seealso::
+    For an overview of all management commands please see :ref:`operations-management-commands`.
+```
+
+## Eve ID to name resolution
+
+A common problem when working with data from ESI is the need to resolve the ID of an Eve object to it's name. To make this easier *django-eveuniverse* provides a dedicated model called `EveEntity`. `EveEntity` allows you to quickly resolve large amounts of Eve IDs to objects in bulk, with every object having it's name and entity category. Resolved objects are stored locally and automatically used to speed up subsequent ID resolving.
+
+Here is a simple example for resolving the ID of the Jita solar system:
 
 ```python
 >>> EveEntity.objects.resolve_name(30000142)
 'Jita'
+```
+
+```eval_rst
+.. note::
+    Eve IDs have unique ranged for the supported categories, which means they can be safely resolved without having to specify a category.
+
 ```
 
 This examples show how to resolve a list of IDs in bulk and using a resolver object to access the results:
@@ -115,7 +219,14 @@ This examples show how to resolve a list of IDs in bulk and using a resolver obj
 
 Another approach is to bulk create EveEntity objects with the ID only and then resolve all "new" objects with `EveEntity.objects.bulk_update_new_esi()`. This approach works well when using EveEntity objects as property in you app's models.
 
-For more features and details please see the API of `EveEntity`.
+```eval_rst
+.. seealso::
+    For more features and details please see :ref:`api-models-eve-entity` and :ref:`api-managers-eve-entity`.
+```
+
+```eval_rst
+.. _developer-testdata:
+```
 
 ## Test data
 
@@ -157,7 +268,7 @@ class CreateEveUniverseTestData(TestCase):
 
 ### Using generated testdata in your tests
 
-To user the generated testdata file in your test you need another script that creates objects from your generated JSON file.
+To utilize the generated testdata file in your test you need another script that creates objects from your generated JSON file.
 
 #### load_eveuniverse.py
 
@@ -205,34 +316,3 @@ class MyTest(TestCase):
     svipul = EveType.objects.get(id=34562)
     # ...
 ```
-
-## Preloading data
-
-While all models support loading eve objects on demand from ESI, some apps might need specific data sets to be preloaded. For example an app might want to provide a drop down list of all structure types, and loading that list on demand would not be fast enough to guarantee acceptable UI response times.
-
-The solution is to provide the user with a management command, so he an preload the needed data sets - for example all ship types - during app installation. Since this is a command use case *django-eveuniverse* offers a management helper command with all the needed functionality for loading data and which can be easily utilized with just a very small and simple management command ine the app.
-
-Here is an example for creating such a management command in the app. We want to load all kinds of structures to show to the user in a drop down list. We therefore want to preload all structure types (category_id = 65), all control towers (group_id = 365) and the customs office (type_id = 2233):
-
-```Python
-from django.core.management import call_command
-from django.core.management.base import BaseCommand
-
-
-class Command(BaseCommand):
-    help = "Preloads data required for this app from ESI"
-
-    def handle(self, *args, **options):
-        call_command(
-            "eveuniverse_load_types",
-            __title__,
-            "--category_id",
-            "65",
-            "--group_id",
-            "365",
-            "--type_id",
-            "2233",
-        )
-```
-
-For more details on how to use `eveuniverse_load_types` just call it with `--help` from a console.

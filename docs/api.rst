@@ -4,13 +4,9 @@
 API
 ===============
 
-Relationship diagramm
-=====================
+This chapter contains the developer reference documentation of the public API for *django-eveuniverse* consisting of all models, their manager methods and helpers.
 
-The following graph shows all models and how they are interrelated:
-
-.. image:: https://i.imgur.com/FYYihzt.png
-   :target: https://i.imgur.com/FYYihzt.png
+.. _api-eve-models:
 
 Eve Models
 ==========
@@ -50,6 +46,8 @@ EveDogmaEffect
 --------------
 .. autoclass:: eveuniverse.models.EveDogmaEffect
     :members:
+
+.. _api-models-eve-entity:
 
 Eve Entity
 --------------
@@ -130,19 +128,23 @@ EveUnit
 .. autoclass:: eveuniverse.models.EveUnit
     :members: 
 
+.. _api-manager-methods:
+
 Manager methods
 ====================
 
-Eve Models
-----------
+Default manager methods
+-------------------------
 
 All eve models have the following manager methods:
 
 .. autoclass:: eveuniverse.managers.EveUniverseEntityModelManager
     :members:
 
-EveEntity
-----------
+.. _api-managers-eve-entity:
+
+EveEntity manager methods
+-------------------------
 
 EveEntity comes with some additional manager methods.
 
@@ -162,3 +164,11 @@ Helpers
 
 .. autofunction:: eveuniverse.helpers.meters_to_ly
     
+Tools
+====================
+
+.. automodule:: eveuniverse.tools.testdata
+    :members:
+
+.. seealso::
+    Please also see :ref:`developer-testdata` on how to create test data for your app.

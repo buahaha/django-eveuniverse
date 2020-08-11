@@ -591,7 +591,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         raise NotImplementedError()
 
     def bulk_update_new_esi(self) -> int:
-        """updates all unresolved EveEntity objectrs in the database from ESI.
+        """updates all unresolved EveEntity objects in the database from ESI.
         
         Returns:
             Count of updated entities.
