@@ -44,6 +44,11 @@ test-linter:
   script:  
   - tox -e linter
 
+test-docs:
+  image: python:3.7-buster
+  script:  
+  - tox -e docs
+
 deploy-pypi:
   stage: deploy
   image: python:3.7-buster
