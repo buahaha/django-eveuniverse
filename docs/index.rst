@@ -6,7 +6,15 @@
 Welcome to django-eveuniverse's documentation!
 ==============================================
 
-*django-eveuniverse* is a foundation app meant to help speed up the development of Django apps that are using data from ESI. It provides all Eve classes from the Universe category in ESI as Django models, including all relationships between then, ready to be used in your project. Furthermore, all Eve models have an on-demand loading mechanism with database caching that will load eve objects from ESI as needed.
+.. figure:: _static/images/django-eveuniverse_logo.png
+   :align: left
+   :scale: 75 %
+   :alt: Logo
+
+*django-eveuniverse* is a foundation app meant to help speed up the development of Eve Online apps with Django and ESI. It provides all classic "static" Eve classes as Django models, including all relationships, ready to be used in your project.
+
+Furthermore, all Eve models have an on-demand loading mechanism for fetching new objects from ESI.
+
 
 .. toctree::
    :maxdepth: 2

@@ -22,7 +22,10 @@ The developer guide describes how to develop apps with *django-eveuniverse*.
 
 The following graph shows all models and how they are interrelated:
 
-[![Models](https://i.imgur.com/FYYihzt.png)](https://i.imgur.com/FYYihzt.png)
+```eval_rst
+    .. image::  _static/images/aa-eveuniverse_models.png
+        :target: _static/images/aa-eveuniverse_models.png
+```
 
 ### Naming of models and properties
 
