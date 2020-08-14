@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.3.1] - 2020-08-14
+
+### Changed
+
+- `EveEntity.objects.bulk_create_esi()` will now resolve all given entities from ESI, not only newly created ones
+
 ## [0.3.0] - 2020-08-11
 
 ### Added

@@ -566,7 +566,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         return obj, created
 
     def bulk_create_esi(self, ids: Iterable[int]) -> int:
-        """bulk create multiple entities from ESI.
+        """bulk create and resolve multiple entities from ESI.
         
         Args:
             ids: List of valid EveEntity IDs
@@ -580,9 +580,8 @@ class EveEntityManager(EveUniverseEntityModelManager):
         if new_ids:
             objects = [self.model(id=id) for id in new_ids]
             self.bulk_create(objects, ignore_conflicts=True)
-            return self.filter(id__in=ids).update_from_esi()
-        else:
-            return 0
+
+        return self.filter(id__in=ids).update_from_esi()
 
     def update_or_create_all_esi(
         self, *, include_children: bool = False, wait_for_children: bool = True,

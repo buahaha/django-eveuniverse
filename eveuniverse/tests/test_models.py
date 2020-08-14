@@ -1267,9 +1267,6 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.name, "Wayne Technologies")
         self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
 
-        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
-        self.assertEqual(result, 0)
-
     def test_update_or_create_all_esi_raises_exception(self, mock_esi):
         with self.assertRaises(NotImplementedError):
             EveEntity.objects.update_or_create_all_esi()
