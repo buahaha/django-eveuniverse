@@ -813,7 +813,7 @@ class EvePlanet(EveUniverseEntityModel):
             "position_z": ("position", "z"),
         }
         children = {"moons": "EveMoon", "asteroid_belts": "EveAsteroidBelt"}
-        load_order = 160
+        load_order = 205
 
     @classmethod
     def _children(cls) -> dict:
@@ -1130,7 +1130,7 @@ class EveStation(EveUniverseEntityModel):
             "position_z": ("position", "z"),
         }
         inline_objects = {"services": "EveStationService"}
-        load_order = 165
+        load_order = 207
 
     @classmethod
     def eve_entity_category(cls) -> str:

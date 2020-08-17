@@ -784,7 +784,8 @@
                 "name": "Jita",
                 "planets": [
                     {
-                        "planet_id": 40009077
+                        "planet_id": 40009077,
+                        "moons": null
                     }
                 ],
                 "position": {
@@ -819,6 +820,10 @@
                 "constellation_id": 20000785,
                 "name": "Enaluri",
                 "planets": [
+                    {
+                        "moons": null,
+                        "planet_id": 40009077
+                    },
                     {
                         "moons": [
                             40349468

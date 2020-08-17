@@ -416,6 +416,7 @@ class EvePlanetChildrenManager(EveUniverseEntityModelManager):
         for planet in solar_system_data["planets"]:
             if (
                 self._my_property_name in planet
+                and planet[self._my_property_name]
                 and id in planet[self._my_property_name]
             ):
                 esi_data["planet_id"] = planet["planet_id"]

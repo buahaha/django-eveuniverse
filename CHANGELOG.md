@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.3.2] - 2020-08-17
+
+### Fixed
+
+- Moon failed to load when there where other planets without moons
+- Load order for planet and station was not correct
+
 ## [0.3.1] - 2020-08-14
 
 ### Changed
