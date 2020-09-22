@@ -12,7 +12,7 @@ def meters_to_au(value: float) -> float:
 
 
 class EveEntityNameResolver:
-    """Container with a mapping between entity Ids and entity names 
+    """Container with a mapping between entity Ids and entity names
     and a performant API
     """
 

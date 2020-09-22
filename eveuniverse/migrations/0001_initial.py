@@ -39,7 +39,9 @@ class Migration(migrations.Migration):
                 ),
                 ("published", models.BooleanField()),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveConstellation",
@@ -95,7 +97,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveDogmaAttribute",
@@ -134,7 +138,9 @@ class Migration(migrations.Migration):
                 ("published", models.BooleanField(default=None, null=True)),
                 ("stackable", models.BooleanField(default=None, null=True)),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveDogmaEffect",
@@ -238,7 +244,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveEntity",
@@ -286,7 +294,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveGraphic",
@@ -322,7 +332,9 @@ class Migration(migrations.Migration):
                 ("sof_hull_name", models.CharField(default="", max_length=255)),
                 ("sof_race_name", models.CharField(default="", max_length=255)),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveGroup",
@@ -360,7 +372,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveMarketGroup",
@@ -400,7 +414,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveRace",
@@ -431,7 +447,9 @@ class Migration(migrations.Migration):
                 ("alliance_id", models.PositiveIntegerField(db_index=True)),
                 ("description", models.TextField()),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveRegion",
@@ -461,7 +479,9 @@ class Migration(migrations.Migration):
                 ),
                 ("description", models.TextField(default="")),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveSolarSystem",
@@ -526,7 +546,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveStationService",
@@ -609,7 +631,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveUnit",
@@ -640,7 +664,9 @@ class Migration(migrations.Migration):
                 ("display_name", models.CharField(default="", max_length=50)),
                 ("description", models.TextField(default="")),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveTypeDogmaEffect",
@@ -796,7 +822,9 @@ class Migration(migrations.Migration):
                     models.ManyToManyField(to="eveuniverse.EveStationService"),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveStargate",
@@ -889,7 +917,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveStar",
@@ -931,7 +961,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.AddField(
             model_name="evesolarsystem",
@@ -1014,7 +1046,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveMoon",
@@ -1078,7 +1112,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveFaction",
@@ -1130,7 +1166,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveDogmaEffectModifier",
@@ -1260,7 +1298,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveAsteroidBelt",
@@ -1324,7 +1364,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.CreateModel(
             name="EveAncestry",
@@ -1367,7 +1409,9 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"abstract": False,},
+            options={
+                "abstract": False,
+            },
         ),
         migrations.AddConstraint(
             model_name="evetypedogmaeffect",

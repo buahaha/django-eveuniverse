@@ -18,7 +18,7 @@ def _eve_entity_image_url(
 ) -> str:
     """returns image URL for an Eve Online ID.
     Supported categories: alliance, corporation, character, inventory_type
-    
+
     Arguments:
     - category: category of the ID, see ESI category constants
     - entity_id: Eve ID of the entity

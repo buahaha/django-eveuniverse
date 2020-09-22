@@ -205,7 +205,8 @@ class TestEveDogmaEffect(NoSocketsTestCase):
             modifiers.modified_attribute, EveDogmaAttribute.objects.get(id=271)
         )
         self.assertEqual(
-            modifiers.modifying_attribute, EveDogmaAttribute.objects.get(id=463),
+            modifiers.modifying_attribute,
+            EveDogmaAttribute.objects.get(id=463),
         )
         self.assertEqual(modifiers.operator, 6)
 
@@ -327,7 +328,8 @@ class TestEvePlanet(NoSocketsTestCase):
         mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(
-            id=40349467, include_children=True,
+            id=40349467,
+            include_children=True,
         )
         self.assertTrue(created)
         self.assertEqual(obj.id, 40349467)
@@ -346,7 +348,8 @@ class TestEvePlanet(NoSocketsTestCase):
         mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(
-            id=40349471, include_children=True,
+            id=40349471,
+            include_children=True,
         )
         self.assertTrue(created)
         self.assertEqual(obj.id, 40349471)
@@ -364,7 +367,8 @@ class TestEvePlanet(NoSocketsTestCase):
         mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(
-            id=40349471, include_children=True,
+            id=40349471,
+            include_children=True,
         )
         self.assertTrue(created)
         self.assertEqual(obj.id, 40349471)
@@ -382,7 +386,8 @@ class TestEvePlanet(NoSocketsTestCase):
 
         # create scenario
         obj, created = EvePlanet.objects.update_or_create_esi(
-            id=40349467, include_children=True,
+            id=40349467,
+            include_children=True,
         )
         self.assertTrue(created)
         self.assertEqual(obj.id, 40349467)
@@ -395,7 +400,8 @@ class TestEvePlanet(NoSocketsTestCase):
 
         # action
         EvePlanet.objects.get_or_create_esi(
-            id=40349467, include_children=True,
+            id=40349467,
+            include_children=True,
         )
 
         # validate
@@ -408,7 +414,8 @@ class TestEvePlanet(NoSocketsTestCase):
 
         # create scenario
         obj, created = EvePlanet.objects.update_or_create_esi(
-            id=40349467, include_children=True,
+            id=40349467,
+            include_children=True,
         )
         self.assertTrue(created)
         self.assertEqual(obj.id, 40349467)

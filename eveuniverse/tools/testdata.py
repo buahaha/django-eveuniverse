@@ -22,7 +22,7 @@ def create_testdata(
     spec: Dict[EveUniverseEntityModel, ModelSpec], filepath: str
 ) -> None:
     """Loads eve data from ESI as defined by spec and dumps it to file as JSON
-    
+
     Args:
         spec: Specification of which Eve objects to load
         filepath: absolute path of where to store the resulting JSON file
@@ -63,7 +63,7 @@ def create_testdata(
 
 def load_testdata_from_dict(testdata: dict) -> None:
     """creates eve objects in the database from testdata dump given as dict
-    
+
     Args:
         testdata: The dict containing the testdata as created by `create_testdata()`
     """
@@ -98,8 +98,8 @@ def load_testdata_from_dict(testdata: dict) -> None:
 
 
 def load_testdata_from_file(filepath: str) -> None:
-    """creates eve objects in the database from testdata dump given as JSON file   
-    
+    """creates eve objects in the database from testdata dump given as JSON file
+
     Args:
         filepath: Absolute path to the JSON file containing the testdata created by `create_testdata()`
     """

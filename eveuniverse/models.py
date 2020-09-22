@@ -179,7 +179,7 @@ class EveUniverseBaseModel(models.Model):
 
 class EveUniverseEntityModel(EveUniverseBaseModel):
     """Eve Universe Entity model
-    
+
     Entity models are normal Eve entities that have a dedicated ESI endpoint
     """
 
@@ -289,8 +289,8 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 
 class EveUniverseInlineModel(EveUniverseBaseModel):
     """Eve Universe Inline model
-    
-    Inline models are objects which do not have a dedicated ESI endpoint and are 
+
+    Inline models are objects which do not have a dedicated ESI endpoint and are
     provided through the endpoint of another entity
 
     This class is also used for static Eve data
@@ -301,12 +301,12 @@ class EveUniverseInlineModel(EveUniverseBaseModel):
 
 
 class EveEntity(EveUniverseEntityModel):
-    """An Eve object from one of the categories supported by ESI's 
+    """An Eve object from one of the categories supported by ESI's
     `/universe/names/` endpoint:
 
     alliance, character, constellation, faction, type, region, solar system, station
-    
-    
+
+
     This is a special model model dedicated to quick resolution of Eve IDs to names and their categories, e.g. for characters. See also manager methods.
     """
 
@@ -351,7 +351,7 @@ class EveEntity(EveUniverseEntityModel):
 
     def update_from_esi(self) -> "EveEntity":
         """Update the current object from ESI
-        
+
         Returns:
             itself after update
         """
@@ -360,7 +360,7 @@ class EveEntity(EveUniverseEntityModel):
 
     def icon_url(self, size: int = EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """Create image URL for related EVE icon
-        
+
         Args:
             size: size of image file in pixels, allowed values: 32, 64, 128, 256, 512
 
@@ -635,7 +635,8 @@ class EveDogmaEffectModifier(EveUniverseInlineModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["eve_dogma_effect", "func"], name="fpk_evedogmaeffectmodifier",
+                fields=["eve_dogma_effect", "func"],
+                name="fpk_evedogmaeffectmodifier",
             )
         ]
 
@@ -682,7 +683,7 @@ class EveFaction(EveUniverseEntityModel):
 
     def logo_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """returns an image URL for this faction
-        
+
         Args:
             size: optional size of the image
         """
@@ -947,7 +948,7 @@ class EveSolarSystem(EveUniverseEntityModel):
 
         Args:
             destination: Other solar system to use in calculation
-                
+
         Returns:
             Distance in meters or None if one of the systems is in WH space
         """
@@ -967,7 +968,7 @@ class EveSolarSystem(EveUniverseEntityModel):
 
         Args:
             destination: Other solar system to use in calculation
-                
+
         Returns:
             List of solar system objects incl. origin and destination or None if no route can be found (e.g. if one system is in WH space)
         """
@@ -985,7 +986,7 @@ class EveSolarSystem(EveUniverseEntityModel):
 
         Args:
             destination: Other solar system to use in calculation
-                
+
         Returns:
             Number of total jumps or None if no route can be found (e.g. if one system is in WH space)
         """
@@ -995,12 +996,12 @@ class EveSolarSystem(EveUniverseEntityModel):
     @staticmethod
     def _calc_route_esi(origin_id: int, destination_id: int) -> Optional[List[int]]:
         """returns the shortest route between two given solar systems.
-        
+
         Route is calculated by ESI
-        
+
         Args:
             destination_id: ID of the other solar system to use in calculation
-                
+
         Returns:
             List of solar system IDs incl. origin and destination or None if no route can be found (e.g. if one system is in WH space)
         """
@@ -1094,10 +1095,14 @@ class EveStation(EveUniverseEntityModel):
         related_name="eve_stations",
     )
     eve_solar_system = models.ForeignKey(
-        "EveSolarSystem", on_delete=models.CASCADE, related_name="eve_stations",
+        "EveSolarSystem",
+        on_delete=models.CASCADE,
+        related_name="eve_stations",
     )
     eve_type = models.ForeignKey(
-        "EveType", on_delete=models.CASCADE, related_name="eve_stations",
+        "EveType",
+        on_delete=models.CASCADE,
+        related_name="eve_stations",
     )
     max_dockable_ship_volume = models.FloatField()
     office_rental_cost = models.FloatField()
@@ -1148,7 +1153,9 @@ class EveType(EveUniverseEntityModel):
 
     capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey(
-        "EveGroup", on_delete=models.CASCADE, related_name="eve_types",
+        "EveGroup",
+        on_delete=models.CASCADE,
+        related_name="eve_types",
     )
     eve_graphic = models.ForeignKey(
         "EveGraphic",
@@ -1265,7 +1272,8 @@ class EveTypeDogmaEffect(EveUniverseInlineModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["eve_type", "eve_dogma_effect"], name="fpk_evetypedogmaeffect",
+                fields=["eve_type", "eve_dogma_effect"],
+                name="fpk_evetypedogmaeffect",
             )
         ]
 

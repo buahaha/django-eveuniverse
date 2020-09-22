@@ -87,8 +87,7 @@ class EsiRoute:
 class EsiClientStub:
     @classmethod
     def _generate(cls):
-        """dnamically generates the client class with all attributes based on definition
-        """
+        """dnamically generates the client class with all attributes based on definition"""
         EsiEndpoint = namedtuple("EsiSpec", ["category", "method", "key"])
         esi_endpoints = [
             EsiEndpoint("Dogma", "get_dogma_attributes_attribute_id", "attribute_id"),

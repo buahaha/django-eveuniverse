@@ -24,7 +24,8 @@ class Command(BaseCommand):
             for MyModel in EveUniverseEntityModel.all_models():
                 self.stdout.write(
                     "Deleting {:,} objects from {}".format(
-                        MyModel.objects.count(), MyModel.__name__,
+                        MyModel.objects.count(),
+                        MyModel.__name__,
                     )
                 )
                 MyModel.objects.all().delete()

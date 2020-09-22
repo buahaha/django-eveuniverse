@@ -77,17 +77,17 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         wait_for_children: bool = True,
     ) -> Tuple[models.Model, bool]:
         """gets or creates an eve universe object.
-        
+
         The object is automatically fetched from ESI if it does not exist (blocking).
         Will always get/create parent objects.
-        
+
         Args:
             id: Eve Online ID of object
             include_children: when needed to updated/created if child objects should be updated/created as well (if any)
             wait_for_children: when true child objects will be updated/created blocking (if any), else async
-        
+
         Returns:
-            A tuple consisting of the requested object and a created flag                
+            A tuple consisting of the requested object and a created flag
         """
         try:
             obj = self.get(id=id)
@@ -148,14 +148,15 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
         except Exception as ex:
             logger.warn(
-                add_prefix("Failed to update or create: %s" % ex), exc_info=True,
+                add_prefix("Failed to update or create: %s" % ex),
+                exc_info=True,
             )
             raise ex
 
         return obj, created
 
     def _fetch_from_esi(self, id: int = None) -> object:
-        """make request to ESI and return response data. 
+        """make request to ESI and return response data.
         Can handle raw ESI response from both list and normal endpoints.
         """
         if id and not self.model._is_list_only_endpoint():
@@ -163,7 +164,10 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         else:
             args = dict()
         category, method = self.model._esi_path_object()
-        esi_data = getattr(getattr(esi.client, category), method,)(**args).results()
+        esi_data = getattr(
+            getattr(esi.client, category),
+            method,
+        )(**args).results()
         return esi_data
 
     def _transform_esi_response_for_list_endpoints(self, id: int, esi_data) -> object:
@@ -221,7 +225,11 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 if not parent_fk or not other_pk:
                     raise ValueError(
                         "ESI Mapping for %s not valid: %s, %s"
-                        % (model_name, parent_fk, other_pk,)
+                        % (
+                            model_name,
+                            parent_fk,
+                            other_pk,
+                        )
                     )
 
                 for eve_data_obj in parent_eve_data_obj[inline_field]:
@@ -232,9 +240,10 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             value = ParentClass2.objects.get(id=esi_value)
                         except ParentClass2.DoesNotExist:
                             if hasattr(ParentClass2.objects, "update_or_create_esi"):
-                                (value, _,) = ParentClass2.objects.get_or_create_esi(
-                                    id=esi_value
-                                )
+                                (
+                                    value,
+                                    _,
+                                ) = ParentClass2.objects.get_or_create_esi(id=esi_value)
                             else:
                                 value = None
                     else:
@@ -282,12 +291,15 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                         )
 
     def update_or_create_all_esi(
-        self, *, include_children: bool = False, wait_for_children: bool = True,
+        self,
+        *,
+        include_children: bool = False,
+        wait_for_children: bool = True,
     ) -> None:
         """updates or creates all objects of this class from ESI.
-        
+
         Loading all objects can take a long time. Use with care!
-        
+
         Args:
             include_children: if child objects should be updated/created as well (if any)
             wait_for_children: when false all objects will be loaded async, else blocking
@@ -305,13 +317,17 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
             except Exception as ex:
                 logger.warn(
-                    add_prefix("Failed to update or create: %s" % ex), exc_info=True,
+                    add_prefix("Failed to update or create: %s" % ex),
+                    exc_info=True,
                 )
                 raise ex
         else:
             if self.model._has_esi_path_list():
                 category, method = self.model._esi_path_list()
-                ids = getattr(getattr(esi.client, category), method,)().results()
+                ids = getattr(
+                    getattr(esi.client, category),
+                    method,
+                )().results()
                 for id in ids:
                     if wait_for_children:
                         self.update_or_create_esi(
@@ -339,15 +355,15 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         wait_for_children: bool = True,
     ) -> models.QuerySet:
         """Gets or creates objects in bulk.
-        
-        Nonexisting objects will be fetched from ESI (blocking). 
+
+        Nonexisting objects will be fetched from ESI (blocking).
         Will always get/create parent objects.
-        
+
         Args:
             ids: List of valid IDs of Eve objects
             include_children: when needed to updated/created if child objects should be updated/created as well (if any)
             wait_for_children: when true child objects will be updated/created blocking (if any), else async
-        
+
         Returns:
             Queryset with all requested eve objects
         """
@@ -552,7 +568,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         wait_for_children: bool = True,
     ) -> Tuple[models.Model, bool]:
         """updates or creates an EveEntity object by fetching it from ESI (blocking).
-        
+
         Args:
             id: Eve Online ID of object
             include_children: (no effect)
@@ -568,7 +584,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
 
     def bulk_create_esi(self, ids: Iterable[int]) -> int:
         """bulk create and resolve multiple entities from ESI.
-        
+
         Args:
             ids: List of valid EveEntity IDs
 
@@ -585,14 +601,17 @@ class EveEntityManager(EveUniverseEntityModelManager):
         return self.filter(id__in=ids).update_from_esi()
 
     def update_or_create_all_esi(
-        self, *, include_children: bool = False, wait_for_children: bool = True,
+        self,
+        *,
+        include_children: bool = False,
+        wait_for_children: bool = True,
     ) -> None:
         """not implemented - do not use"""
         raise NotImplementedError()
 
     def bulk_update_new_esi(self) -> int:
         """updates all unresolved EveEntity objects in the database from ESI.
-        
+
         Returns:
             Count of updated entities.
         """
@@ -600,14 +619,14 @@ class EveEntityManager(EveUniverseEntityModelManager):
 
     def bulk_update_all_esi(self):
         """Updates all EveEntity objects in the database from ESI.
-        
+
         Returns:
             Count of updated entities.
         """
         return self.all().update_from_esi()
 
     def resolve_name(self, id: int) -> str:
-        """return the name for the given Eve entity ID 
+        """return the name for the given Eve entity ID
         or an empty string if ID is not valid
         """
         if id is not None:
@@ -619,7 +638,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
 
     def bulk_resolve_names(self, ids: Iterable[int]) -> EveEntityNameResolver:
         """returns a map of IDs to names in a resolver object for given IDs
-        
+
         Args:
             ids: List of valid EveEntity IDs
 

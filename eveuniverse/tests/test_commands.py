@@ -98,7 +98,9 @@ class TestLoadTypes(NoSocketsTestCase):
         mock_get_input.return_value = "Y"
 
         call_command(
-            "eveuniverse_load_types", "dummy_app", stdout=self.out,
+            "eveuniverse_load_types",
+            "dummy_app",
+            stdout=self.out,
         )
 
     def test_can_abort(self, mock_get_input, mock_esi):
