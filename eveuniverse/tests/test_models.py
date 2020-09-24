@@ -1239,41 +1239,6 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(obj.name, "Bruce Wayne")
         self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
 
-    def test_can_bulk_create_from_esi_1(self, mock_esi):
-        mock_esi.client = EsiClientStub()
-
-        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
-        self.assertEqual(result, 2)
-
-        obj = EveEntity.objects.get(id=1001)
-        self.assertEqual(obj.id, 1001)
-        self.assertEqual(obj.name, "Bruce Wayne")
-        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
-
-        obj = EveEntity.objects.get(id=2001)
-        self.assertEqual(obj.id, 2001)
-        self.assertEqual(obj.name, "Wayne Technologies")
-        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
-
-    def test_can_bulk_create_from_esi_2(self, mock_esi):
-        mock_esi.client = EsiClientStub()
-
-        EveEntity.objects.create(
-            id=1001, name="John Doe", category=EveEntity.CATEGORY_CORPORATION
-        )
-        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
-        self.assertEqual(result, 2)
-
-        obj = EveEntity.objects.get(id=1001)
-        self.assertEqual(obj.id, 1001)
-        self.assertEqual(obj.name, "Bruce Wayne")
-        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
-
-        obj = EveEntity.objects.get(id=2001)
-        self.assertEqual(obj.id, 2001)
-        self.assertEqual(obj.name, "Wayne Technologies")
-        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
-
     def test_update_or_create_all_esi_raises_exception(self, mock_esi):
         with self.assertRaises(NotImplementedError):
             EveEntity.objects.update_or_create_all_esi()
@@ -1343,3 +1308,61 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(resolver.to_name(1001), "Bruce Wayne")
         self.assertEqual(resolver.to_name(2001), "Wayne Technologies")
         self.assertEqual(resolver.to_name(3001), "Wayne Enterprises")
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveEntityBulkCreateEsi(NoSocketsTestCase):
+    def setUp(self):
+        EveEntity.objects.all().delete()
+
+    def test_create_new_entities(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
+        self.assertEqual(result, 2)
+
+        obj = EveEntity.objects.get(id=1001)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+        obj = EveEntity.objects.get(id=2001)
+        self.assertEqual(obj.id, 2001)
+        self.assertEqual(obj.name, "Wayne Technologies")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
+
+    def test_create_only_non_existing_entities(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        EveEntity.objects.create(
+            id=1001, name="Bruce Wayne", category=EveEntity.CATEGORY_CHARACTER
+        )
+        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
+        self.assertEqual(result, 1)
+
+        obj = EveEntity.objects.get(id=1001)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+        obj = EveEntity.objects.get(id=2001)
+        self.assertEqual(obj.id, 2001)
+        self.assertEqual(obj.name, "Wayne Technologies")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)
+
+    def test_entities_without_name_will_be_refetched(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        EveEntity.objects.create(id=1001, category=EveEntity.CATEGORY_CORPORATION)
+        result = EveEntity.objects.bulk_create_esi(ids=[1001, 2001])
+        self.assertEqual(result, 2)
+
+        obj = EveEntity.objects.get(id=1001)
+        self.assertEqual(obj.id, 1001)
+        self.assertEqual(obj.name, "Bruce Wayne")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CHARACTER)
+
+        obj = EveEntity.objects.get(id=2001)
+        self.assertEqual(obj.id, 2001)
+        self.assertEqual(obj.name, "Wayne Technologies")
+        self.assertEqual(obj.category, EveEntity.CATEGORY_CORPORATION)

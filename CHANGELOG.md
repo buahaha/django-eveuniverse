@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.3.3] - 2020-09-24
+
+### Changed
+
+- Added full test matrix with Django 2 and Django 3
+
+### Fixed
+
+- Will no longer refetch already resolved entities in bulk_create_esi
+
 ## [0.3.2] - 2020-08-17
 
 ### Fixed

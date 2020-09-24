@@ -592,13 +592,16 @@ class EveEntityManager(EveUniverseEntityModelManager):
             Count of updated entities
         """
         ids = set(ids)
-        existing_ids = set(self.filter(id__in=ids).values_list("id", flat=True))
+        existing_ids = set(
+            self.filter(id__in=ids).exclude(name="").values_list("id", flat=True)
+        )
         new_ids = ids.difference(existing_ids)
         if new_ids:
             objects = [self.model(id=id) for id in new_ids]
             self.bulk_create(objects, ignore_conflicts=True)
+            return self.filter(id__in=new_ids).update_from_esi()
 
-        return self.filter(id__in=ids).update_from_esi()
+        return 0
 
     def update_or_create_all_esi(
         self,

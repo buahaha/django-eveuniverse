@@ -21,6 +21,7 @@ setup(
     description="Complete set of Eve Universe models with on-demand loading from ESI",
     long_description=long_description,
     long_description_content_type="text/markdown",
+    url="https://gitlab.com/ErikKalkoken/django-eveuniverse",
     author="Erik Kalkoken",
     author_email="kalkoken87@gmail.com",
     classifiers=[
@@ -29,7 +30,7 @@ setup(
         "Framework :: Django :: 2.2",
         "Framework :: Django :: 3.0",
         "Framework :: Django :: 3.1",
-        "Intended Audience :: End Users/Desktop",
+        "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
