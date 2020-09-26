@@ -89,6 +89,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         Returns:
             A tuple consisting of the requested object and a created flag
         """
+        id = int(id)
         try:
             obj = self.get(id=id)
             created = False
@@ -119,6 +120,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         Returns:
             A tuple consisting of the requested object and a created flag
         """
+        id = int(id)
         add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
         try:
             eve_data_obj = self._transform_esi_response_for_list_endpoints(
@@ -371,7 +373,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         existing_ids = set(self.filter(id__in=ids).values_list("id", flat=True))
         for id in ids.difference(existing_ids):
             self.update_or_create_esi(
-                id=id,
+                id=int(id),
                 include_children=include_children,
                 wait_for_children=wait_for_children,
             )
@@ -466,7 +468,7 @@ class EveStargateManager(EveUniverseEntityModelManager):
             A tuple consisting of the requested object and a created flag
         """
         obj, created = super().update_or_create_esi(
-            id=id,
+            id=int(id),
             include_children=include_children,
             wait_for_children=wait_for_children,
         )
@@ -577,6 +579,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         Returns:
             A tuple consisting of the requested object and a created flag
         """
+        id = int(id)
         obj, created = self.update_or_create(id=id)
         self.filter(id=id).update_from_esi()
         obj.refresh_from_db()
@@ -591,7 +594,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         Returns:
             Count of updated entities
         """
-        ids = set(ids)
+        ids = set(map(int, ids))
         existing_ids = set(
             self.filter(id__in=ids).exclude(name="").values_list("id", flat=True)
         )
@@ -633,7 +636,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         or an empty string if ID is not valid
         """
         if id is not None:
-            obj, _ = self.get_or_create_esi(id=id)
+            obj, _ = self.get_or_create_esi(id=int(id))
             if obj:
                 return obj.name
 

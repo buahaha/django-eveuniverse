@@ -76,9 +76,12 @@ class EveUniverseBaseModel(models.Model):
         )
         fields_2 = list()
         for f in fields:
-            if f.is_relation:
+            if f.many_to_one or f.one_to_one:
                 name = f"{f.name}_id"
                 value = getattr(self, name)
+            elif f.many_to_many:
+                name = f.name
+                value = ", ".join(sorted([str(x) for x in getattr(self, f.name).all()]))
             else:
                 name = f.name
                 value = getattr(self, f.name)
@@ -1146,6 +1149,9 @@ class EveStationService(models.Model):
     """A service in a space station"""
 
     name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class EveType(EveUniverseEntityModel):

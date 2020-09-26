@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.3.4] - 2020-09-25
+
+### Changed
+
+- Added type checking for ids to get_or_create_esi() and update_or_create_esi()
+
+### Fixed
+
+- repr() now works for models with m2m relations, e.g. EveStation
+
 ## [0.3.3] - 2020-09-24
 
 ### Changed
