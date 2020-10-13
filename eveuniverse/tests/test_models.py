@@ -839,13 +839,52 @@ class TestEveType(NoSocketsTestCase):
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
-    def test_can_create_icon_url(self, mock_esi):
+    def test_can_create_icon_url_1(self, mock_esi):
+        """icon from regular type"""
         mock_esi.client = EsiClientStub()
 
         eve_type, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
         self.assertEqual(
             eve_type.icon_url(256), "https://images.evetech.net/types/603/icon?size=256"
+        )
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    def test_can_create_icon_url_2(self, mock_esi):
+        """icon from blueprint type"""
+        mock_esi.client = EsiClientStub()
+
+        eve_type, created = EveType.objects.get_or_create_esi(id=950)
+        self.assertTrue(created)
+        self.assertEqual(
+            eve_type.icon_url(256), "https://images.evetech.net/types/950/bp?size=256"
+        )
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    def test_can_create_icon_url_3(self, mock_esi):
+        """icon from regular type"""
+        mock_esi.client = EsiClientStub()
+
+        eve_type, created = EveType.objects.get_or_create_esi(id=603)
+        self.assertTrue(created)
+        self.assertEqual(
+            eve_type.icon_url(size=256, is_blueprint=True),
+            "https://images.evetech.net/types/603/bp?size=256",
+        )
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    def test_can_create_icon_url_4(self, mock_esi):
+        """icon from blueprint type"""
+        mock_esi.client = EsiClientStub()
+
+        eve_type, created = EveType.objects.get_or_create_esi(id=950)
+        self.assertTrue(created)
+        self.assertEqual(
+            eve_type.icon_url(size=256, is_blueprint=False),
+            "https://images.evetech.net/types/950/icon?size=256",
         )
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)

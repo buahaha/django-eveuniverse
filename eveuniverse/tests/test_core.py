@@ -113,3 +113,7 @@ class TestEveImageServer(TestCase):
     def test_type_render_url(self):
         expected = "https://images.evetech.net/types/42/render?size=128"
         self.assertEqual(eveimageserver.type_render_url(42, 128), expected)
+
+    def test_type_bp_url(self):
+        expected = "https://images.evetech.net/types/42/bp?size=128"
+        self.assertEqual(eveimageserver.type_bp_url(42, 128), expected)

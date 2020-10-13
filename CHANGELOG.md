@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.3.5] - 2020-10-13
+
+### Fixed
+
+- Now returns correct icon urls for blueprint types
+
 ## [0.3.4] - 2020-09-25
 
 ### Changed

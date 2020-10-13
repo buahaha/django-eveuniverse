@@ -247,6 +247,14 @@
                 "name": "Ship",
                 "published": true
             },
+            "9": {
+                "category_id": 9,
+                "groups": [
+                    105
+                ],
+                "name": "Blueprint",
+                "published": true
+            },
             "65": {
                 "category_id": 65,
                 "groups": [
@@ -447,6 +455,15 @@
                 "types": [
                     621,
                     626
+                ]
+            },
+            "105": {
+                "category_id": 9,
+                "group_id": 105,
+                "name": "Frigate Blueprint",
+                "published": true,
+                "types": [
+                    950
                 ]
             },
             "1404": {
@@ -1059,6 +1076,22 @@
                 "radius": 110,
                 "type_id": 626,
                 "volume": 115000
+            },
+            "950": {
+                "capacity": 0,
+                "description": "",
+                "dogma_attributes": [],
+                "graphic_id": 314,
+                "group_id": 105,
+                "market_group_id": 61,
+                "mass": 0,
+                "name": "Merlin Blueprint",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1,
+                "type_id": 950,
+                "volume": 0.01
             },
             "1529": {
                 "capacity": 0,

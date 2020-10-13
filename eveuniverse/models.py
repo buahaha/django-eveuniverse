@@ -40,6 +40,7 @@ from .utils import LoggerAddTag
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 NAMES_MAX_LENGTH = 100
+EVE_CATEGORY_ID_BLUEPRINT = 9
 
 EsiMapping = namedtuple(
     "EsiMapping",
@@ -1200,8 +1201,23 @@ class EveType(EveUniverseEntityModel):
         }
         load_order = 134
 
-    def icon_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
-        """return an image URL to this type as icon"""
+    def icon_url(
+        self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE, is_blueprint=None
+    ) -> str:
+        """return an image URL to this type as icon. Also works for blueprints.
+
+        This method accesses eve_group
+
+        Args:
+        - is_blueprint: Inform the method whether this type is a blueprint,
+        so it does not have to run a DB query to check (Optional)
+        """
+        if is_blueprint is None:
+            is_blueprint = self.eve_group.eve_category_id == EVE_CATEGORY_ID_BLUEPRINT
+
+        if is_blueprint:
+            return eveimageserver.type_bp_url(self.id, size=size)
+
         return eveimageserver.type_icon_url(self.id, size=size)
 
     def render_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:

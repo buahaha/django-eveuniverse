@@ -23,7 +23,7 @@ def _eve_entity_image_url(
     - category: category of the ID, see ESI category constants
     - entity_id: Eve ID of the entity
     - size: (optional) render size of the image.must be between 32 (default) and 1024
-    - variant: (optional) image variant for category. currently not relevant.
+    - variant: (optional) image variant for category.
     - tenant: (optional) Eve Server, either `tranquility`(default) or `singularity`
 
     Returns:
@@ -41,7 +41,7 @@ def _eve_entity_image_url(
         _ESI_CATEGORY_FACTION: {"endpoint": "corporations", "variants": ["logo"]},
         _ESI_CATEGORY_INVENTORYTYPE: {
             "endpoint": "types",
-            "variants": ["icon", "render"],
+            "variants": ["icon", "render", "bp"],
         },
     }
     tenants = ["tranquility", "singularity"]
@@ -111,4 +111,11 @@ def type_render_url(type_id: int, size: int = _DEFAULT_IMAGE_SIZE) -> str:
     """render image URL for the given type ID"""
     return _eve_entity_image_url(
         _ESI_CATEGORY_INVENTORYTYPE, type_id, size, variant="render"
+    )
+
+
+def type_bp_url(type_id: int, size: int = _DEFAULT_IMAGE_SIZE) -> str:
+    """blueprint image URL for the given type ID"""
+    return _eve_entity_image_url(
+        _ESI_CATEGORY_INVENTORYTYPE, type_id, size, variant="bp"
     )
