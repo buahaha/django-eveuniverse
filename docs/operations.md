@@ -51,7 +51,7 @@ Finally restart your Django instance so your changes become effective.
 To update your installation first install the new version:
 
 ```bash
-pip install django-eveuniverse
+pip install -U django-eveuniverse
 ```
 
 Then run Django migrations:
