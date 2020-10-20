@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.4.0] - 2020-10-20
+
+### Added
+
+- Tasks for bulk resolving and creating EveEntity objects
+- Tasks section in the documentation
+
+### Fixed
+
+- Documentation update section
+
+Thanks to Darthmoll Amatin for the contribution!
+
 ## [0.3.5] - 2020-10-13
 
 ### Fixed

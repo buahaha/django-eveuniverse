@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Iterable
 
 from celery import shared_task
 
@@ -16,7 +16,7 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
 )
-from .models import EveUniverseEntityModel
+from .models import EveUniverseEntityModel, EveEntity
 from .providers import esi
 from .utils import LoggerAddTag
 
@@ -26,6 +26,9 @@ logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 EVE_CATEGORY_ID_SHIP = 6
 EVE_CATEGORY_ID_STRUCTURE = 65
+
+
+# Eve Universe objects
 
 
 @shared_task
@@ -72,6 +75,24 @@ def _eve_object_names_to_be_loaded() -> list:
         if setting:
             names_to_be_loaded.append(entity_name)
     return sorted(names_to_be_loaded)
+
+
+# EveEntity objects
+
+
+@shared_task
+def create_eve_entities(ids: Iterable[int]) -> None:
+    """Task for bulk creating and resolving multiple entities from ESI."""
+    EveEntity.objects.bulk_create_esi(ids)
+
+
+@shared_task
+def update_unresolved_eve_entities() -> None:
+    """Task for bulk updating all unresolved EveEntity objects in the database from ESI."""
+    EveEntity.objects.bulk_update_new_esi()
+
+
+# Object loaders
 
 
 @shared_task

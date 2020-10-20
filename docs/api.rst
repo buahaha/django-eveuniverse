@@ -163,7 +163,37 @@ Helpers
 .. autofunction:: eveuniverse.helpers.meters_to_au
 
 .. autofunction:: eveuniverse.helpers.meters_to_ly
-    
+
+Tasks
+====================
+
+Eve Universe tasks
+------------------
+
+.. autofunction:: eveuniverse.tasks.load_eve_object
+
+.. autofunction:: eveuniverse.tasks.update_or_create_eve_object
+
+EveEntity tasks
+---------------
+
+.. autofunction:: eveuniverse.tasks.create_eve_entities
+
+.. autofunction:: eveuniverse.tasks.update_unresolved_eve_entities
+
+Object loader tasks
+-------------------
+
+.. autofunction:: eveuniverse.tasks.create_eve_entities
+    :noindex:
+
+.. autofunction:: eveuniverse.tasks.update_unresolved_eve_entities
+    :noindex:
+
+.. autofunction:: eveuniverse.tasks.load_map
+
+.. autofunction:: eveuniverse.tasks.load_eve_types
+
 Tools
 ====================
 

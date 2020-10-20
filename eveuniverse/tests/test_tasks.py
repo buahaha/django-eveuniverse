@@ -18,6 +18,8 @@ from ..tasks import (
     load_ship_types,
     load_structure_types,
     update_or_create_eve_object,
+    create_eve_entities,
+    update_unresolved_eve_entities,
 )
 from ..utils import NoSocketsTestCase, set_test_logger
 
@@ -49,6 +51,18 @@ class TestTasks(NoSocketsTestCase):
 
         obj.refresh_from_db()
         self.assertNotEqual(obj.name, "Dummy")
+
+    @patch(MODULE_PATH + ".EveEntity.objects.bulk_create_esi")
+    def test_create_eve_entities(self, mock_bulk_create_esi):
+        create_eve_entities([1, 2, 3])
+        self.assertTrue(mock_bulk_create_esi.called)
+        args, _ = mock_bulk_create_esi.call_args
+        self.assertListEqual(args[0], [1, 2, 3])
+
+    @patch(MODULE_PATH + ".EveEntity.objects.bulk_update_new_esi")
+    def test_update_unresolved_eve_entities(self, mock_bulk_update_new_esi):
+        update_unresolved_eve_entities()
+        self.assertTrue(mock_bulk_update_new_esi.called)
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
