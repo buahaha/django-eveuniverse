@@ -15,8 +15,9 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARGATES,
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
+    EVEUNIVERSE_TASKS_TIME_LIMIT,
 )
-from .models import EveUniverseEntityModel, EveEntity
+from .models import EveUniverseEntityModel, EveEntity, EveMarketPrice
 from .providers import esi
 from .utils import LoggerAddTag
 
@@ -31,7 +32,7 @@ EVE_CATEGORY_ID_STRUCTURE = 65
 # Eve Universe objects
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def load_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
@@ -44,7 +45,7 @@ def load_eve_object(
     )
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def update_or_create_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
@@ -80,13 +81,13 @@ def _eve_object_names_to_be_loaded() -> list:
 # EveEntity objects
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def create_eve_entities(ids: Iterable[int]) -> None:
     """Task for bulk creating and resolving multiple entities from ESI."""
     EveEntity.objects.bulk_create_esi(ids)
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def update_unresolved_eve_entities() -> None:
     """Task for bulk updating all unresolved EveEntity objects in the database from ESI."""
     EveEntity.objects.bulk_update_new_esi()
@@ -95,7 +96,7 @@ def update_unresolved_eve_entities() -> None:
 # Object loaders
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def load_map() -> None:
     """loads the complete Eve map with all regions, constellation and solarsystems
     and additional related entities if they are enabled
@@ -146,21 +147,21 @@ def _load_type(type_id: int) -> None:
     )
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def load_ship_types() -> None:
     """Loads all ship types"""
     logger.info("Started loading all ship types into eveuniverse")
     _load_category(EVE_CATEGORY_ID_SHIP)
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def load_structure_types() -> None:
     """Loads all structure types"""
     logger.info("Started loading all structure types into eveuniverse")
     _load_category(EVE_CATEGORY_ID_STRUCTURE)
 
 
-@shared_task
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def load_eve_types(
     category_ids: List[int] = None,
     group_ids: List[int] = None,
@@ -179,3 +180,10 @@ def load_eve_types(
     if type_ids:
         for type_id in type_ids:
             _load_type(type_id)
+
+
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+def update_market_prices(minutes_until_stale: int = None):
+    """Updates market prices from ESI.
+    see EveMarketPrice.objects.update_from_esi() for details"""
+    EveMarketPrice.objects.update_from_esi(minutes_until_stale)

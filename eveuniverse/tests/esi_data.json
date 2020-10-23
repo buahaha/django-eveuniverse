@@ -161,7 +161,19 @@
                 "parent_group_id": 4,
                 "types": []
             }
-        }
+        },
+        "get_markets_prices": [
+            {
+                "adjusted_price": 306988.09,
+                "average_price": 306292.67,
+                "type_id": 603
+            },
+            {
+                "adjusted_price": 123.45,
+                "average_price": 678.90,
+                "type_id": 420
+            }
+        ]
     },
     "Universe": {
         "get_universe_ancestries": [

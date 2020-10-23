@@ -1,14 +1,17 @@
 from collections import namedtuple
+import datetime as dt
 import logging
 from typing import List, Iterable, Tuple
 
-from django.db import models
+from django.db import models, transaction
 from django.db.utils import IntegrityError
+from django.utils.timezone import now
 
 from bravado.exception import HTTPNotFound
 
 from . import __title__
-from .helpers import EveEntityNameResolver
+from .app_settings import EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
+from .helpers import EveEntityNameResolver, get_or_create_esi_or_none
 from .providers import esi
 from .utils import chunks, LoggerAddTag, make_logger_prefix
 
@@ -587,6 +590,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
 
     def bulk_create_esi(self, ids: Iterable[int]) -> int:
         """bulk create and resolve multiple entities from ESI.
+        Will also resolve existing entities, that have no name.
 
         Args:
             ids: List of valid EveEntity IDs
@@ -595,14 +599,18 @@ class EveEntityManager(EveUniverseEntityModelManager):
             Count of updated entities
         """
         ids = set(map(int, ids))
-        existing_ids = set(
-            self.filter(id__in=ids).exclude(name="").values_list("id", flat=True)
-        )
-        new_ids = ids.difference(existing_ids)
-        if new_ids:
-            objects = [self.model(id=id) for id in new_ids]
-            self.bulk_create(objects, ignore_conflicts=True)
-            return self.filter(id__in=new_ids).update_from_esi()
+        with transaction.atomic():
+            existing_ids = set(self.filter(id__in=ids).values_list("id", flat=True))
+            new_ids = ids.difference(existing_ids)
+            if new_ids:
+                objects = [self.model(id=id) for id in new_ids]
+                self.bulk_create(
+                    objects, batch_size=EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
+                )
+                to_update_qs = self.filter(id__in=new_ids) | self.filter(
+                    id__in=ids.difference(new_ids), name=""
+                )
+                return to_update_qs.update_from_esi()
 
         return 0
 
@@ -660,3 +668,55 @@ class EveEntityManager(EveUniverseEntityModelManager):
                 for row in self.filter(id__in=ids).values_list("id", "name")
             }
         )
+
+
+class EveMarketPriceManager(models.Manager):
+    def update_from_esi(self, minutes_until_stale: int = None) -> int:
+        """Updates market prices from ESI. Will only create new price objects for EveTypes that already exist in the database.
+
+        Args:
+            minutes_until_stale: only prices older then given minutes are regarding as stale and will be updated. Will use default (60) if not specified.
+
+        Returns:
+            Count of updated types
+        """
+        from .models import EveType
+
+        if minutes_until_stale is None:
+            minutes_until_stale = self.model.DEFAULT_MINUTES_UNTIL_STALE
+
+        logger.info("Fetching market prices from ESI")
+        entries = esi.client.Market.get_markets_prices().results()
+        if not entries:
+            return 0
+
+        entries_2 = {int(x["type_id"]): x for x in entries if "type_id" in x}
+        with transaction.atomic():
+            existing_types_ids = set(EveType.objects.values_list("id", flat=True))
+            relevant_prices_ids = set(entries_2.keys()).intersection(existing_types_ids)
+            deadline = now() - dt.timedelta(minutes=minutes_until_stale)
+            current_prices_ids = set(
+                self.filter(updated_at__gt=deadline).values_list(
+                    "eve_type_id", flat=True
+                )
+            )
+            need_updating_ids = relevant_prices_ids.difference(current_prices_ids)
+            if not need_updating_ids:
+                logger.info("Market prices are up to date")
+                return 0
+
+            logger.info("Updating market prices for %s types", len(need_updating_ids))
+            self.filter(eve_type_id__in=need_updating_ids).delete()
+            market_prices = [
+                self.model(
+                    eve_type=get_or_create_esi_or_none("type_id", entry, EveType),
+                    adjusted_price=entry.get("adjusted_price"),
+                    average_price=entry.get("average_price"),
+                )
+                for type_id, entry in entries_2.items()
+                if type_id in need_updating_ids
+            ]
+            self.bulk_create(
+                market_prices, batch_size=EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
+            )
+            return len(market_prices)

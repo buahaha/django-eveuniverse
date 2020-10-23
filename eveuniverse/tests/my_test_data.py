@@ -95,6 +95,7 @@ class EsiClientStub:
             EsiEndpoint(
                 "Market", "get_markets_groups_market_group_id", "market_group_id"
             ),
+            EsiEndpoint("Market", "get_markets_prices", None),
             EsiEndpoint("Universe", "get_universe_ancestries", None),
             EsiEndpoint(
                 "Universe",

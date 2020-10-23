@@ -76,6 +76,11 @@ EveMarketGroup
 .. autoclass:: eveuniverse.models.EveMarketGroup
     :members:
 
+EveMarketPrice
+--------------
+.. autoclass:: eveuniverse.models.EveMarketPrice
+    :members:
+
 EveMoon
 ----------
 .. autoclass:: eveuniverse.models.EveMoon
@@ -154,6 +159,12 @@ EveEntity comes with some additional manager methods.
 .. autoclass:: eveuniverse.managers.EveEntityManager
     :members: get_or_create_esi, update_or_create_esi, bulk_create_esi, bulk_update_new_esi, bulk_update_all_esi, resolve_name, bulk_resolve_names
 
+Other manager methods
+-------------------------
+
+.. autoclass:: eveuniverse.managers.EveMarketPriceManager
+    :members: 
+
 Helpers
 ====================
 
@@ -193,6 +204,11 @@ Object loader tasks
 .. autofunction:: eveuniverse.tasks.load_map
 
 .. autofunction:: eveuniverse.tasks.load_eve_types
+
+Other tasks
+-------------------
+
+.. autofunction:: eveuniverse.tasks.update_market_prices
 
 Tools
 ====================

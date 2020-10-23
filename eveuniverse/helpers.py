@@ -1,4 +1,6 @@
-from typing import Dict
+from typing import Dict, Optional
+
+from django.db import models
 
 
 def meters_to_ly(value: float) -> float:
@@ -9,6 +11,21 @@ def meters_to_ly(value: float) -> float:
 def meters_to_au(value: float) -> float:
     """converts meters into AU"""
     return float(value) / 149_597_870_691 if value is not None else None
+
+
+def get_or_create_esi_or_none(
+    prop_name: str, dct: dict, Model: type
+) -> Optional[models.Model]:
+    """tries to create a new eveuniverse object from a dictionary entry
+
+    return the object on success or None
+    """
+    if dct.get(prop_name):
+        obj, _ = Model.objects.get_or_create_esi(id=dct.get(prop_name))
+    else:
+        obj = None
+
+    return obj
 
 
 class EveEntityNameResolver:

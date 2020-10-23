@@ -1,7 +1,11 @@
+import datetime as dt
+
 import unittest
 from unittest.mock import patch, Mock
 
 from bravado.exception import HTTPNotFound
+
+from django.utils.timezone import now
 
 from .my_test_data import EsiClientStub, BravadoOperationStub
 from ..helpers import meters_to_ly
@@ -19,6 +23,7 @@ from ..models import (
     EveGraphic,
     EveGroup,
     EveMarketGroup,
+    EveMarketPrice,
     EveMoon,
     EvePlanet,
     EveRace,
@@ -291,6 +296,78 @@ class TestEveMarketGroup(NoSocketsTestCase):
             obj.parent_market_group.parent_market_group.parent_market_group.name,
             "Ships",
         )
+
+
+@patch("eveuniverse.managers.esi")
+class TestEveMarketPriceManager(NoSocketsTestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+        with patch("eveuniverse.managers.esi") as mock_esi:
+            mock_esi.client = EsiClientStub()
+            EveType.objects.get_or_create_esi(id=603)
+
+    def test_update_from_esi_1(self, mock_esi):
+        """updated only for types that already exist in the DB,
+        e.g. does not try to update type with ID 420
+        """
+        mock_esi.client = EsiClientStub()
+
+        result = EveMarketPrice.objects.update_from_esi()
+        self.assertEqual(result, 1)
+        self.assertEqual(EveMarketPrice.objects.count(), 1)
+        obj = EveType.objects.get(id=603)
+        self.assertEqual(float(obj.market_price.adjusted_price), 306988.09)
+        self.assertEqual(float(obj.market_price.average_price), 306292.67)
+
+    def test_update_from_esi_2a(self, mock_esi):
+        """does not update market prices that have recently been update (DEFAULTS)"""
+        mock_esi.client = EsiClientStub()
+
+        EveMarketPrice.objects.create(
+            eve_type=EveType.objects.get(id=603), adjusted_price=2, average_price=3
+        )
+        result = EveMarketPrice.objects.update_from_esi()
+
+        self.assertEqual(result, 0)
+        self.assertEqual(EveMarketPrice.objects.count(), 1)
+        obj = EveType.objects.get(id=603)
+        self.assertEqual(float(obj.market_price.adjusted_price), 2)
+        self.assertEqual(float(obj.market_price.average_price), 3)
+
+    def test_update_from_esi_2b(self, mock_esi):
+        """does not update market prices that have recently been update (CUSTOM)"""
+        mock_esi.client = EsiClientStub()
+
+        mocked_update_at = now() - dt.timedelta(minutes=60)
+        with patch("django.utils.timezone.now", Mock(return_value=mocked_update_at)):
+            EveMarketPrice.objects.create(
+                eve_type=EveType.objects.get(id=603), adjusted_price=2, average_price=3
+            )
+        result = EveMarketPrice.objects.update_from_esi(minutes_until_stale=65)
+
+        self.assertEqual(result, 0)
+        self.assertEqual(EveMarketPrice.objects.count(), 1)
+        obj = EveType.objects.get(id=603)
+        self.assertEqual(float(obj.market_price.adjusted_price), 2)
+        self.assertEqual(float(obj.market_price.average_price), 3)
+
+    def test_update_from_esi_3(self, mock_esi):
+        """does update market prices that are stale"""
+        mock_esi.client = EsiClientStub()
+
+        mocked_update_at = now() - dt.timedelta(minutes=65)
+        with patch("django.utils.timezone.now", Mock(return_value=mocked_update_at)):
+            EveMarketPrice.objects.create(
+                eve_type=EveType.objects.get(id=603), adjusted_price=2, average_price=3
+            )
+        result = EveMarketPrice.objects.update_from_esi(minutes_until_stale=60)
+
+        self.assertEqual(result, 1)
+        self.assertEqual(EveMarketPrice.objects.count(), 1)
+        obj = EveType.objects.get(id=603)
+        self.assertEqual(float(obj.market_price.adjusted_price), 306988.09)
+        self.assertEqual(float(obj.market_price.average_price), 306292.67)
 
 
 @patch("eveuniverse.managers.esi")

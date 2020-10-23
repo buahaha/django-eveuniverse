@@ -27,6 +27,7 @@ from .core import eveimageserver
 from .managers import (
     EveUniverseBaseModelManager,
     EveUniverseEntityModelManager,
+    EveMarketPriceManager,
     EvePlanetChildrenManager,
     EvePlanetManager,
     EveStargateManager,
@@ -754,6 +755,36 @@ class EveMarketGroup(EveUniverseEntityModel):
         field_mappings = {"parent_market_group": "parent_group_id"}
         children = {"types": "EveType"}
         load_order = 230
+
+
+class EveMarketPrice(models.Model):
+    """A market price of an Eve Online type"""
+
+    DEFAULT_MINUTES_UNTIL_STALE = 60
+
+    eve_type = models.OneToOneField(
+        "EveType",
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name="market_price",
+    )
+    adjusted_price = models.FloatField(default=None, null=True)
+    average_price = models.FloatField(default=None, null=True)
+    updated_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    objects = EveMarketPriceManager()
+
+    def __str__(self) -> str:
+        return f"{self.eve_type}: {self.average_price}"
+
+    def __repr__(self) -> str:
+        return "{}(eve_type='{}', adjusted_price={}, average_price={}, updated_at={})".format(
+            type(self).__name__,
+            self.eve_type,
+            self.adjusted_price,
+            self.average_price,
+            self.updated_at.isoformat(),
+        )
 
 
 class EveMoon(EveUniverseEntityModel):

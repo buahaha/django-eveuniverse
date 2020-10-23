@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.5.0] - 2020-10-23
+
+### Added
+
+- New model `EveMarketPrice` for getting current market prices for `EveType` objects from ESI
+- New setting defining max batch size in bulk methods
+- New setting defining global timeout for all tasks
+
 ## [0.4.0] - 2020-10-20
 
 ### Added
 
-- Tasks for bulk resolving and creating EveEntity objects
+- Tasks for bulk resolving and creating `EveEntity` objects
 - Tasks section in the documentation
 
 ### Fixed

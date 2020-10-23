@@ -20,6 +20,7 @@ from ..tasks import (
     update_or_create_eve_object,
     create_eve_entities,
     update_unresolved_eve_entities,
+    update_market_prices,
 )
 from ..utils import NoSocketsTestCase, set_test_logger
 
@@ -63,6 +64,11 @@ class TestTasks(NoSocketsTestCase):
     def test_update_unresolved_eve_entities(self, mock_bulk_update_new_esi):
         update_unresolved_eve_entities()
         self.assertTrue(mock_bulk_update_new_esi.called)
+
+    @patch(MODULE_PATH + ".EveMarketPrice.objects.update_from_esi")
+    def test_update_market_prices(self, mock_update_from_esi):
+        update_market_prices()
+        self.assertTrue(mock_update_from_esi.called)
 
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
