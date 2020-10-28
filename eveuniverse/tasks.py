@@ -39,6 +39,7 @@ def load_eve_object(
     """Task for loading an eve object.
     Will only be created from ESI if it does not exist
     """
+    logger.info("Loading %s with ID %s", model_name, id)
     ModelClass = EveUniverseEntityModel.get_model_class(model_name)
     ModelClass.objects.get_or_create_esi(
         id=id, include_children=include_children, wait_for_children=wait_for_children
@@ -47,15 +48,67 @@ def load_eve_object(
 
 @shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
 def update_or_create_eve_object(
-    model_name: str, id: int, include_children=False, wait_for_children=True
+    model_name: str,
+    id: int,
+    include_children=False,
+    wait_for_children=True,
+    enabled_sections: List[str] = None,
 ) -> None:
     """Task for updating or creating an eve object from ESI"""
+    logger.info("Updating/Creating %s with ID %s", model_name, id)
     ModelClass = EveUniverseEntityModel.get_model_class(model_name)
     ModelClass.objects.update_or_create_esi(
         id=id,
         include_children=include_children,
         wait_for_children=wait_for_children,
+        enabled_sections=enabled_sections,
     )
+
+
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+def update_or_create_inline_object(
+    parent_obj_id: int,
+    parent_fk: str,
+    eve_data_obj: dict,
+    other_pk_info: dict,
+    parent2_model_name: str,
+    inline_model_name: str,
+    parent_model_name: str,
+) -> None:
+    """Task for updating or creating a single inline object from ESI"""
+    logger.info(
+        "Updating/Creating inline object %s for %s wit ID %s",
+        inline_model_name,
+        parent_model_name,
+        parent_obj_id,
+    )
+    ModelClass = EveUniverseEntityModel.get_model_class(parent_model_name)
+    ModelClass.objects._update_or_create_inline_object(
+        parent_obj_id=parent_obj_id,
+        parent_fk=parent_fk,
+        eve_data_obj=eve_data_obj,
+        other_pk_info=other_pk_info,
+        parent2_model_name=parent2_model_name,
+        inline_model_name=inline_model_name,
+    )
+
+
+# EveEntity objects
+
+
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+def create_eve_entities(ids: Iterable[int]) -> None:
+    """Task for bulk creating and resolving multiple entities from ESI."""
+    EveEntity.objects.bulk_create_esi(ids)
+
+
+@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+def update_unresolved_eve_entities() -> None:
+    """Task for bulk updating all unresolved EveEntity objects in the database from ESI."""
+    EveEntity.objects.bulk_update_new_esi()
+
+
+# Object loaders
 
 
 def _eve_object_names_to_be_loaded() -> list:
@@ -76,24 +129,6 @@ def _eve_object_names_to_be_loaded() -> list:
         if setting:
             names_to_be_loaded.append(entity_name)
     return sorted(names_to_be_loaded)
-
-
-# EveEntity objects
-
-
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
-def create_eve_entities(ids: Iterable[int]) -> None:
-    """Task for bulk creating and resolving multiple entities from ESI."""
-    EveEntity.objects.bulk_create_esi(ids)
-
-
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
-def update_unresolved_eve_entities() -> None:
-    """Task for bulk updating all unresolved EveEntity objects in the database from ESI."""
-    EveEntity.objects.bulk_update_new_esi()
-
-
-# Object loaders
 
 
 @shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
@@ -117,33 +152,45 @@ def load_map() -> None:
         )
 
 
-def _load_category(category_id: int) -> None:
+def _load_category(category_id: int, force_loading_dogma: bool = False) -> None:
     """Starts a task for loading a category incl. all it's children from ESI via"""
+    enabled_sections = (
+        [EveUniverseEntityModel.LOAD_DOGMAS] if force_loading_dogma else None
+    )
     update_or_create_eve_object.delay(
         model_name="EveCategory",
         id=category_id,
         include_children=True,
         wait_for_children=False,
+        enabled_sections=enabled_sections,
     )
 
 
-def _load_group(group_id: int) -> None:
+def _load_group(group_id: int, force_loading_dogma: bool = False) -> None:
     """Starts a task for loading a group incl. all it's children from ESI"""
+    enabled_sections = (
+        [EveUniverseEntityModel.LOAD_DOGMAS] if force_loading_dogma else None
+    )
     update_or_create_eve_object.delay(
         model_name="EveGroup",
         id=group_id,
         include_children=True,
         wait_for_children=False,
+        enabled_sections=enabled_sections,
     )
 
 
-def _load_type(type_id: int) -> None:
+def _load_type(type_id: int, force_loading_dogma: bool = False) -> None:
     """Starts a task for loading a type incl. all it's children from ESI"""
+    enabled_sections = (
+        [EveUniverseEntityModel.LOAD_DOGMAS] if force_loading_dogma else None
+    )
     update_or_create_eve_object.delay(
         model_name="EveType",
         id=type_id,
-        include_children=True,
+        include_children=False,
         wait_for_children=False,
+        enabled_sections=enabled_sections,
     )
 
 
@@ -166,20 +213,28 @@ def load_eve_types(
     category_ids: List[int] = None,
     group_ids: List[int] = None,
     type_ids: List[int] = None,
+    force_loading_dogma: bool = False,
 ) -> None:
-    """Load specified eve types from ESI. Will always load all children"""
+    """Load specified eve types from ESI. Will always load all children except for EveType
+
+    Args:
+    - category_ids: EveCategory IDs
+    - group_ids: EveGroup IDs
+    - type_ids: EveType IDs
+    - load_dogma: When True will load dogma for all types
+    """
     logger.info("Started loading several eve types into eveuniverse")
     if category_ids:
         for category_id in category_ids:
-            _load_category(category_id)
+            _load_category(category_id, force_loading_dogma)
 
     if group_ids:
         for group_id in group_ids:
-            _load_group(group_id)
+            _load_group(group_id, force_loading_dogma)
 
     if type_ids:
         for type_id in type_ids:
-            _load_type(type_id)
+            _load_type(type_id, force_loading_dogma)
 
 
 @shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)

@@ -3,7 +3,7 @@ import inspect
 import logging
 import math
 import sys
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Set
 
 from bravado.exception import HTTPNotFound
 
@@ -59,7 +59,7 @@ EsiMapping = namedtuple(
 
 
 class EveUniverseBaseModel(models.Model):
-    """Base properties and features"""
+    """Base class for all Eve Universe Models"""
 
     objects = EveUniverseBaseModelManager()
 
@@ -98,6 +98,42 @@ class EveUniverseBaseModel(models.Model):
             fields_2.append(text)
 
         return f"{self.__class__.__name__}({', '.join(fields_2)})"
+
+    @classmethod
+    def all_models(cls) -> List[Dict[models.Model, int]]:
+        """returns a list of all Eve Universe model classes sorted by load order"""
+        mappings = list()
+        for _, ModelClass in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+            if issubclass(
+                ModelClass, (EveUniverseEntityModel, EveUniverseInlineModel)
+            ) and ModelClass not in (
+                cls,
+                EveUniverseEntityModel,
+                EveUniverseInlineModel,
+            ):
+                mappings.append(
+                    {
+                        "model": ModelClass,
+                        "load_order": ModelClass._eve_universe_meta_attr(
+                            "load_order", is_mandatory=True
+                        ),
+                    }
+                )
+
+        return [y["model"] for y in sorted(mappings, key=lambda x: x["load_order"])]
+
+    @classmethod
+    def get_model_class(cls, model_name: str) -> models.Model:
+        """returns the model class for the given name"""
+        classes = {
+            x[0]: x[1]
+            for x in inspect.getmembers(sys.modules[__name__], inspect.isclass)
+            if issubclass(x[1], (EveUniverseBaseModel, EveUniverseInlineModel))
+        }
+        try:
+            return classes[model_name]
+        except KeyError:
+            raise ValueError("Unknown model_name: %s" % model_name)
 
     @classmethod
     def _esi_mapping(cls) -> dict:
@@ -167,27 +203,30 @@ class EveUniverseBaseModel(models.Model):
         cls, attr_name: str, is_mandatory: bool = False
     ) -> Optional[Any]:
         """returns value of an attribute from EveUniverseMeta or None"""
-        if not hasattr(cls, "EveUniverseMeta"):
-            raise ValueError("EveUniverseMeta not defined for class %s" % cls.__name__)
-
-        if hasattr(cls.EveUniverseMeta, attr_name):
+        try:
             value = getattr(cls.EveUniverseMeta, attr_name)
-        else:
+        except AttributeError:
             value = None
             if is_mandatory:
                 raise ValueError(
                     "Mandatory attribute EveUniverseMeta.%s not defined "
                     "for class %s" % (attr_name, cls.__name__)
                 )
+
         return value
 
 
 class EveUniverseEntityModel(EveUniverseBaseModel):
-    """Eve Universe Entity model
+    """Base class for Eve Universe Entity models
 
     Entity models are normal Eve entities that have a dedicated ESI endpoint
     """
 
+    # sections
+    LOAD_DOGMAS = "dogmas"
+    # TODO: Implement other sections
+
+    # icons
     DEFAULT_ICON_SIZE = 64
 
     id = models.PositiveIntegerField(primary_key=True, help_text="Eve Online ID")
@@ -250,7 +289,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return mappings if mappings else dict()
 
     @classmethod
-    def _inline_objects(cls) -> dict:
+    def _inline_objects(cls, enabled_sections: Set[str] = None) -> dict:
         """returns a dict of inline objects if any"""
         inline_objects = cls._eve_universe_meta_attr("inline_objects")
         return inline_objects if inline_objects else dict()
@@ -261,39 +300,9 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         esi_path_object = cls._eve_universe_meta_attr("esi_path_object")
         return esi_path_list and esi_path_object and esi_path_list == esi_path_object
 
-    @classmethod
-    def all_models(cls) -> List[Dict[models.Model, int]]:
-        """returns a list of all Eve Universe model classes sorted by load order"""
-        mappings = list()
-        for _, ModelClass in inspect.getmembers(sys.modules[__name__], inspect.isclass):
-            if issubclass(ModelClass, cls) and ModelClass != cls:
-                mappings.append(
-                    {
-                        "model": ModelClass,
-                        "load_order": ModelClass._eve_universe_meta_attr(
-                            "load_order", is_mandatory=True
-                        ),
-                    }
-                )
-
-        return [y["model"] for y in sorted(mappings, key=lambda x: x["load_order"])]
-
-    @classmethod
-    def get_model_class(cls, model_name: str) -> models.Model:
-        """returns the model class for the given name"""
-        classes = {
-            x[0]: x[1]
-            for x in inspect.getmembers(sys.modules[__name__], inspect.isclass)
-            if issubclass(x[1], EveUniverseBaseModel)
-        }
-        try:
-            return classes[model_name]
-        except KeyError:
-            raise ValueError("Unknown model_name: %s" % model_name)
-
 
 class EveUniverseInlineModel(EveUniverseBaseModel):
-    """Eve Universe Inline model
+    """Base class for Eve Universe Inline models
 
     Inline models are objects which do not have a dedicated ESI endpoint and are
     provided through the endpoint of another entity
@@ -538,6 +547,14 @@ class EveDogmaAttribute(EveUniverseEntityModel):
 
 class EveDogmaEffect(EveUniverseEntityModel):
     """A dogma effect in Eve Online"""
+
+    # we need to redefine the name field, because effect names can be very long
+    name = models.CharField(
+        max_length=400,
+        default="",
+        db_index=True,
+        help_text="Eve Online name",
+    )
 
     description = models.TextField(default="")
     disallow_auto_repeat = models.BooleanField(default=None, null=True)
@@ -1267,8 +1284,10 @@ class EveType(EveUniverseEntityModel):
         return disabled_fields
 
     @classmethod
-    def _inline_objects(cls) -> dict:
-        if EVEUNIVERSE_LOAD_DOGMAS:
+    def _inline_objects(cls, enabled_sections: Set[str] = None) -> dict:
+        if EVEUNIVERSE_LOAD_DOGMAS or (
+            enabled_sections and cls.LOAD_DOGMAS in enabled_sections
+        ):
             return super()._inline_objects()
         else:
             return dict()

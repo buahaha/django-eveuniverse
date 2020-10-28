@@ -5,12 +5,13 @@ from unittest.mock import patch, Mock
 
 from bravado.exception import HTTPNotFound
 
+from django.test.utils import override_settings
 from django.utils.timezone import now
 
 from .my_test_data import EsiClientStub, BravadoOperationStub
 from ..helpers import meters_to_ly
 from ..models import (
-    EveUniverseEntityModel,
+    EveUniverseBaseModel,
     EsiMapping,
     EveAncestry,
     EveAsteroidBelt,
@@ -19,6 +20,7 @@ from ..models import (
     EveConstellation,
     EveDogmaAttribute,
     EveDogmaEffect,
+    EveDogmaEffectModifier,
     EveFaction,
     EveGraphic,
     EveGroup,
@@ -33,6 +35,7 @@ from ..models import (
     EveStargate,
     EveStation,
     EveType,
+    EveTypeDogmaAttribute,
     EveTypeDogmaEffect,
     EveUnit,
     EveEntity,
@@ -43,14 +46,67 @@ unittest.util._MAX_LENGTH = 1000
 MODULE_PATH = "eveuniverse.models"
 
 
-class TestEveUniverseEntityModel(NoSocketsTestCase):
+class TestEveUniverseBaseModel(NoSocketsTestCase):
     def test_get_model_class(self):
         self.assertIs(
-            EveUniverseEntityModel.get_model_class("EveSolarSystem"), EveSolarSystem
+            EveUniverseBaseModel.get_model_class("EveSolarSystem"), EveSolarSystem
         )
 
         with self.assertRaises(ValueError):
-            EveUniverseEntityModel.get_model_class("Unknown Class")
+            EveUniverseBaseModel.get_model_class("Unknown Class")
+
+    def test_all_models(self):
+        models = EveUniverseBaseModel.all_models()
+        self.maxDiff = None
+        self.assertListEqual(
+            models,
+            [
+                EveUnit,  # load_order = 100
+                EveEntity,  # load_order = 110
+                EveGraphic,  # load_order = 120
+                EveCategory,  # load_order = 130
+                EveGroup,  # load_order = 132
+                EveType,  # load_order = 134
+                EveDogmaAttribute,  # load_order = 140
+                EveDogmaEffect,  # load_order = 142
+                EveDogmaEffectModifier,  # load_order = 144
+                EveTypeDogmaEffect,  # load_order = 146
+                EveTypeDogmaAttribute,  # load_order = 148
+                EveRace,  # load_order = 150
+                EveBloodline,  # load_order = 170
+                EveAncestry,  # load_order = 180
+                EveRegion,  # load_order = 190
+                EveConstellation,  # load_order = 192
+                EveSolarSystem,  # load_order = 194
+                EveAsteroidBelt,  # load_order = 200
+                EvePlanet,  # load_order = 205
+                EveStation,  # load_order = 207
+                EveFaction,  # load_order = 210
+                EveMoon,  # load_order = 220
+                EveStar,  # load_order = 222
+                EveStargate,  # load_order = 224
+                EveMarketGroup,  # load_order = 230
+            ],
+        )
+
+    def test_eve_universe_meta_attr_1(self):
+        """When defined, return value"""
+        self.assertEqual(EveType._eve_universe_meta_attr("esi_pk"), "type_id")
+
+    def test_eve_universe_meta_attr_2(self):
+        """When not defined, then return None"""
+        self.assertIsNone(EveType._eve_universe_meta_attr("undefined_param"))
+
+    def test_eve_universe_meta_attr_3(self):
+        """When not defined and is_mandatory, then raise exception"""
+        with self.assertRaises(ValueError):
+            EveType._eve_universe_meta_attr("undefined_param", is_mandatory=True)
+
+    def test_eve_universe_meta_attr_4(self):
+        """When EveUniverseMeta class not defined, then return None"""
+        self.assertIsNone(
+            EveUniverseBaseModel._eve_universe_meta_attr("undefined_param")
+        )
 
 
 @patch("eveuniverse.managers.esi")
@@ -138,6 +194,31 @@ class TestEveCategory(NoSocketsTestCase):
         self.assertEqual(obj.id, 6)
         self.assertEqual(obj.name, "Ship")
         self.assertTrue(obj.published)
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    def test_can_create_types_of_category_from_esi_including_dogmas_when_disabled(
+        self, mock_esi
+    ):
+        mock_esi.client = EsiClientStub()
+
+        EveCategory.objects.update_or_create_esi(
+            id=6, include_children=True, enabled_sections=[EveType.LOAD_DOGMAS]
+        )
+        eve_type = EveType.objects.get(id=603)
+        self.assertSetEqual(
+            set(
+                eve_type.dogma_attributes.values_list(
+                    "eve_dogma_attribute_id", flat=True
+                )
+            ),
+            {588, 129},
+        )
+        self.assertSetEqual(
+            set(eve_type.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
 
 
 @patch("eveuniverse.managers.esi")
@@ -272,6 +353,31 @@ class TestEveGroup(NoSocketsTestCase):
         self.assertEqual(obj.id, 10)
         self.assertEqual(obj.name, "Stargate")
         self.assertFalse(obj.published)
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    def test_can_create_types_of_group_from_esi_including_dogmas_when_disabled(
+        self, mock_esi
+    ):
+        mock_esi.client = EsiClientStub()
+
+        EveGroup.objects.update_or_create_esi(
+            id=25, include_children=True, enabled_sections=[EveType.LOAD_DOGMAS]
+        )
+        eve_type = EveType.objects.get(id=603)
+        self.assertSetEqual(
+            set(
+                eve_type.dogma_attributes.values_list(
+                    "eve_dogma_attribute_id", flat=True
+                )
+            ),
+            {588, 129},
+        )
+        self.assertSetEqual(
+            set(eve_type.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
 
 
 @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
@@ -895,24 +1001,67 @@ class TestEveType(NoSocketsTestCase):
         self.assertTrue(created)
         self.assertEqual(eve_type.id, 603)
         self.assertIsNone(eve_type.eve_market_group)
+        self.assertSetEqual(
+            set(
+                eve_type.dogma_attributes.values_list(
+                    "eve_dogma_attribute_id", flat=True
+                )
+            ),
+            {588, 129},
+        )
+        self.assertSetEqual(
+            set(eve_type.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
 
-        dogma_attribute_1 = eve_type.dogma_attributes.filter(
-            eve_dogma_attribute=EveDogmaAttribute.objects.get(id=588)
-        ).first()
-        self.assertEqual(dogma_attribute_1.value, 5)
-        dogma_attribute_1 = eve_type.dogma_attributes.filter(
-            eve_dogma_attribute=EveDogmaAttribute.objects.get(id=129)
-        ).first()
-        self.assertEqual(dogma_attribute_1.value, 12)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    def test_can_create_type_from_esi_including_dogmas_when_disabled(self, mock_esi):
+        mock_esi.client = EsiClientStub()
 
-        dogma_effect_1 = eve_type.dogma_effects.filter(
-            eve_dogma_effect=EveDogmaEffect.objects.get(id=1816)
-        ).first()
-        self.assertFalse(dogma_effect_1.is_default)
-        dogma_effect_2 = eve_type.dogma_effects.filter(
-            eve_dogma_effect=EveDogmaEffect.objects.get(id=1817)
-        ).first()
-        self.assertTrue(dogma_effect_2.is_default)
+        eve_type, created = EveType.objects.update_or_create_esi(
+            id=603, enabled_sections=[EveType.LOAD_DOGMAS]
+        )
+        self.assertTrue(created)
+        self.assertEqual(eve_type.id, 603)
+        self.assertSetEqual(
+            set(
+                eve_type.dogma_attributes.values_list(
+                    "eve_dogma_attribute_id", flat=True
+                )
+            ),
+            {588, 129},
+        )
+        self.assertSetEqual(
+            set(eve_type.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
+
+    @override_settings(CELERY_ALWAYS_EAGER=True)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    def test_can_create_type_from_esi_including_children_as_task(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        eve_type, created = EveType.objects.update_or_create_esi(
+            id=603, wait_for_children=False, enabled_sections=[EveType.LOAD_DOGMAS]
+        )
+        self.assertTrue(created)
+        self.assertEqual(eve_type.id, 603)
+        self.assertSetEqual(
+            set(
+                eve_type.dogma_attributes.values_list(
+                    "eve_dogma_attribute_id", flat=True
+                )
+            ),
+            {588, 129},
+        )
+        self.assertSetEqual(
+            set(eve_type.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)

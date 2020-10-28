@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.6.0] - 2020-10-28
+
+This version adds better support for dogmas when loading types.
+
+### Added
+
+- Can now also get dogmas when loading types via `eveuniverse_load_types` management command
+- Added option to load dogmas when updating/creating an EveType
+- New function `eveuniverse.core.esitools.is_esi_online()` for querying the current status of the Eve servers
+- Added info logging to load tasks
+- Added info logging for `eveuniverse.tools.testdata.create_testdata()`
+
+### Changed
+
+- BREAKING CHANGE: Changed interface of the test tool: `eveuniverse.tools.testdata.create_testdata()`.
+- Inline objects can now also be loaded async when `wait_for_children` is set to `False`
+- `all_models()` is now member of `eveuniverse.models.EveUniverseBaseModel` and also returns Inline models
+It requires a list of specifications instead of a dict. Also, you now need to provide the name of the model with `ModelSpec` instead of in the dict as before.
+- Reduced duration for loading testdata with `eveuniverse.tools.testdata.load_testdata_from_dict()`
+- Added inline models to docs
+- Added core functions to docs
+- Performance improvements
+
+### Fixed
+
+- Name field of EveDogmaEffect was too small
+- Testdata creation now also supports inline models, e.g. Dogmas
+
 ## [0.5.0] - 2020-10-23
 
 ### Added

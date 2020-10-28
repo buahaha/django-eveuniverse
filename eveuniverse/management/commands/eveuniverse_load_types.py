@@ -22,22 +22,56 @@ class Command(BaseCommand):
             "--category_id",
             action="append",
             type=int,
-            help="Eve category ID to be loaded",
+            help="Eve category ID to be loaded excl. dogma",
         )
         parser.add_argument(
-            "--group_id", action="append", type=int, help="Eve group ID to be loaded"
+            "--category_id_with_dogma",
+            action="append",
+            type=int,
+            help="Eve category ID to be loaded incl. dogma",
         )
         parser.add_argument(
-            "--type_id", action="append", type=int, help="Eve type ID to be loaded"
+            "--group_id",
+            action="append",
+            type=int,
+            help="Eve group ID to be loaded  excl. dogma",
+        )
+        parser.add_argument(
+            "--group_id_with_dogma",
+            action="append",
+            type=int,
+            help="Eve group ID to be loaded incl. dogma",
+        )
+        parser.add_argument(
+            "--type_id",
+            action="append",
+            type=int,
+            help="Eve type ID to be loaded  excl. dogma",
+        )
+        parser.add_argument(
+            "--type_id_with_dogma",
+            action="append",
+            type=int,
+            help="Eve type ID to be loaded  incl. dogma",
         )
 
     def handle(self, *args, **options):
         app_name = options["app_name"]
         category_ids = options["category_id"]
+        category_ids_with_dogma = options["category_id_with_dogma"]
         group_ids = options["group_id"]
+        group_ids_with_dogma = options["group_id_with_dogma"]
         type_ids = options["type_id"]
+        type_ids_with_dogma = options["type_id_with_dogma"]
 
-        if not category_ids and not group_ids and not type_ids:
+        if (
+            not category_ids
+            and not category_ids_with_dogma
+            and not group_ids
+            and not group_ids_with_dogma
+            and not type_ids
+            and not type_ids_with_dogma
+        ):
             self.stdout.write(self.style.WARNING("No IDs specified. Nothing to do."))
             return
 
@@ -59,9 +93,17 @@ class Command(BaseCommand):
         )
         user_input = get_input("Are you sure you want to proceed? (Y/n)?")
         if user_input == "Y":
-            load_eve_types.delay(
-                category_ids=category_ids, group_ids=group_ids, type_ids=type_ids
-            )
+            if category_ids or group_ids or type_ids:
+                load_eve_types.delay(
+                    category_ids=category_ids, group_ids=group_ids, type_ids=type_ids
+                )
+            if category_ids_with_dogma or group_ids_with_dogma or type_ids_with_dogma:
+                load_eve_types.delay(
+                    category_ids=category_ids_with_dogma,
+                    group_ids=group_ids_with_dogma,
+                    type_ids=type_ids_with_dogma,
+                    force_loading_dogma=True,
+                )
             self.stdout.write(self.style.SUCCESS("Data loading has been started!"))
         else:
             self.stdout.write(self.style.WARNING("Aborted"))

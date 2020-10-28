@@ -8,6 +8,29 @@ This chapter contains the developer reference documentation of the public API fo
 
 .. _api-eve-models:
 
+Base classes
+============
+
+.. autoclass:: eveuniverse.models.EveUniverseBaseModel
+    :members:
+
+.. autoclass:: eveuniverse.models.EveUniverseEntityModel
+    :members:
+
+
+Core functions
+==============
+
+esitools
+----------------
+.. automodule:: eveuniverse.core.esitools
+    :members:
+
+eveimageserver
+----------------
+.. automodule:: eveuniverse.core.eveimageserver
+    :members:
+
 Eve Models
 ==========
 
@@ -48,6 +71,11 @@ EveDogmaEffect
     :members:
 
 .. _api-models-eve-entity:
+
+EveDogmaEffectModifier
+----------------------
+.. autoclass:: eveuniverse.models.EveDogmaEffectModifier
+    :members:
 
 Eve Entity
 --------------
@@ -123,9 +151,24 @@ EveStation
 .. autoclass:: eveuniverse.models.EveStation
     :members:    
 
+EveStationService
+-----------------
+.. autoclass:: eveuniverse.models.EveStationService
+    :members:  
+
 EveType
 ---------
 .. autoclass:: eveuniverse.models.EveType
+    :members: 
+
+EveTypeDogmaAttribute
+---------------------
+.. autoclass:: eveuniverse.models.EveTypeDogmaAttribute
+    :members: 
+
+EveTypeDogmaEffect
+------------------
+.. autoclass:: eveuniverse.models.EveTypeDogmaEffect
     :members: 
 
 EveUnit
