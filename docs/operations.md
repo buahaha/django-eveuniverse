@@ -117,12 +117,40 @@ Note that all settings are optional and the app will use the documented default 
 
 The following management commands are available:
 
-- **eveuniverse_load_data**: This command will load a complete set of data form ESI and store it locally. Useful to optimize performance or when you want to provide the user with drop-down lists. Available sets:
-  - **map**: All regions, constellations and solar systems
-  - **ships**: All ship types
-  - **structures**: All structures types
-- **eveuniverse_purge_all**: This command will purge ALL data of your models.
-- **eveuniverse_load_type**: This command can load a specific set of types. This is a helper command meant to be called from other apps only.
+### eveuniverse_load_data
+
+This command will load a complete set of data form ESI and store it locally. Useful to optimize performance or when you want to provide the user with drop-down lists. Available sets:
+
+- **map**: All regions, constellations and solar systems
+- **ships**: All ship types
+- **structures**: All structures types
+
+### eveuniverse_purge_all
+
+This command will purge ALL data of your models
+
+### eveuniverse_load_types
+
+```text
+Loads large sets of types as specified from ESI into the local database. This
+is a helper command meant to be called from other apps only.
+
+positional arguments:
+  app_name              Name of app this data is loaded for
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --category_id CATEGORY_ID
+                        Eve category ID to be loaded excl. dogma
+  --category_id_with_dogma CATEGORY_ID_WITH_DOGMA
+                        Eve category ID to be loaded incl. dogma
+  --group_id GROUP_ID   Eve group ID to be loaded excl. dogma
+  --group_id_with_dogma GROUP_ID_WITH_DOGMA
+                        Eve group ID to be loaded incl. dogma
+  --type_id TYPE_ID     Eve type ID to be loaded excl. dogma
+  --type_id_with_dogma TYPE_ID_WITH_DOGMA
+                        Eve type ID to be loaded incl. dogma
+```
 
 ## Database tools
 

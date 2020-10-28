@@ -26,26 +26,41 @@ class TestTestData(NoSocketsTestCase):
         return {x["id"] for x in testdata[model_name]}
 
     @patch("eveuniverse.models.EVEUNIVERSE_LOAD_STARGATES", True)
+    @patch("eveuniverse.tools.testdata.is_esi_online", lambda: True)
     @patch("eveuniverse.managers.esi")
     def test_create_testdata(self, mock_esi):
         mock_esi.client = EsiClientStub()
 
-        spec = {
-            "EveRegion": ModelSpec(ids=[10000069], include_children=False),
-            "EveType": ModelSpec(ids=[603, 621], include_children=False),
-            "EveSolarSystem": ModelSpec(ids=[30045339], include_children=True),
-        }
+        spec = [
+            ModelSpec("EveType", ids=[603]),
+            ModelSpec("EveType", ids=[621]),
+            ModelSpec("EveSolarSystem", ids=[30045339], include_children=True),
+        ]
         filepath = f"{_currentdir}/{FILENAME_TESTDATA}"
         create_testdata(spec, filepath)
 
         with open(filepath, "r", encoding="utf-8") as f:
             testdata = json.load(f, object_pairs_hook=OrderedDict)
 
+        # EveType
+        # did load requested objects
+        self.assertEqual(self._get_ids(testdata, "EveType"), {16, 603, 621})
+
+        # did load their partents too
         self.assertEqual(self._get_ids(testdata, "EveCategory"), {2, 6})
         self.assertEqual(self._get_ids(testdata, "EveGroup"), {10, 25, 26})
-        self.assertEqual(self._get_ids(testdata, "EveType"), {16, 603, 621})
-        self.assertEqual(self._get_ids(testdata, "EveRegion"), {10000069})
+
+        # did not load their children
+        self.assertEqual(EveType.objects.get(id=603).dogma_attributes.count(), 0)
+
+        # EveSolarSystem
+        # did load requested objects
         self.assertEqual(self._get_ids(testdata, "EveSolarSystem"), {30045339})
+
+        # did load their partents too
+        self.assertEqual(self._get_ids(testdata, "EveConstellation"), {20000785})
+
+        # did load children of solar systems as requested
         self.assertEqual(self._get_ids(testdata, "EveStargate"), {50016284, 50016286})
 
         os.remove(filepath)

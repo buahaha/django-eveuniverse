@@ -58,9 +58,11 @@ class TestLoadTypes(NoSocketsTestCase):
         mock_get_input.return_value = "Y"
 
         call_command(
-            "eveuniverse_load_types", "dummy_app", "--type_id", "35825", stdout=self.out
+            "eveuniverse_load_types", "dummy_app", "--type_id", "603", stdout=self.out
         )
-        self.assertTrue(EveType.objects.filter(id=35825).exists())
+        obj = EveType.objects.get(id=603)
+        self.assertEqual(obj.dogma_attributes.count(), 0)
+        self.assertEqual(obj.dogma_effects.count(), 0)
 
     def test_load_multiple_types(self, mock_get_input, mock_esi):
         mock_esi.client = EsiClientStub()
@@ -111,3 +113,18 @@ class TestLoadTypes(NoSocketsTestCase):
             "eveuniverse_load_types", "dummy_app", "--type_id", "35825", stdout=self.out
         )
         self.assertFalse(EveType.objects.filter(id=35825).exists())
+
+    def test_load_one_type_with_dogma(self, mock_get_input, mock_esi):
+        mock_esi.client = EsiClientStub()
+        mock_get_input.return_value = "Y"
+
+        call_command(
+            "eveuniverse_load_types",
+            "dummy_app",
+            "--type_id_with_dogma",
+            "603",
+            stdout=self.out,
+        )
+        obj = EveType.objects.get(id=603)
+        self.assertEqual(obj.dogma_attributes.count(), 2)
+        self.assertEqual(obj.dogma_effects.count(), 2)

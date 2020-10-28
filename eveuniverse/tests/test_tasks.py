@@ -6,6 +6,7 @@ from django.test.utils import override_settings
 from .my_test_data import EsiClientStub
 from ..models import (
     EveCategory,
+    EveDogmaAttribute,
     EveGroup,
     EveRegion,
     EveConstellation,
@@ -18,6 +19,7 @@ from ..tasks import (
     load_ship_types,
     load_structure_types,
     update_or_create_eve_object,
+    update_or_create_inline_object,
     create_eve_entities,
     update_unresolved_eve_entities,
     update_market_prices,
@@ -52,6 +54,29 @@ class TestTasks(NoSocketsTestCase):
 
         obj.refresh_from_db()
         self.assertNotEqual(obj.name, "Dummy")
+
+    @patch("eveuniverse.managers.esi")
+    def test_update_or_create_inline_object(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.update_or_create_esi(id=603)
+
+        update_or_create_inline_object(
+            parent_model_name=type(eve_type).__name__,
+            parent_object_pk=eve_type.pk,
+            parent_fk="eve_type",
+            eve_data_obj={"attribute_id": 588, "value": 5},
+            other_pk_info={
+                "esi_name": "attribute_id",
+                "is_fk": True,
+                "name": "eve_dogma_attribute",
+            },
+            parent2_model_name="EveDogmaAttribute",
+            inline_model_name="EveTypeDogmaAttribute",
+        )
+        dogma_attribute_1 = eve_type.dogma_attributes.filter(
+            eve_dogma_attribute=EveDogmaAttribute.objects.get(id=588)
+        ).first()
+        self.assertEqual(dogma_attribute_1.value, 5)
 
     @patch(MODULE_PATH + ".EveEntity.objects.bulk_create_esi")
     def test_create_eve_entities(self, mock_bulk_create_esi):

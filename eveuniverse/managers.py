@@ -49,16 +49,16 @@ class EveUniverseBaseModelManager(models.Manager):
                         try:
                             value = ParentClass.objects.get(id=esi_value)
                         except ParentClass.DoesNotExist:
-                            if mapping.create_related and hasattr(
-                                ParentClass.objects, "update_or_create_esi"
-                            ):
-                                value, _ = ParentClass.objects.update_or_create_esi(
-                                    id=esi_value,
-                                    include_children=False,
-                                    wait_for_children=True,
-                                )
-                            else:
-                                value = None
+                            value = None
+                            if mapping.create_related:
+                                try:
+                                    value, _ = ParentClass.objects.update_or_create_esi(
+                                        id=esi_value,
+                                        include_children=False,
+                                        wait_for_children=True,
+                                    )
+                                except AttributeError:
+                                    pass
 
                     else:
                         if mapping.is_charfield and esi_value is None:
@@ -111,6 +111,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
+        enabled_sections: Iterable[str] = None,
     ) -> Tuple[models.Model, bool]:
         """updates or creates an Eve universe object by fetching it from ESI (blocking).
         Will always get/create parent objects
@@ -119,11 +120,13 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             id: Eve Online ID of object
             include_children: if child objects should be updated/created as well (if any)
             wait_for_children: when true child objects will be updated/created blocking (if any), else async
+            enabled_sections: Sections to load regardless of current settings, e.g. `EveUniverseEntityModel.LOAD_DOGMAS` will always load dogmas for EveTypes
 
         Returns:
             A tuple consisting of the requested object and a created flag
         """
         id = int(id)
+        enabled_sections = set(enabled_sections) if enabled_sections else set()
         add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
         try:
             eve_data_obj = self._transform_esi_response_for_list_endpoints(
@@ -132,14 +135,15 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             if eve_data_obj:
                 defaults = self._defaults_from_esi_obj(eve_data_obj)
                 obj, created = self.update_or_create(id=id, defaults=defaults)
-                inline_objects = self.model._inline_objects()
+                inline_objects = self.model._inline_objects(enabled_sections)
                 if inline_objects:
                     self._update_or_create_inline_objects(
                         parent_eve_data_obj=eve_data_obj,
                         parent_obj=obj,
                         inline_objects=inline_objects,
+                        wait_for_children=wait_for_children,
                     )
-                if eve_data_obj and include_children:
+                if include_children:
                     self._update_or_create_children(
                         parent_eve_data_obj=eve_data_obj,
                         include_children=include_children,
@@ -199,10 +203,15 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         parent_eve_data_obj: dict,
         parent_obj: models.Model,
         inline_objects: dict,
+        wait_for_children: bool,
     ) -> None:
         """updates_or_creates eve objects that are returns "inline" from ESI
         for the parent eve objects as defined for this parent model (if any)
         """
+        from .tasks import (
+            update_or_create_inline_object as task_update_or_create_inline_object,
+        )
+
         if not parent_eve_data_obj or not parent_obj:
             raise ValueError(
                 "%s: Tried to create inline object from empty parent object"
@@ -237,28 +246,31 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                         )
                     )
 
+                parent2_model_name = ParentClass2.__name__ if ParentClass2 else None
+                other_pk_info = {
+                    "name": other_pk[0],
+                    "esi_name": other_pk[1].esi_name,
+                    "is_fk": other_pk[1].is_fk,
+                }
                 for eve_data_obj in parent_eve_data_obj[inline_field]:
-                    args = {parent_fk: parent_obj}
-                    esi_value = eve_data_obj[other_pk[1].esi_name]
-                    if other_pk[1].is_fk:
-                        try:
-                            value = ParentClass2.objects.get(id=esi_value)
-                        except ParentClass2.DoesNotExist:
-                            if hasattr(ParentClass2.objects, "update_or_create_esi"):
-                                (
-                                    value,
-                                    _,
-                                ) = ParentClass2.objects.get_or_create_esi(id=esi_value)
-                            else:
-                                value = None
+                    if wait_for_children:
+                        parent_obj._update_or_create_inline_object(
+                            parent_fk=parent_fk,
+                            eve_data_obj=eve_data_obj,
+                            other_pk_info=other_pk_info,
+                            parent2_model_name=parent2_model_name,
+                            inline_model_name=model_name,
+                        )
                     else:
-                        value = esi_value
-
-                    args[other_pk[0]] = value
-                    args["defaults"] = InlineModel.objects._defaults_from_esi_obj(
-                        eve_data_obj,
-                    )
-                    InlineModel.objects.update_or_create(**args)
+                        task_update_or_create_inline_object(
+                            parent_model_name=self.model.__name__,
+                            parent_object_pk=parent_obj.pk,
+                            parent_fk=parent_fk,
+                            eve_data_obj=eve_data_obj,
+                            other_pk_info=other_pk_info,
+                            parent2_model_name=parent2_model_name,
+                            inline_model_name=model_name,
+                        )
 
     def _update_or_create_children(
         self,
@@ -458,6 +470,7 @@ class EveStargateManager(EveUniverseEntityModelManager):
         *,
         include_children: bool = False,
         wait_for_children: bool = True,
+        enabled_sections: Iterable[str] = None,
     ) -> Tuple[models.Model, bool]:
         """updates or creates an EveStargate object by fetching it from ESI (blocking).
         Will always get/create parent objects
@@ -497,6 +510,7 @@ class EveStationManager(EveUniverseEntityModelManager):
         parent_eve_data_obj: dict,
         parent_obj: models.Model,
         inline_objects: dict,
+        wait_for_children: bool,
     ) -> None:
         """updates_or_creates station service objects for EveStations"""
         from .models import EveStationService
@@ -571,6 +585,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
+        enabled_sections: Iterable[str] = None,
     ) -> Tuple[models.Model, bool]:
         """updates or creates an EveEntity object by fetching it from ESI (blocking).
 
