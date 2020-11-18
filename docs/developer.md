@@ -203,7 +203,6 @@ Here is a simple example for resolving the ID of the Jita solar system:
 ```eval_rst
 .. note::
     Eve IDs have unique ranged for the supported categories, which means they can be safely resolved without having to specify a category.
-
 ```
 
 This examples show how to resolve a list of IDs in bulk and using a resolver object to access the results:
@@ -223,8 +222,17 @@ This examples show how to resolve a list of IDs in bulk and using a resolver obj
 Another approach is to bulk create EveEntity objects with the ID only and then resolve all "new" objects with `EveEntity.objects.bulk_update_new_esi()`. This approach works well when using EveEntity objects as property in you app's models.
 
 ```eval_rst
+.. hint::
+    If you need to test that an ID is valid you can use ``get_or_create_esi()`` or ``update_or_create_esi()``. Both will return  ``None`` instead of an ``EveEntity`` object if the given ID was not valid. You can also use ``resolve_name()``, which will return an empty string for invalid IDs.
+
+    However, calling ESI with an invalid ID will also count against the error rate limit, so use with care.
+
+```
+
+```eval_rst
 .. seealso::
-    For more features and details please see :ref:`api-models-eve-entity` and :ref:`api-managers-eve-entity`.
+    For more features and details please see :ref:`api-managers-eve-entity`.
+
 ```
 
 ```eval_rst

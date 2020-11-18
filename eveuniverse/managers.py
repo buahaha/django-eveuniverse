@@ -1,7 +1,7 @@
 from collections import namedtuple
 import datetime as dt
 import logging
-from typing import List, Iterable, Tuple
+from typing import List, Iterable, Tuple, Optional
 
 from django.db import models, transaction
 from django.db.utils import IntegrityError
@@ -620,6 +620,38 @@ class EveEntityManager(EveUniverseEntityModelManager):
     def get_queryset(self) -> models.QuerySet:
         return EveEntityQuerySet(self.model, using=self._db)
 
+    def get_or_create_esi(
+        self,
+        *,
+        id: int,
+        include_children: bool = False,
+        wait_for_children: bool = True,
+    ) -> Tuple[models.Model, bool]:
+        """gets or creates an EvEntity object.
+
+        The object is automatically fetched from ESI if it does not exist (blocking)
+        or if it has not yet been resolved.
+
+        Args:
+            id: Eve Online ID of object
+
+        Returns:
+            A tuple consisting of the requested EveEntity object and a created flag
+            Returns a None objects if the ID is invalid
+        """
+        id = int(id)
+        try:
+            obj = self.exclude(name="").get(id=id)
+            created = False
+        except self.model.DoesNotExist:
+            obj, created = self.update_or_create_esi(
+                id=id,
+                include_children=include_children,
+                wait_for_children=wait_for_children,
+            )
+
+        return obj, created
+
     def update_or_create_esi(
         self,
         *,
@@ -627,7 +659,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
         include_children: bool = False,
         wait_for_children: bool = True,
         enabled_sections: Iterable[str] = None,
-    ) -> Tuple[models.Model, bool]:
+    ) -> Tuple[Optional[models.Model], bool]:
         """updates or creates an EveEntity object by fetching it from ESI (blocking).
 
         Args:
@@ -637,12 +669,24 @@ class EveEntityManager(EveUniverseEntityModelManager):
 
         Returns:
             A tuple consisting of the requested object and a created flag
+            When the ID is invalid the returned object will be None
+
+        Exceptions:
+            Raises all HTTP codes of ESI endpoint /universe/names except 404
         """
         id = int(id)
-        obj, created = self.update_or_create(id=id)
-        self.filter(id=id).update_from_esi()
-        obj.refresh_from_db()
-        return obj, created
+        logger.info("%s: Trying to resolve ID to EveEntity with ESI", id)
+        try:
+            result = esi.client.Universe.post_universe_names(ids=[id]).results()
+        except HTTPNotFound:
+            logger.info("%s: ID is not valid", id)
+            return None, False
+
+        item = result[0]
+        return self.update_or_create(
+            id=item.get("id"),
+            defaults={"name": item.get("name"), "category": item.get("category")},
+        )
 
     def bulk_create_esi(self, ids: Iterable[int]) -> int:
         """bulk create and resolve multiple entities from ESI.
