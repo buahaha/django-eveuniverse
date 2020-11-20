@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.6.2] - 2020-11-20
+
+### Changed
+
+- Management commands will about if ESI is not online
+- All tasks will now retry (with exponential backoff) on common HTTP errors and OSError exceptions from django-esi
+
 ## [0.6.1] - 2020-11-18
 
 ### Changed

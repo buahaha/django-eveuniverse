@@ -2,6 +2,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from ... import __title__
+from ...core.esitools import is_esi_online
 from ...tasks import load_eve_types, _eve_object_names_to_be_loaded
 from ...utils import LoggerAddTag
 from . import get_input
@@ -77,6 +78,14 @@ class Command(BaseCommand):
 
         self.stdout.write("Eve Universe - Types Loader")
         self.stdout.write("===========================")
+
+        if not is_esi_online():
+            self.stdout.write(
+                "ESI does not appear to be online at this time. Please try again later."
+            )
+            self.stdout.write(self.style.WARNING("Aborted"))
+            return
+
         self.stdout.write(
             f"This command will start loading data for the app: {app_name}."
         )

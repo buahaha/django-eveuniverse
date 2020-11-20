@@ -2,6 +2,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from ... import __title__
+from ...core.esitools import is_esi_online
 from ...tasks import (
     load_map,
     load_ship_types,
@@ -22,8 +23,16 @@ class Command(BaseCommand):
         parser.add_argument("area", choices=["map", "ships", "structures"])
 
     def handle(self, *args, **options):
-        self.stdout.write("Eve Universe - Data Loader - A")
+        self.stdout.write("Eve Universe - Data Loader")
+        self.stdout.write("==========================")
         self.stdout.write("")
+
+        if not is_esi_online():
+            self.stdout.write(
+                "ESI does not appear to be online at this time. Please try again later."
+            )
+            self.stdout.write(self.style.WARNING("Aborted"))
+            return
 
         if options["area"] == "map":
             text = (
@@ -46,11 +55,13 @@ class Command(BaseCommand):
 
         self.stdout.write(text)
 
-        self.stdout.write(
-            "It will also load the following additional entities when related to "
-            "the above mentioned entities: "
-            f"{','.join(_eve_object_names_to_be_loaded())}"
-        )
+        additional_objects = _eve_object_names_to_be_loaded()
+        if additional_objects:
+            self.stdout.write(
+                "It will also load the following additional entities when related to "
+                "objects loaded for the app: "
+                f"{','.join(additional_objects)}"
+            )
         self.stdout.write(
             "Note that this process can take a while to complete "
             "and may cause some significant load to your system."

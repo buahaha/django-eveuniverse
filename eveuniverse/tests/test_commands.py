@@ -12,6 +12,7 @@ from ..utils import NoSocketsTestCase
 PACKAGE_PATH = "eveuniverse.management.commands"
 
 
+@patch(PACKAGE_PATH + ".eveuniverse_load_data.is_esi_online", lambda: True)
 @patch(PACKAGE_PATH + ".eveuniverse_load_data.get_input")
 class TestLoadCommand(NoSocketsTestCase):
     def setUp(self) -> None:
@@ -48,6 +49,7 @@ class TestLoadCommand(NoSocketsTestCase):
 
 @override_settings(CELERY_ALWAYS_EAGER=True)
 @patch("eveuniverse.managers.esi")
+@patch(PACKAGE_PATH + ".eveuniverse_load_types.is_esi_online", lambda: True)
 @patch(PACKAGE_PATH + ".eveuniverse_load_types.get_input")
 class TestLoadTypes(NoSocketsTestCase):
     def setUp(self) -> None:

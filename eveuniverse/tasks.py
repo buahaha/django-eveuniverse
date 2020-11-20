@@ -3,6 +3,7 @@ from typing import List, Iterable
 
 from celery import shared_task
 
+from bravado.exception import HTTPBadGateway, HTTPGatewayTimeout, HTTPServiceUnavailable
 from . import __title__
 from . import models
 from .app_settings import (
@@ -28,11 +29,30 @@ logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 EVE_CATEGORY_ID_SHIP = 6
 EVE_CATEGORY_ID_STRUCTURE = 65
 
+# params for all tasks
+TASK_DEFAULT_KWARGS = {
+    "time_limit": EVEUNIVERSE_TASKS_TIME_LIMIT,
+}
+
+# params for tasks that make ESI calls
+TASK_ESI_KWARGS = {
+    **TASK_DEFAULT_KWARGS,
+    **{
+        "autoretry_for": (
+            OSError,
+            HTTPBadGateway,
+            HTTPGatewayTimeout,
+            HTTPServiceUnavailable,
+        ),
+        "retry_kwargs": {"max_retries": 3},
+        "retry_backoff": 30,
+    },
+}
 
 # Eve Universe objects
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_ESI_KWARGS)
 def load_eve_object(
     model_name: str, id: int, include_children=False, wait_for_children=True
 ) -> None:
@@ -46,7 +66,7 @@ def load_eve_object(
     )
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_ESI_KWARGS)
 def update_or_create_eve_object(
     model_name: str,
     id: int,
@@ -65,7 +85,7 @@ def update_or_create_eve_object(
     )
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_ESI_KWARGS)
 def update_or_create_inline_object(
     parent_obj_id: int,
     parent_fk: str,
@@ -96,13 +116,13 @@ def update_or_create_inline_object(
 # EveEntity objects
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_ESI_KWARGS)
 def create_eve_entities(ids: Iterable[int]) -> None:
     """Task for bulk creating and resolving multiple entities from ESI."""
     EveEntity.objects.bulk_create_esi(ids)
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_ESI_KWARGS)
 def update_unresolved_eve_entities() -> None:
     """Task for bulk updating all unresolved EveEntity objects in the database from ESI."""
     EveEntity.objects.bulk_update_new_esi()
@@ -131,7 +151,7 @@ def _eve_object_names_to_be_loaded() -> list:
     return sorted(names_to_be_loaded)
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_ESI_KWARGS)
 def load_map() -> None:
     """loads the complete Eve map with all regions, constellation and solarsystems
     and additional related entities if they are enabled
@@ -194,21 +214,21 @@ def _load_type(type_id: int, force_loading_dogma: bool = False) -> None:
     )
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_DEFAULT_KWARGS)
 def load_ship_types() -> None:
     """Loads all ship types"""
     logger.info("Started loading all ship types into eveuniverse")
     _load_category(EVE_CATEGORY_ID_SHIP)
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_DEFAULT_KWARGS)
 def load_structure_types() -> None:
     """Loads all structure types"""
     logger.info("Started loading all structure types into eveuniverse")
     _load_category(EVE_CATEGORY_ID_STRUCTURE)
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_DEFAULT_KWARGS)
 def load_eve_types(
     category_ids: List[int] = None,
     group_ids: List[int] = None,
@@ -237,7 +257,7 @@ def load_eve_types(
             _load_type(type_id, force_loading_dogma)
 
 
-@shared_task(time_limit=EVEUNIVERSE_TASKS_TIME_LIMIT)
+@shared_task(**TASK_ESI_KWARGS)
 def update_market_prices(minutes_until_stale: int = None):
     """Updates market prices from ESI.
     see EveMarketPrice.objects.update_from_esi() for details"""
