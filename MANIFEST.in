@@ -6,4 +6,3 @@ recursive-include eveuniverse *.py
 recursive-include eveuniverse/static *
 recursive-include eveuniverse/templates *
 recursive-include eveuniverse/tools *.sql
-

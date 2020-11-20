@@ -2,7 +2,7 @@
 # flake8: noqa
 """script for testing client with live requests to ESI
 
-Run this script directly. Make sure to also set the environment variable 
+Run this script directly. Make sure to also set the environment variable
 DJANGO_PROJECT_PATH and DJANGO_SETTINGS_MODULE to match your setup:
 
 You can see the result in your main log file of your Django installation.

@@ -58,7 +58,7 @@ EveCategory
 EveConstellation
 ----------------
 .. autoclass:: eveuniverse.models.EveConstellation
-    :members:    
+    :members:
 
 EveDogmaAttribute
 -----------------
@@ -144,37 +144,37 @@ EveStargate
 -----------
 .. autoclass:: eveuniverse.models.EveStargate
     :members:
-    :exclude-members:  children, inline_objects     
+    :exclude-members:  children, inline_objects
 
 EveStation
 ----------
 .. autoclass:: eveuniverse.models.EveStation
-    :members:    
+    :members:
 
 EveStationService
 -----------------
 .. autoclass:: eveuniverse.models.EveStationService
-    :members:  
+    :members:
 
 EveType
 ---------
 .. autoclass:: eveuniverse.models.EveType
-    :members: 
+    :members:
 
 EveTypeDogmaAttribute
 ---------------------
 .. autoclass:: eveuniverse.models.EveTypeDogmaAttribute
-    :members: 
+    :members:
 
 EveTypeDogmaEffect
 ------------------
 .. autoclass:: eveuniverse.models.EveTypeDogmaEffect
-    :members: 
+    :members:
 
 EveUnit
 ---------
 .. autoclass:: eveuniverse.models.EveUnit
-    :members: 
+    :members:
 
 .. _api-manager-methods:
 
@@ -206,7 +206,7 @@ Other manager methods
 -------------------------
 
 .. autoclass:: eveuniverse.managers.EveMarketPriceManager
-    :members: 
+    :members:
 
 Helpers
 ====================

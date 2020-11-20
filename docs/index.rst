@@ -20,7 +20,7 @@ Furthermore, all Eve models have an on-demand loading mechanism for fetching new
    :maxdepth: 2
    :caption: Contents:
 
-   operations   
+   operations
    developer
    api
 
