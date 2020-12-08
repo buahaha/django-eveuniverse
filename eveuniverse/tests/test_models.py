@@ -1017,10 +1017,34 @@ class TestEveType(NoSocketsTestCase):
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    def test_can_create_type_from_esi_including_dogmas_when_disabled(self, mock_esi):
+    def test_can_create_type_from_esi_including_dogmas_when_disabled_1(self, mock_esi):
         mock_esi.client = EsiClientStub()
 
         eve_type, created = EveType.objects.update_or_create_esi(
+            id=603, enabled_sections=[EveType.LOAD_DOGMAS]
+        )
+        self.assertTrue(created)
+        self.assertEqual(eve_type.id, 603)
+        self.assertSetEqual(
+            set(
+                eve_type.dogma_attributes.values_list(
+                    "eve_dogma_attribute_id", flat=True
+                )
+            ),
+            {588, 129},
+        )
+        self.assertSetEqual(
+            set(eve_type.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    def test_can_create_type_from_esi_including_dogmas_when_disabled_2(self, mock_esi):
+        mock_esi.client = EsiClientStub()
+
+        eve_type, created = EveType.objects.get_or_create_esi(
             id=603, enabled_sections=[EveType.LOAD_DOGMAS]
         )
         self.assertTrue(created)

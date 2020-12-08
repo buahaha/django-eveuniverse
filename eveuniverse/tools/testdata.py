@@ -2,7 +2,7 @@ from copy import deepcopy
 from collections import OrderedDict, namedtuple
 import logging
 import json
-from typing import List
+from typing import List, Iterable
 
 from django.core.serializers.json import DjangoJSONEncoder
 
@@ -16,11 +16,16 @@ from ..utils import LoggerAddTag
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 
-_ModelSpec = namedtuple("ModelSpec", ["model_name", "ids", "include_children"])
+_ModelSpec = namedtuple(
+    "ModelSpec", ["model_name", "ids", "include_children", "enabled_sections"]
+)
 
 
 def ModelSpec(
-    model_name: str, ids: List[int], include_children: bool = False
+    model_name: str,
+    ids: List[int],
+    include_children: bool = False,
+    enabled_sections: Iterable[str] = None,
 ) -> _ModelSpec:
     """Wrapper for creating ModelSpec objects.
 
@@ -31,7 +36,12 @@ def ModelSpec(
         ids: List of Eve IDs to be loaded
         include_children: Whether to also load children of those objects
     """
-    return _ModelSpec(model_name=model_name, ids=ids, include_children=include_children)
+    return _ModelSpec(
+        model_name=model_name,
+        ids=ids,
+        include_children=include_children,
+        enabled_sections=enabled_sections,
+    )
 
 
 def create_testdata(spec: List[ModelSpec], filepath: str) -> None:
@@ -67,6 +77,7 @@ def create_testdata(spec: List[ModelSpec], filepath: str) -> None:
                 id=id,
                 include_children=model_spec.include_children,
                 wait_for_children=True,
+                enabled_sections=model_spec.enabled_sections,
             )
 
     # dump all data into file

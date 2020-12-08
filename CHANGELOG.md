@@ -7,18 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.6.3] - 2020-12-08
+
+### Added
+
+- Added option to load dogmas on-demand when getting/creating an EveType
+
 ## [0.6.2] - 2020-11-20
 
 ### Changed
 
-- Management commands will about if ESI is not online
+- Management commands about if ESI is not online
 - All tasks will now retry (with exponential backoff) on common HTTP errors and OSError exceptions from django-esi
 
 ## [0.6.1] - 2020-11-18
 
 ### Changed
 
-- It is now possible to test for invalid Ids with EveEntity, e.g. `EveEntity.objects.get_or_create_esi()` will now return `None` instead of the object if the ID was invalid.
+- It is now possible to test for invalid Ids with EveEntity, e.g. `EveEntity.objects.get_or_create_esi()` will now return `None` instead of the object, if the ID was invalid.
 - `EveEntity.objects.get_or_create_esi()` will now try to resolve the ID if an unresolved object with that ID already exists.
 
 ## [0.6.0] - 2020-10-28
@@ -28,7 +34,7 @@ This version adds better support for dogmas when loading types.
 ### Added
 
 - Can now also get dogmas when loading types via `eveuniverse_load_types` management command
-- Added option to load dogmas when updating/creating an EveType
+- Added option to load dogmas on-demand when updating/creating an EveType
 - New function `eveuniverse.core.esitools.is_esi_online()` for querying the current status of the Eve servers
 - Added info logging to load tasks
 - Added info logging for `eveuniverse.tools.testdata.create_testdata()`

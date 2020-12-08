@@ -130,7 +130,7 @@ Eve models are heavily interrelated and trying to load just a small subset of ob
 
 For example the "dogma" consists of 4 models that relate to inventory types and contain specifics for type objects like the rate of fire for some ship modules. Not every app may need that additional information in their database.
 
-Our solution here is to offer developers control over which related models are loaded through configuration. By default the following eve models are not loaded by relation and need to be turned on explicitly (see also Settings for details):
+Therefore the following eve models are not loaded through relations By default and need to be turned on explicitly:
 
 - EveAsteroidBelt
 - EveDogmaAttribute
@@ -144,14 +144,38 @@ Our solution here is to offer developers control over which related models are l
 - EveStation
 
 ```eval_rst
-.. note::
+.. Hint::
     You can still load objects from disabled models directly - e.g. with ``get_or_create_esi()`` - but be mindful that relations will not be created automatically, which can lead to inconsistencies in your database.
 ```
+
+There are two solutions for loading disabled models incl. their relations:
+
+- Globally enabling disabled models
+- Enabling disabled models on-demand
+
+#### Globally enabling models
+
+One solution here is to offer developers control over which related models are loaded through configuration. Each disabled model therefore as a corresponding setting that can be used to globally enable that model.
 
 ```eval_rst
 .. hint::
     When turning on loading of related models you usually want to reload related eve objects that already exist in the database to make sure all relations are created correctly. e.g. after turning on ``EveStargate`` you want to reload all solar systems.
 ```
+
+```eval_rst
+.. seealso::
+    For an overview of all settings please see :ref:`operations-settings`.
+```
+
+### Activate disabled models on-demand
+
+However, globally enabling models will affect all apps of a Django installation. For instance if you turn on dogmas globally, dogmas will be loaded for each and every type, even if it that extra data is not needed.
+
+This might not be the option for some use cases and we are therefore offering an alternative solution. You can also activate disabled models on-demand:
+
+- `get_or_create_esi()` and `update_or_create_esi()` take an extra argument called `enabled_sections`, which allows you to activate disabled models just for that request.
+- `eveuniverse_load_types` management command for preloading types can also include loading dogmas if requested
+- Test tool for creating test data also support the `enabled_sections` argument
 
 ### Preloading data
 

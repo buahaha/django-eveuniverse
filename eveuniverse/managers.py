@@ -78,6 +78,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
+        enabled_sections: Iterable[str] = None,
     ) -> Tuple[models.Model, bool]:
         """gets or creates an eve universe object.
 
@@ -86,8 +87,9 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
         Args:
             id: Eve Online ID of object
-            include_children: when needed to updated/created if child objects should be updated/created as well (if any)
-            wait_for_children: when true child objects will be updated/created blocking (if any), else async
+            include_children: if child objects should be updated/created as well (only when a new object is created)
+            wait_for_children: when true child objects will be updated/created blocking (if any), else async (only when a new object is created)
+            enabled_sections: Sections to load regardless of current settings, e.g. `EveUniverseEntityModel.LOAD_DOGMAS` will always load dogmas for EveTypes (only when a new object is created)
 
         Returns:
             A tuple consisting of the requested object and a created flag
@@ -101,6 +103,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 id=id,
                 include_children=include_children,
                 wait_for_children=wait_for_children,
+                enabled_sections=enabled_sections,
             )
 
         return obj, created

@@ -62,6 +62,10 @@ python manage.py migrate
 
 And finally restart your Django instance so your changes become effective.
 
+```eval_rst
+.. _operations-settings:
+```
+
 ## Settings
 
 Here is a list of available settings for this app. They can be configured by adding them to your local Django settings file.

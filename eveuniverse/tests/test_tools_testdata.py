@@ -33,7 +33,7 @@ class TestTestData(NoSocketsTestCase):
 
         spec = [
             ModelSpec("EveType", ids=[603]),
-            ModelSpec("EveType", ids=[621]),
+            ModelSpec("EveType", ids=[621], enabled_sections=[EveType.LOAD_DOGMAS]),
             ModelSpec("EveSolarSystem", ids=[30045339], include_children=True),
         ]
         filepath = f"{_currentdir}/{FILENAME_TESTDATA}"
