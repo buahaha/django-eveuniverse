@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.6.4] - 2020-12-15
+
+### Added
+
+- Now submits a proper user agent with all requests to ESI
+
+### Changed
+
+- Removed dependency to local swagger spec file
+
 ## [0.6.3] - 2020-12-08
 
 ### Added
