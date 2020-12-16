@@ -1634,6 +1634,213 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertEqual(resolver.to_name(2001), "Wayne Technologies")
         self.assertEqual(resolver.to_name(3001), "Wayne Enterprises")
 
+    def test_is_alliance(self, mock_esi):
+        """when entity is an alliance, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertTrue(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_alliance)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_alliance)
+
+    def test_is_character(self, mock_esi):
+        """when entity is a character, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertTrue(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_character)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_character)
+
+    def test_is_constellation(self, mock_esi):
+        """when entity is a constellation, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertTrue(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_constellation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_constellation)
+
+    def test_is_corporation(self, mock_esi):
+        """when entity is a corporation, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertTrue(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_corporation)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_corporation)
+
+    def test_is_faction(self, mock_esi):
+        """when entity is a faction, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertTrue(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_faction)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_faction)
+
+    def test_is_type(self, mock_esi):
+        """when entity is an inventory type, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertTrue(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_type)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_type)
+
+    def test_is_region(self, mock_esi):
+        """when entity is a region, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertTrue(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_region)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_region)
+
+    def test_is_solar_system(self, mock_esi):
+        """when entity is a solar system, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertTrue(obj.is_solar_system)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_solar_system)
+
+    def test_is_station(self, mock_esi):
+        """when entity is a station, then return True, else False"""
+        mock_esi.client = EsiClientStub()
+
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3001)  # alliance
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1001)  # character
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=20000020)  # constellation
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=2001)  # corporation
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=500001)  # faction
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=603)  # inventory type
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=10000069)  # region
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
+        self.assertFalse(obj.is_station)
+        obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertTrue(obj.is_station)
+
 
 @patch("eveuniverse.managers.esi")
 class TestEveEntityBulkCreateEsi(NoSocketsTestCase):

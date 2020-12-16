@@ -1234,6 +1234,46 @@
                 "id": 30004984,
                 "name": "Abune",
                 "category": "solar_system"
+            },
+            "3019583": {
+                "id": 3019583,
+                "name": "Tyrannos Strategos",
+                "category": "character"
+            },
+            "1000274": {
+                "id": 1000274,
+                "name": "Vigilant Tyrannos",
+                "category": "corporation"
+            },
+            "93330670": {
+                "id": 93330670,
+                "name": "Erik Kalkoken",
+                "category": "character"
+            },
+            "98394960": {
+                "id": 98394960,
+                "name": "VOLTAGE REGULATORS",
+                "category": "corporation"
+            },
+            "99008435": {
+                "id": 99008435,
+                "name": "420 MLG TWINTURBO 3000 EMPIRE ALLIANCE RELOADED",
+                "category": "alliance"
+            },
+            "20000020": {
+                "id": 20000020,
+                "name": "Kimotoro",
+                "category": "constellation"
+            },
+            "500001": {
+                "id": 500001,
+                "name": "Caldari State",
+                "category": "faction"
+            },
+            "60015068": {
+                "id": 60015068,
+                "name": "Enaluri V - State Protectorate Assembly Plant",
+                "category": "station"
             }
         }
     }

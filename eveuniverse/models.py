@@ -324,6 +324,13 @@ class EveEntity(EveUniverseEntityModel):
     This is a special model model dedicated to quick resolution of Eve IDs to names and their categories, e.g. for characters. See also manager methods.
     """
 
+    # NPC IDs
+    NPC_CORPORATION_ID_BEGIN = 0
+    NPC_CORPORATION_ID_END = 0
+    NPC_CHARACTER_ID_BEGIN = 0
+    NPC_CHARACTER_ID_END = 0
+
+    # categories
     CATEGORY_ALLIANCE = "alliance"
     CATEGORY_CHARACTER = "character"
     CATEGORY_CONSTELLATION = "constellation"
@@ -357,11 +364,55 @@ class EveEntity(EveUniverseEntityModel):
         esi_path_object = "Universe.post_universe_names"
         load_order = 110
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self._CATEGORIES = {x[0] for x in self.CATEGORY_CHOICES}
+
     def __str__(self) -> str:
         if self.name:
             return self.name
         else:
             return f"ID:{self.id}"
+
+    @property
+    def is_alliance(self) -> bool:
+        return self.is_category(self.CATEGORY_ALLIANCE)
+
+    @property
+    def is_character(self) -> bool:
+        return self.is_category(self.CATEGORY_CHARACTER)
+
+    @property
+    def is_constellation(self) -> bool:
+        return self.is_category(self.CATEGORY_CONSTELLATION)
+
+    @property
+    def is_corporation(self) -> bool:
+        return self.is_category(self.CATEGORY_CORPORATION)
+
+    @property
+    def is_faction(self) -> bool:
+        return self.is_category(self.CATEGORY_FACTION)
+
+    @property
+    def is_type(self) -> bool:
+        return self.is_category(self.CATEGORY_INVENTORY_TYPE)
+
+    @property
+    def is_region(self) -> bool:
+        return self.is_category(self.CATEGORY_REGION)
+
+    @property
+    def is_solar_system(self) -> bool:
+        return self.is_category(self.CATEGORY_SOLAR_SYSTEM)
+
+    @property
+    def is_station(self) -> bool:
+        return self.is_category(self.CATEGORY_STATION)
+
+    def is_category(self, category: str) -> bool:
+        """returns True if this entity has the given category, else False"""
+        return category in self._CATEGORIES and self.category == category
 
     def update_from_esi(self) -> "EveEntity":
         """Update the current object from ESI
