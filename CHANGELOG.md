@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.7.0] - 2020-12-16
+
+### Added
+
+- Boolean properties to EveEntity for identifying if an object is a certain category or if it is an NPC
+
 ## [0.6.4] - 2020-12-15
 
 ### Added

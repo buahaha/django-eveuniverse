@@ -1656,6 +1656,8 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertFalse(obj.is_alliance)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
         self.assertFalse(obj.is_alliance)
+        obj = EveEntity(id=666)
+        self.assertFalse(obj.is_alliance)
 
     def test_is_character(self, mock_esi):
         """when entity is a character, then return True, else False"""
@@ -1678,6 +1680,8 @@ class TestEveEntity(NoSocketsTestCase):
         obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
         self.assertFalse(obj.is_character)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_character)
+        obj = EveEntity(id=666)
         self.assertFalse(obj.is_character)
 
     def test_is_constellation(self, mock_esi):
@@ -1702,6 +1706,8 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertFalse(obj.is_constellation)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
         self.assertFalse(obj.is_constellation)
+        obj = EveEntity(id=666)
+        self.assertFalse(obj.is_constellation)
 
     def test_is_corporation(self, mock_esi):
         """when entity is a corporation, then return True, else False"""
@@ -1724,6 +1730,8 @@ class TestEveEntity(NoSocketsTestCase):
         obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
         self.assertFalse(obj.is_corporation)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_corporation)
+        obj = EveEntity(id=666)
         self.assertFalse(obj.is_corporation)
 
     def test_is_faction(self, mock_esi):
@@ -1748,6 +1756,8 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertFalse(obj.is_faction)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
         self.assertFalse(obj.is_faction)
+        obj = EveEntity(id=666)
+        self.assertFalse(obj.is_faction)
 
     def test_is_type(self, mock_esi):
         """when entity is an inventory type, then return True, else False"""
@@ -1770,6 +1780,8 @@ class TestEveEntity(NoSocketsTestCase):
         obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
         self.assertFalse(obj.is_type)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_type)
+        obj = EveEntity(id=666)
         self.assertFalse(obj.is_type)
 
     def test_is_region(self, mock_esi):
@@ -1794,6 +1806,8 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertFalse(obj.is_region)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
         self.assertFalse(obj.is_region)
+        obj = EveEntity(id=666)
+        self.assertFalse(obj.is_region)
 
     def test_is_solar_system(self, mock_esi):
         """when entity is a solar system, then return True, else False"""
@@ -1816,6 +1830,8 @@ class TestEveEntity(NoSocketsTestCase):
         obj, _ = EveEntity.objects.update_or_create_esi(id=30004984)  # solar system
         self.assertTrue(obj.is_solar_system)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
+        self.assertFalse(obj.is_solar_system)
+        obj = EveEntity(id=666)
         self.assertFalse(obj.is_solar_system)
 
     def test_is_station(self, mock_esi):
@@ -1840,6 +1856,38 @@ class TestEveEntity(NoSocketsTestCase):
         self.assertFalse(obj.is_station)
         obj, _ = EveEntity.objects.update_or_create_esi(id=60015068)  # station
         self.assertTrue(obj.is_station)
+        obj = EveEntity(id=666)
+        self.assertFalse(obj.is_station)
+
+    def test_is_npc_1(self, mock_esi):
+        """when entity is NPC character, then return True"""
+        mock_esi.client = EsiClientStub()
+        obj, _ = EveEntity.objects.update_or_create_esi(id=3019583)
+        self.assertTrue(obj.is_npc)
+
+    def test_is_npc_2(self, mock_esi):
+        """when entity is NPC corporation, then return True"""
+        mock_esi.client = EsiClientStub()
+        obj, _ = EveEntity.objects.update_or_create_esi(id=1000274)
+        self.assertTrue(obj.is_npc)
+
+    def test_is_npc_3(self, mock_esi):
+        """when entity is normal character, then return False"""
+        mock_esi.client = EsiClientStub()
+        obj, _ = EveEntity.objects.update_or_create_esi(id=93330670)
+        self.assertFalse(obj.is_npc)
+
+    def test_is_npc_4(self, mock_esi):
+        """when entity is normal corporation, then return False"""
+        mock_esi.client = EsiClientStub()
+        obj, _ = EveEntity.objects.update_or_create_esi(id=98394960)
+        self.assertFalse(obj.is_npc)
+
+    def test_is_npc_5(self, mock_esi):
+        """when entity is normal alliance, then return False"""
+        mock_esi.client = EsiClientStub()
+        obj, _ = EveEntity.objects.update_or_create_esi(id=99008435)
+        self.assertFalse(obj.is_npc)
 
 
 @patch("eveuniverse.managers.esi")

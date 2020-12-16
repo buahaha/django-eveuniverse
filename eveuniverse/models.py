@@ -325,10 +325,10 @@ class EveEntity(EveUniverseEntityModel):
     """
 
     # NPC IDs
-    NPC_CORPORATION_ID_BEGIN = 0
-    NPC_CORPORATION_ID_END = 0
-    NPC_CHARACTER_ID_BEGIN = 0
-    NPC_CHARACTER_ID_END = 0
+    NPC_CORPORATION_ID_BEGIN = 1_000_000
+    NPC_CORPORATION_ID_END = 2_000_000
+    NPC_CHARACTER_ID_BEGIN = 3_000_000
+    NPC_CHARACTER_ID_END = 4_000_000
 
     # categories
     CATEGORY_ALLIANCE = "alliance"
@@ -376,39 +376,67 @@ class EveEntity(EveUniverseEntityModel):
 
     @property
     def is_alliance(self) -> bool:
+        """returns True if entity is an alliance, else False"""
         return self.is_category(self.CATEGORY_ALLIANCE)
 
     @property
     def is_character(self) -> bool:
+        """returns True if entity is a character, else False"""
         return self.is_category(self.CATEGORY_CHARACTER)
 
     @property
     def is_constellation(self) -> bool:
+        """returns True if entity is a constellation, else False"""
         return self.is_category(self.CATEGORY_CONSTELLATION)
 
     @property
     def is_corporation(self) -> bool:
+        """returns True if entity is a corporation, else False"""
         return self.is_category(self.CATEGORY_CORPORATION)
 
     @property
     def is_faction(self) -> bool:
+        """returns True if entity is a faction, else False"""
         return self.is_category(self.CATEGORY_FACTION)
 
     @property
     def is_type(self) -> bool:
+        """returns True if entity is an inventory type, else False"""
         return self.is_category(self.CATEGORY_INVENTORY_TYPE)
 
     @property
     def is_region(self) -> bool:
+        """returns True if entity is a region, else False"""
         return self.is_category(self.CATEGORY_REGION)
 
     @property
     def is_solar_system(self) -> bool:
+        """returns True if entity is a solar system, else False"""
         return self.is_category(self.CATEGORY_SOLAR_SYSTEM)
 
     @property
     def is_station(self) -> bool:
+        """returns True if entity is a station, else False"""
         return self.is_category(self.CATEGORY_STATION)
+
+    @property
+    def is_npc(self) -> bool:
+        """returns True if this entity is an NPC character or NPC corporation,
+        else False
+        """
+        if (
+            self.is_corporation
+            and self.NPC_CORPORATION_ID_BEGIN <= self.id < self.NPC_CORPORATION_ID_END
+        ):
+            return True
+
+        if (
+            self.is_character
+            and self.NPC_CHARACTER_ID_BEGIN <= self.id < self.NPC_CHARACTER_ID_END
+        ):
+            return True
+
+        return False
 
     def is_category(self, category: str) -> bool:
         """returns True if this entity has the given category, else False"""
