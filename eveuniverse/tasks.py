@@ -18,6 +18,7 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STATIONS,
     EVEUNIVERSE_TASKS_TIME_LIMIT,
 )
+from .constants import EVE_CATEGORY_ID_SHIP, EVE_CATEGORY_ID_STRUCTURE
 from .models import EveUniverseEntityModel, EveEntity, EveMarketPrice
 from .providers import esi
 from .utils import LoggerAddTag
@@ -26,8 +27,6 @@ from .utils import LoggerAddTag
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 # logging.getLogger("esi").setLevel(logging.INFO)
 
-EVE_CATEGORY_ID_SHIP = 6
-EVE_CATEGORY_ID_STRUCTURE = 65
 
 # params for all tasks
 TASK_DEFAULT_KWARGS = {

@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, Set
 from bravado.exception import HTTPNotFound
 
 from django.db import models
-
+from django.contrib.staticfiles.storage import staticfiles_storage
 
 from . import __title__
 from .app_settings import (
@@ -22,8 +22,8 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
 )
+from .constants import EVE_CATEGORY_ID_BLUEPRINT, EVE_CATEGORY_ID_SKIN
 from .core import eveimageserver
-
 from .managers import (
     EveUniverseBaseModelManager,
     EveUniverseEntityModelManager,
@@ -41,7 +41,7 @@ from .utils import LoggerAddTag
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 NAMES_MAX_LENGTH = 100
-EVE_CATEGORY_ID_BLUEPRINT = 9
+
 
 EsiMapping = namedtuple(
     "EsiMapping",
@@ -1329,23 +1329,41 @@ class EveType(EveUniverseEntityModel):
         load_order = 134
 
     def icon_url(
-        self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE, is_blueprint=None
+        self,
+        size=EveUniverseEntityModel.DEFAULT_ICON_SIZE,
+        category_id=None,
+        is_blueprint=None,
     ) -> str:
         """return an image URL to this type as icon. Also works for blueprints.
 
-        This method accesses eve_group
+        This method accesses eve_group unless is_regular, is_blueprint or is_skin is set
 
         Args:
-        - is_blueprint: Inform the method whether this type is a blueprint,
-        so it does not have to run a DB query to check (Optional)
+            category_id: category ID of this type (avoids extra DB call)
+            is_blueprint: DEPRECATED - type is assumed to be a blueprint
+
+        Note that a generic icon will returned for all SKIN types, which supports sizes
+        of 32, 64, 128 only.
         """
-        if is_blueprint is None:
-            is_blueprint = self.eve_group.eve_category_id == EVE_CATEGORY_ID_BLUEPRINT
+        # if is_blueprint is not None:
+        #    warnings.warn("is_blueprint in EveType.icon_url() is deprecated")
 
         if is_blueprint:
-            return eveimageserver.type_bp_url(self.id, size=size)
+            category_id = EVE_CATEGORY_ID_BLUEPRINT
 
-        return eveimageserver.type_icon_url(self.id, size=size)
+        if category_id is None:
+            category_id = self.eve_group.eve_category_id
+
+        if category_id == EVE_CATEGORY_ID_BLUEPRINT:
+            return eveimageserver.type_bp_url(self.id, size=size)
+        elif category_id == EVE_CATEGORY_ID_SKIN:
+            if not size or size < 32 or size > 128 or (size & (size - 1) != 0):
+                raise ValueError("Invalid size: {}".format(size))
+            else:
+                filename = f"eveuniverse/skin_generic_{size}.png"
+                return staticfiles_storage.url(filename)
+        else:
+            return eveimageserver.type_icon_url(self.id, size=size)
 
     def render_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """return an image URL to this type as render"""

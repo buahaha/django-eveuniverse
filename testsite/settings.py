@@ -23,6 +23,13 @@ SECRET_KEY = "wow I'm a really bad default secret key"
 
 ROOT_URLCONF = "testsite.urls"
 
+# static files conf
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+    os.path.join(PROJECT_DIR, "static"),
+]
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+
 # Celery configuration
 BROKER_URL = "memory://localhost/"
 

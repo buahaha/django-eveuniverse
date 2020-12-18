@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.7.1] - 2020-12-18
+
+### Changed
+
+- `EveType.icon_url()` can now be called with a category ID to avoid additional DB calls
+- DEPRECATED: `is_blueprint` for `EveType.icon_url()`
+
+### Fixed
+
+- `EveType.icon_url()` now returns a generic SKIN icon for SKIN license types instead of an invalid URL
+
 ## [0.7.0] - 2020-12-16
 
 ### Added

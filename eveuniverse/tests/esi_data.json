@@ -282,6 +282,14 @@
                 ],
                 "name": "Structure",
                 "published": true
+            },
+            "91": {
+                "category_id": 91,
+                "groups": [
+                    1950
+                ],
+                "name": "SKINs",
+                "published": true
             }
         },
         "get_universe_constellations_constellation_id": {
@@ -490,6 +498,15 @@
                 "category_id": 65,
                 "group_id": 1404,
                 "name": "Engineering Complex",
+                "published": true,
+                "types": [
+                    35825
+                ]
+            },
+            "1950": {
+                "category_id": 91,
+                "group_id": 1950,
+                "name": "Permanent SKIN",
                 "published": true,
                 "types": [
                     35825
@@ -1169,6 +1186,20 @@
                 "radius": 4499,
                 "type_id": 29627,
                 "volume": 10000000
+            },
+            "34599": {
+                "capacity": 0,
+                "description": "",
+                "group_id": 1950,
+                "market_group_id": 1964,
+                "mass": 0,
+                "name": "Apocalypse Kador SKIN",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1,
+                "type_id": 34599,
+                "volume": 0.01
             },
             "35825": {
                 "capacity": 0,
