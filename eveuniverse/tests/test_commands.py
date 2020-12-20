@@ -130,3 +130,41 @@ class TestLoadTypes(NoSocketsTestCase):
         obj = EveType.objects.get(id=603)
         self.assertEqual(obj.dogma_attributes.count(), 2)
         self.assertEqual(obj.dogma_effects.count(), 2)
+
+
+@override_settings(CELERY_ALWAYS_EAGER=True)
+@patch("eveuniverse.managers.esi")
+@patch(PACKAGE_PATH + ".eveuniverse_load_types.is_esi_online")
+@patch(PACKAGE_PATH + ".eveuniverse_load_types.get_input")
+class TestLoadTypesEsiCheck(NoSocketsTestCase):
+    def setUp(self) -> None:
+        self.out = StringIO()
+
+    def test_checks_esi_by_default(self, mock_get_input, mock_is_esi_online, mock_esi):
+        mock_esi.client = EsiClientStub()
+        mock_get_input.return_value = "Y"
+
+        call_command(
+            "eveuniverse_load_types",
+            "dummy_app",
+            "--type_id",
+            "603",
+            stdout=self.out,
+        )
+        self.assertTrue(EveType.objects.filter(id=603).exists())
+        self.assertTrue(mock_is_esi_online.called)
+
+    def test_can_disable_esi_check(self, mock_get_input, mock_is_esi_online, mock_esi):
+        mock_esi.client = EsiClientStub()
+        mock_get_input.return_value = "Y"
+
+        call_command(
+            "eveuniverse_load_types",
+            "dummy_app",
+            "--type_id",
+            "603",
+            "--disable_esi_check",
+            stdout=self.out,
+        )
+        self.assertTrue(EveType.objects.filter(id=603).exists())
+        self.assertFalse(mock_is_esi_online.called)

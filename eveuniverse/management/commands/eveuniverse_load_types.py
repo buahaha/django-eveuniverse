@@ -55,6 +55,11 @@ class Command(BaseCommand):
             type=int,
             help="Eve type ID to be loaded  incl. dogma",
         )
+        parser.add_argument(
+            "--disable_esi_check",
+            action="store_true",
+            help="Disables checking that ESI is online",
+        )
 
     def handle(self, *args, **options):
         app_name = options["app_name"]
@@ -79,7 +84,7 @@ class Command(BaseCommand):
         self.stdout.write("Eve Universe - Types Loader")
         self.stdout.write("===========================")
 
-        if not is_esi_online():
+        if not options["disable_esi_check"] and not is_esi_online():
             self.stdout.write(
                 "ESI does not appear to be online at this time. Please try again later."
             )

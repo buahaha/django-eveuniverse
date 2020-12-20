@@ -148,6 +148,7 @@ optional arguments:
                         Eve category ID to be loaded excl. dogma
   --category_id_with_dogma CATEGORY_ID_WITH_DOGMA
                         Eve category ID to be loaded incl. dogma
+  --disable_esi_check   Disables checking that ESI is online
   --group_id GROUP_ID   Eve group ID to be loaded excl. dogma
   --group_id_with_dogma GROUP_ID_WITH_DOGMA
                         Eve group ID to be loaded incl. dogma

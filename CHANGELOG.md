@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.7.2] - 2020-12-20
+
+### Added
+
+- Option to disable ESI checks for management command **eveuniverse_load_types**
+
 ## [0.7.1] - 2020-12-18
 
 ### Changed
