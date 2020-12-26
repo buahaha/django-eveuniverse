@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, Set
 from bravado.exception import HTTPNotFound
 
 from django.db import models
+
 from django.contrib.staticfiles.storage import staticfiles_storage
 
 from . import __title__
@@ -21,9 +22,10 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARGATES,
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
+    EVEUNIVERSE_USE_EVESKINSERVER,
 )
 from .constants import EVE_CATEGORY_ID_BLUEPRINT, EVE_CATEGORY_ID_SKIN
-from .core import eveimageserver
+from .core import eveimageserver, eveskinserver
 from .managers import (
     EveUniverseBaseModelManager,
     EveUniverseEntityModelManager,
@@ -1310,7 +1312,7 @@ class EveType(EveUniverseEntityModel):
     packaged_volume = models.FloatField(default=None, null=True)
     portion_size = models.PositiveIntegerField(default=None, null=True)
     radius = models.FloatField(default=None, null=True)
-    published = models.BooleanField()
+    published = models.BooleanField()  # TODO: Add index
     volume = models.FloatField(default=None, null=True)
 
     class EveUniverseMeta:
@@ -1356,14 +1358,18 @@ class EveType(EveUniverseEntityModel):
 
         if category_id == EVE_CATEGORY_ID_BLUEPRINT:
             return eveimageserver.type_bp_url(self.id, size=size)
-        elif category_id == EVE_CATEGORY_ID_SKIN:
-            if not size or size < 32 or size > 128 or (size & (size - 1) != 0):
+
+        if category_id == EVE_CATEGORY_ID_SKIN:
+            size = EveUniverseEntityModel.DEFAULT_ICON_SIZE if not size else size
+            if EVEUNIVERSE_USE_EVESKINSERVER:
+                return eveskinserver.type_icon_url(self.id, size=size)
+
+            if size < 32 or size > 128 or (size & (size - 1) != 0):
                 raise ValueError("Invalid size: {}".format(size))
-            else:
-                filename = f"eveuniverse/skin_generic_{size}.png"
-                return staticfiles_storage.url(filename)
-        else:
-            return eveimageserver.type_icon_url(self.id, size=size)
+            filename = f"eveuniverse/skin_generic_{size}.png"
+            return staticfiles_storage.url(filename)
+
+        return eveimageserver.type_icon_url(self.id, size=size)
 
     def render_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """return an image URL to this type as render"""

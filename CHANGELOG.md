@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.7.3] - 2020-12-27
+
+### Changed
+
+- Now returns correct SKIN icons for EveTypes using the new eveskinserver. Can be turned off with new setting `EVEUNIVERSE_USE_EVESKINSERVER`.
+
 ## [0.7.2] - 2020-12-20
 
 ### Added

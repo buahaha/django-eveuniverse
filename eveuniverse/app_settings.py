@@ -37,3 +37,7 @@ EVEUNIVERSE_LOAD_STATIONS = clean_setting("EVEUNIVERSE_LOAD_STATIONS", False)
 
 # Global timeout for tasks in seconds to reduce task accumulation during outages
 EVEUNIVERSE_TASKS_TIME_LIMIT = clean_setting("EVEUNIVERSE_TASKS_TIME_LIMIT", 7200)
+
+# When True a call to EveType.icon_url for a SKIN type will return a eveskinserver URL
+# else it will return a generic SKIN icon
+EVEUNIVERSE_USE_EVESKINSERVER = clean_setting("EVEUNIVERSE_USE_EVESKINSERVER", True)

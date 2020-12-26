@@ -31,6 +31,11 @@ eveimageserver
 .. automodule:: eveuniverse.core.eveimageserver
     :members:
 
+eveskinserver
+----------------
+.. automodule:: eveuniverse.core.eveskinserver
+    :members:
+
 Eve Models
 ==========
 
