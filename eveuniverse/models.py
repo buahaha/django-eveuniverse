@@ -1,4 +1,5 @@
 from collections import namedtuple
+import enum
 import inspect
 import logging
 import math
@@ -1330,36 +1331,60 @@ class EveType(EveUniverseEntityModel):
         }
         load_order = 134
 
+    class IconVariant(enum.Enum):
+
+        REGULAR = enum.auto()
+        """anything, except blueprint or skin"""
+
+        BPO = enum.auto()
+        """blueprint original"""
+
+        BPC = enum.auto()
+        """blueprint copy"""
+
+        SKIN = enum.auto()
+        """SKIN"""
+
     def icon_url(
         self,
-        size=EveUniverseEntityModel.DEFAULT_ICON_SIZE,
-        category_id=None,
-        is_blueprint=None,
+        size: int = EveUniverseEntityModel.DEFAULT_ICON_SIZE,
+        variant: IconVariant = None,
+        category_id: int = None,
+        is_blueprint: bool = None,
     ) -> str:
-        """return an image URL to this type as icon. Also works for blueprints.
+        """returns an image URL to this type as icon. Also works for blueprints and SKINs.
 
-        This method accesses eve_group unless is_regular, is_blueprint or is_skin is set
+        Will try to auto-detect the variant based on the types's category,
+        unless `variant` or `category_id` is specified.
 
         Args:
-            category_id: category ID of this type (avoids extra DB call)
+            variant: icon variant to use
+            category_id: category ID of this type
             is_blueprint: DEPRECATED - type is assumed to be a blueprint
-
-        Note that a generic icon will returned for all SKIN types, which supports sizes
-        of 32, 64, 128 only.
         """
         # if is_blueprint is not None:
         #    warnings.warn("is_blueprint in EveType.icon_url() is deprecated")
 
         if is_blueprint:
-            category_id = EVE_CATEGORY_ID_BLUEPRINT
+            variant = self.IconVariant.BPO
 
-        if category_id is None:
-            category_id = self.eve_group.eve_category_id
+        if not variant:
+            if not category_id:
+                category_id = self.eve_group.eve_category_id
 
-        if category_id == EVE_CATEGORY_ID_BLUEPRINT:
+            if category_id == EVE_CATEGORY_ID_BLUEPRINT:
+                variant = self.IconVariant.BPO
+
+            elif category_id == EVE_CATEGORY_ID_SKIN:
+                variant = self.IconVariant.SKIN
+
+        if variant is self.IconVariant.BPO:
             return eveimageserver.type_bp_url(self.id, size=size)
 
-        if category_id == EVE_CATEGORY_ID_SKIN:
+        if variant is self.IconVariant.BPC:
+            return eveimageserver.type_bpc_url(self.id, size=size)
+
+        if variant is self.IconVariant.SKIN:
             size = EveUniverseEntityModel.DEFAULT_ICON_SIZE if not size else size
             if EVEUNIVERSE_USE_EVESKINSERVER:
                 return eveskinserver.type_icon_url(self.id, size=size)

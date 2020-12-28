@@ -21,8 +21,8 @@ class ImageVariant(enum.Enum):
     PORTRAIT = "portrait"
     ICON = "icon"
     RENDER = "render"
-    BLUEPRINT = "bp"
-    BLUEPRINTCOPY = "bpc"
+    BPO = "bp"
+    BPC = "bpc"
 
 
 class EsiTenant(enum.Enum):
@@ -78,8 +78,8 @@ def _eve_entity_image_url(
             "variants": [
                 ImageVariant.ICON,
                 ImageVariant.RENDER,
-                ImageVariant.BLUEPRINT,
-                ImageVariant.BLUEPRINTCOPY,
+                ImageVariant.BPO,
+                ImageVariant.BPC,
             ],
         },
     }
@@ -154,12 +154,12 @@ def type_render_url(type_id: int, size: int = _DEFAULT_IMAGE_SIZE) -> str:
 def type_bp_url(type_id: int, size: int = _DEFAULT_IMAGE_SIZE) -> str:
     """blueprint original image URL for the given type ID"""
     return _eve_entity_image_url(
-        EsiCategory.TYPE, type_id, size, variant=ImageVariant.BLUEPRINT
+        EsiCategory.TYPE, type_id, size, variant=ImageVariant.BPO
     )
 
 
 def type_bpc_url(type_id: int, size: int = _DEFAULT_IMAGE_SIZE) -> str:
     """blueprint copy image URL for the given type ID"""
     return _eve_entity_image_url(
-        EsiCategory.TYPE, type_id, size, variant=ImageVariant.BLUEPRINTCOPY
+        EsiCategory.TYPE, type_id, size, variant=ImageVariant.BPC
     )

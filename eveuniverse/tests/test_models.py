@@ -1105,100 +1105,78 @@ class TestEveType(NoSocketsTestCase):
         )
 
 
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+@patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
 @patch("eveuniverse.managers.esi")
 class TestEveTypeIconUrl(NoSocketsTestCase):
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_1(self, mock_esi):
         """icon from regular type, automatically detected"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=603)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=603)
-        self.assertTrue(created)
         self.assertEqual(
             eve_type.icon_url(256), "https://images.evetech.net/types/603/icon?size=256"
         )
 
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_2(self, mock_esi):
         """icon from blueprint type, automatically detected"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=950)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=950)
-        self.assertTrue(created)
         self.assertEqual(
             eve_type.icon_url(256), "https://images.evetech.net/types/950/bp?size=256"
         )
 
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_3(self, mock_esi):
         """icon from regular type, preset as blueprint"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=603)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=603)
-        self.assertTrue(created)
         self.assertEqual(
             eve_type.icon_url(size=256, is_blueprint=True),
             "https://images.evetech.net/types/603/bp?size=256",
         )
 
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_3a(self, mock_esi):
         """icon from regular type, preset as blueprint"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=603)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=603)
-        self.assertTrue(created)
         self.assertEqual(
             eve_type.icon_url(size=256, category_id=EVE_CATEGORY_ID_BLUEPRINT),
             "https://images.evetech.net/types/603/bp?size=256",
         )
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_5(self, mock_esi):
         """when called for SKIN type, will return dummy SKIN URL with requested size"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=34599)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=34599)
-        self.assertTrue(created)
         self.assertIn("skin_generic_64.png", eve_type.icon_url(size=64))
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_5a(self, mock_esi):
         """when called for SKIN type, will return dummy SKIN URL with requested size"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=34599)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=34599)
-        self.assertTrue(created)
         self.assertIn("skin_generic_32.png", eve_type.icon_url(size=32))
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_5b(self, mock_esi):
         """when called for SKIN type, will return dummy SKIN URL with requested size"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=34599)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=34599)
-        self.assertTrue(created)
         self.assertIn("skin_generic_128.png", eve_type.icon_url(size=128))
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_5c(self, mock_esi):
         """when called for SKIN type and size is invalid, then raise exception"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=34599)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=34599)
-        self.assertTrue(created)
         with self.assertRaises(ValueError):
             eve_type.icon_url(size=512)
 
@@ -1209,48 +1187,62 @@ class TestEveTypeIconUrl(NoSocketsTestCase):
             eve_type.icon_url(size=31)
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_6(self, mock_esi):
         """when called for non SKIN type and SKIN is forced, then return SKIN URL"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=950)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=950)
-        self.assertTrue(created)
         self.assertIn(
             "skin_generic_128.png",
             eve_type.icon_url(size=128, category_id=EVE_CATEGORY_ID_SKIN),
         )
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_7(self, mock_esi):
         """when called for SKIN type and regular is forced, then return regular URL"""
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=34599)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=34599)
-        self.assertTrue(created)
         self.assertEqual(
             eve_type.icon_url(size=256, category_id=EVE_CATEGORY_ID_STRUCTURE),
             "https://images.evetech.net/types/34599/icon?size=256",
         )
 
     @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", True)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODULE_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     def test_can_create_icon_url_8(self, mock_esi):
         """
         when called for SKIN type and eveskinserver is enabled,
         then return corresponding eveskinserver URL
         """
         mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=34599)
 
-        eve_type, created = EveType.objects.get_or_create_esi(id=34599)
-        self.assertTrue(created)
         self.assertEqual(
             eve_type.icon_url(size=256),
             "https://eveskinserver.kalkoken.net/skin/34599/icon?size=256",
+        )
+
+    @patch(MODULE_PATH + ".EVEUNIVERSE_USE_EVESKINSERVER", True)
+    def test_can_create_icon_url_9(self, mock_esi):
+        """can use variants"""
+        mock_esi.client = EsiClientStub()
+        eve_type, _ = EveType.objects.get_or_create_esi(id=603)
+
+        self.assertEqual(
+            eve_type.icon_url(size=256, variant=EveType.IconVariant.REGULAR),
+            "https://images.evetech.net/types/603/icon?size=256",
+        )
+        self.assertEqual(
+            eve_type.icon_url(size=256, variant=EveType.IconVariant.BPO),
+            "https://images.evetech.net/types/603/bp?size=256",
+        )
+        self.assertEqual(
+            eve_type.icon_url(size=256, variant=EveType.IconVariant.BPC),
+            "https://images.evetech.net/types/603/bpc?size=256",
+        )
+        self.assertEqual(
+            eve_type.icon_url(size=256, variant=EveType.IconVariant.SKIN),
+            "https://eveskinserver.kalkoken.net/skin/603/icon?size=256",
         )
 
 

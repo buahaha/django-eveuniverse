@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.7.4] - 2020-12-28
+
+### Added
+
+- Can now also return BPC icons for blueprints via EveType.icon_url()
+- New parameter variant allows to specify the icon variant for EveType.icon_url()
+
 ## [0.7.3] - 2020-12-27
 
 ### Changed
