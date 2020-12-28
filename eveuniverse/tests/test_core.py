@@ -29,31 +29,45 @@ class TestEveImageServer(TestCase):
 
     def test_sizes(self):
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42
+            ),
             "https://images.evetech.net/characters/42/portrait?size=32",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, size=32),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42, size=32
+            ),
             "https://images.evetech.net/characters/42/portrait?size=32",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, size=64),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42, size=64
+            ),
             "https://images.evetech.net/characters/42/portrait?size=64",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, size=128),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42, size=128
+            ),
             "https://images.evetech.net/characters/42/portrait?size=128",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, size=256),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42, size=256
+            ),
             "https://images.evetech.net/characters/42/portrait?size=256",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, size=512),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42, size=512
+            ),
             "https://images.evetech.net/characters/42/portrait?size=512",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, size=1024),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42, size=1024
+            ),
             "https://images.evetech.net/characters/42/portrait?size=1024",
         )
         with self.assertRaises(ValueError):
@@ -73,43 +87,63 @@ class TestEveImageServer(TestCase):
 
     def test_variant(self):
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, variant="portrait"),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER,
+                42,
+                variant=eveimageserver.ImageVariant.PORTRAIT,
+            ),
             "https://images.evetech.net/characters/42/portrait?size=32",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("alliance", 42, variant="logo"),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.ALLIANCE,
+                42,
+                variant=eveimageserver.ImageVariant.LOGO,
+            ),
             "https://images.evetech.net/alliances/42/logo?size=32",
         )
         with self.assertRaises(ValueError):
-            eveimageserver._eve_entity_image_url("character", 42, variant="logo")
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER,
+                42,
+                variant=eveimageserver.ImageVariant.LOGO,
+            )
 
-    def test_alliance(self):
+    def test_categories(self):
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("alliance", 42),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.ALLIANCE, 42
+            ),
             "https://images.evetech.net/alliances/42/logo?size=32",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("corporation", 42),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CORPORATION, 42
+            ),
             "https://images.evetech.net/corporations/42/logo?size=32",
         )
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42
+            ),
             "https://images.evetech.net/characters/42/portrait?size=32",
         )
         with self.assertRaises(ValueError):
-            eveimageserver._eve_entity_image_url("station", 42)
+            eveimageserver._eve_entity_image_url("invalid", 42)
 
     def test_tenants(self):
         self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, tenant="tranquility"),
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER,
+                42,
+                tenant=eveimageserver.EsiTenant.TRANQUILITY,
+            ),
             "https://images.evetech.net/characters/42/portrait?size=32&tenant=tranquility",
         )
-        self.assertEqual(
-            eveimageserver._eve_entity_image_url("character", 42, tenant="singularity"),
-            "https://images.evetech.net/characters/42/portrait?size=32&tenant=singularity",
-        )
         with self.assertRaises(ValueError):
-            eveimageserver._eve_entity_image_url("character", 42, tenant="xxx")
+            eveimageserver._eve_entity_image_url(
+                eveimageserver.EsiCategory.CHARACTER, 42, tenant="xxx"
+            )
 
     def test_alliance_logo_url(self):
         expected = "https://images.evetech.net/alliances/42/logo?size=128"
@@ -138,6 +172,10 @@ class TestEveImageServer(TestCase):
     def test_type_bp_url(self):
         expected = "https://images.evetech.net/types/42/bp?size=128"
         self.assertEqual(eveimageserver.type_bp_url(42, 128), expected)
+
+    def test_type_bpc_url(self):
+        expected = "https://images.evetech.net/types/42/bpc?size=128"
+        self.assertEqual(eveimageserver.type_bpc_url(42, 128), expected)
 
 
 class TestEveSkinServer(TestCase):
