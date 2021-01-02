@@ -1034,17 +1034,17 @@ class EveSolarSystem(EveUniverseEntityModel):
     @property
     def is_high_sec(self) -> bool:
         """returns True if this solar system is in high sec, else False"""
-        return self.security_status > 0.5
+        return round(self.security_status, 1) >= 0.5
 
     @property
     def is_low_sec(self) -> bool:
         """returns True if this solar system is in low sec, else False"""
-        return 0 < self.security_status <= 0.5
+        return 0 < round(self.security_status, 1) < 0.5
 
     @property
     def is_null_sec(self) -> bool:
         """returns True if this solar system is in null sec, else False"""
-        return self.security_status <= 0 and not self.is_w_space
+        return round(self.security_status, 1) <= 0 and not self.is_w_space
 
     @property
     def is_w_space(self) -> bool:

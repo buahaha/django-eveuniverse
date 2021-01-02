@@ -66,8 +66,8 @@ class Command(BaseCommand):
             "Note that this process can take a while to complete "
             "and may cause some significant load to your system."
         )
-        user_input = get_input("Are you sure you want to proceed? (Y/n)?")
-        if user_input == "Y":
+        user_input = get_input("Are you sure you want to proceed? (y/N)?")
+        if user_input.lower() == "y":
             self.stdout.write("Starting update. Please stand by.")
             my_task.delay()
             self.stdout.write(self.style.SUCCESS("Load started!"))

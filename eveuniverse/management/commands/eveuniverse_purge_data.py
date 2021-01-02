@@ -36,8 +36,8 @@ class Command(BaseCommand):
             "This can not be undone. Note that this can disrupt other apps "
             "that relate to this data. Use with caution."
         )
-        user_input = get_input("Are you sure you want to proceed? (Y/n)?")
-        if user_input == "Y":
+        user_input = get_input("Are you sure you want to proceed? (y/N)?")
+        if user_input.lower() == "y":
             self.stdout.write("Starting data purge. Please stand by.")
             self._purge_all_data()
             self.stdout.write(self.style.SUCCESS("Purge complete!"))

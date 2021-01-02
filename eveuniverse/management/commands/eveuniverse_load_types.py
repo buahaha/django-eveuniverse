@@ -105,8 +105,8 @@ class Command(BaseCommand):
             "Note that this process can take a while to complete "
             "and may cause some significant load to your system."
         )
-        user_input = get_input("Are you sure you want to proceed? (Y/n)?")
-        if user_input == "Y":
+        user_input = get_input("Are you sure you want to proceed? (y/N)?")
+        if user_input.lower() == "y":
             if category_ids or group_ids or type_ids:
                 load_eve_types.delay(
                     category_ids=category_ids, group_ids=group_ids, type_ids=type_ids

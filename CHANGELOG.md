@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.7.5] - 2021-01-02
+
+### Changed
+
+- Confirming the start of a management command now requires "y" instead of "Y" ([#3](https://gitlab.com/ErikKalkoken/django-eveuniverse/-/issues/3))
+
+### Fixed
+
+- EveSolarSystem.is_low_sec() and EveSolarSystem.is_high_sec() incorrect on border cases
+
 ## [0.7.4] - 2020-12-28
 
 ### Added

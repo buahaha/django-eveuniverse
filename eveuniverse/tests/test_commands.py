@@ -20,28 +20,28 @@ class TestLoadCommand(NoSocketsTestCase):
 
     @patch(PACKAGE_PATH + ".eveuniverse_load_data.load_map")
     def test_load_data_map(self, mock_load_map, mock_get_input):
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command("eveuniverse_load_data", "map", stdout=self.out)
         self.assertTrue(mock_load_map.delay.called)
 
     @patch(PACKAGE_PATH + ".eveuniverse_load_data.load_ship_types")
     def test_load_data_ship_types(self, mock_load_ship_types, mock_get_input):
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command("eveuniverse_load_data", "ships", stdout=self.out)
         self.assertTrue(mock_load_ship_types.delay.called)
 
     @patch(PACKAGE_PATH + ".eveuniverse_load_data.load_structure_types")
     def test_load_data_structure_types(self, mock_load_structure_types, mock_get_input):
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command("eveuniverse_load_data", "structures", stdout=self.out)
         self.assertTrue(mock_load_structure_types.delay.called)
 
     @patch(PACKAGE_PATH + ".eveuniverse_load_data.load_map")
     def test_can_abort(self, mock_load_map, mock_get_input):
-        mock_get_input.return_value = "N"
+        mock_get_input.return_value = "n"
 
         call_command("eveuniverse_load_data", "map", stdout=self.out)
         self.assertFalse(mock_load_map.delay.called)
@@ -57,7 +57,7 @@ class TestLoadTypes(NoSocketsTestCase):
 
     def test_load_one_type(self, mock_get_input, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command(
             "eveuniverse_load_types", "dummy_app", "--type_id", "603", stdout=self.out
@@ -68,7 +68,7 @@ class TestLoadTypes(NoSocketsTestCase):
 
     def test_load_multiple_types(self, mock_get_input, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command(
             "eveuniverse_load_types",
@@ -84,7 +84,7 @@ class TestLoadTypes(NoSocketsTestCase):
 
     def test_load_multiple_combined(self, mock_get_input, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command(
             "eveuniverse_load_types",
@@ -99,7 +99,7 @@ class TestLoadTypes(NoSocketsTestCase):
 
     def test_can_handle_no_input(self, mock_get_input, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command(
             "eveuniverse_load_types",
@@ -109,7 +109,7 @@ class TestLoadTypes(NoSocketsTestCase):
 
     def test_can_abort(self, mock_get_input, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "N"
+        mock_get_input.return_value = "n"
 
         call_command(
             "eveuniverse_load_types", "dummy_app", "--type_id", "35825", stdout=self.out
@@ -118,7 +118,7 @@ class TestLoadTypes(NoSocketsTestCase):
 
     def test_load_one_type_with_dogma(self, mock_get_input, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command(
             "eveuniverse_load_types",
@@ -142,7 +142,7 @@ class TestLoadTypesEsiCheck(NoSocketsTestCase):
 
     def test_checks_esi_by_default(self, mock_get_input, mock_is_esi_online, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command(
             "eveuniverse_load_types",
@@ -156,7 +156,7 @@ class TestLoadTypesEsiCheck(NoSocketsTestCase):
 
     def test_can_disable_esi_check(self, mock_get_input, mock_is_esi_online, mock_esi):
         mock_esi.client = EsiClientStub()
-        mock_get_input.return_value = "Y"
+        mock_get_input.return_value = "y"
 
         call_command(
             "eveuniverse_load_types",
