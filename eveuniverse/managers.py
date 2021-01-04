@@ -705,15 +705,18 @@ class EveEntityManager(EveUniverseEntityModelManager):
         with transaction.atomic():
             existing_ids = set(self.filter(id__in=ids).values_list("id", flat=True))
             new_ids = ids.difference(existing_ids)
-            if new_ids:
-                objects = [self.model(id=id) for id in new_ids]
-                self.bulk_create(
-                    objects, batch_size=EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
-                )
-                to_update_qs = self.filter(id__in=new_ids) | self.filter(
-                    id__in=ids.difference(new_ids), name=""
-                )
-                return to_update_qs.update_from_esi()
+
+        if new_ids:
+            objects = [self.model(id=id) for id in new_ids]
+            self.bulk_create(
+                objects,
+                batch_size=EVEUNIVERSE_BULK_METHODS_BATCH_SIZE,
+                ignore_conflicts=True,
+            )
+            to_update_qs = self.filter(id__in=new_ids) | self.filter(
+                id__in=ids.difference(new_ids), name=""
+            )
+            return to_update_qs.update_from_esi()
 
         return 0
 

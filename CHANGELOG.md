@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.7.6] - 2021-01-04
+
+### Fixed
+
+- Removed cause for occasional transaction timeout in `EveEntity.bulk_create_esi()`
+- Updated version dependency to django-esi
+
 ## [0.7.5] - 2021-01-02
 
 ### Changed
