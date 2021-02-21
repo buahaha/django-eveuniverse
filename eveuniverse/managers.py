@@ -2,7 +2,11 @@ from collections import namedtuple
 import datetime as dt
 import logging
 from typing import List, Iterable, Tuple, Optional
+from urllib.parse import urljoin
 
+import requests
+
+from django.core.cache import cache
 from django.db import models, transaction
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
@@ -19,6 +23,8 @@ from .utils import chunks, LoggerAddTag, make_logger_prefix
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 
 FakeResponse = namedtuple("FakeResponse", ["status_code"])
+
+SDE_ZZEVE_URL = "https://sde.zzeve.com"
 
 
 class EveUniverseBaseModelManager(models.Manager):
@@ -826,3 +832,45 @@ class EveMarketPriceManager(models.Manager):
                 market_prices, batch_size=EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
             )
             return len(market_prices)
+
+
+class EveTypeMaterialManager(models.Manager):
+    SDE_CACHE_KEY = "EVEUNIVERSE_TYPE_MATERIALS_REQUEST"
+    SDE_CACHE_TIMEOUT = 3600 * 24
+    SDE_ZZEVE_ROUTE = "invTypeMaterials.json"
+
+    def update_or_create_api(self, *, eve_type) -> None:
+        """updates or creates type material objects for the given eve type"""
+        from .models import EveType
+
+        type_material_data_all = self._fetch_sde_data_cached()
+        for type_material_data in type_material_data_all[eve_type.id]:
+            material_eve_type, _ = EveType.objects.get_or_create_esi(
+                id=type_material_data.get("materialTypeID")
+            )
+            self.update_or_create(
+                eve_type=eve_type,
+                material_eve_type=material_eve_type,
+                defaults={
+                    "quantity": type_material_data.get("quantity"),
+                },
+            )
+
+    @classmethod
+    def _fetch_sde_data_cached(cls) -> dict:
+        type_material_data_all = cache.get(cls.SDE_CACHE_KEY)
+        if not type_material_data_all:
+            r = requests.get(urljoin(SDE_ZZEVE_URL, cls.SDE_ZZEVE_ROUTE))
+            r.raise_for_status()
+            type_material_data_all = dict()
+            for row in r.json():
+                type_id = row["typeID"]
+                if type_id not in type_material_data_all:
+                    type_material_data_all[type_id] = list()
+                type_material_data_all[type_id].append(row)
+            cache.set(
+                key=cls.SDE_CACHE_KEY,
+                value=type_material_data_all,
+                timeout=cls.SDE_CACHE_TIMEOUT,
+            )
+        return type_material_data_all

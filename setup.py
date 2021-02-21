@@ -41,5 +41,10 @@ setup(
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     ],
     python_requires="~=3.6",
-    install_requires=["django>=2.2", "celery>=4.0.2", "django-esi>=2.0.4,<3"],
+    install_requires=[
+        "django>=2.2",
+        "celery>=4.0.2",
+        "django-esi>=2.0.4,<3",
+        "requests",
+    ],
 )

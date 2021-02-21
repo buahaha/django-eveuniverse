@@ -4,7 +4,7 @@ import json
 import os
 from unittest.mock import patch
 
-from .my_test_data import EsiClientStub
+from .testdata.esi import EsiClientStub
 from ..models import EveCategory, EveGroup, EveType, EveRegion
 from ..tools.testdata import create_testdata, load_testdata_from_file, ModelSpec
 from ..utils import NoSocketsTestCase

@@ -36,6 +36,7 @@ from .managers import (
     EveStargateManager,
     EveStationManager,
     EveEntityManager,
+    EveTypeMaterialManager,
 )
 from .providers import esi
 from .utils import LoggerAddTag
@@ -1503,3 +1504,39 @@ class EveUnit(EveUniverseEntityModel):
             "unit_name": "name",
         }
         load_order = 100
+
+
+#######################
+# SDE models
+
+
+class EveTypeMaterial(models.Model):
+    eve_type = models.ForeignKey(
+        EveType, on_delete=models.CASCADE, related_name="materials"
+    )
+    material_eve_type = models.ForeignKey(
+        EveType, on_delete=models.CASCADE, related_name="material_types"
+    )
+    quantity = models.PositiveIntegerField()
+
+    objects = EveTypeMaterialManager()
+
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint(
+    #             fields=["eve_type", "material_eve_type"],
+    #             name="fpk_evetypematerial",
+    #         )
+    #     ]
+
+    def __str__(self) -> str:
+        return f"{self.eve_type}-{self.material_eve_type}"
+
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            f"eve_type={repr(self.eve_type)}, "
+            f"material_eve_type={repr(self.material_eve_type)}, "
+            f"quantity={self.quantity}"
+            ")"
+        )

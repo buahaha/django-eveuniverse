@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from bravado.exception import HTTPNotFound
 
-from .. import models as eveuniverse_models
+from eveuniverse import models as eveuniverse_models
 
 _currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 

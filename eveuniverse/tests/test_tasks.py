@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.test.utils import override_settings
 
-from .my_test_data import EsiClientStub
+from .testdata.esi import EsiClientStub
 from ..models import (
     EveCategory,
     EveDogmaAttribute,
@@ -24,10 +24,9 @@ from ..tasks import (
     update_unresolved_eve_entities,
     update_market_prices,
 )
-from ..utils import NoSocketsTestCase, set_test_logger
+from ..utils import NoSocketsTestCase
 
 MODULE_PATH = "eveuniverse.tasks"
-logger = set_test_logger(MODULE_PATH, __file__)
 
 
 class TestTasks(NoSocketsTestCase):

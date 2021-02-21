@@ -5,7 +5,7 @@ from bravado.exception import HTTPInternalServerError
 from django.test import TestCase
 
 from ..core import eveimageserver, esitools, eveskinserver
-from .my_test_data import EsiClientStub
+from .testdata.esi import EsiClientStub
 from ..utils import NoSocketsTestCase
 
 
