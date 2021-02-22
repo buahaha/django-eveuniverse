@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.8.0] - TBD
+
+### Added
+
+- Now supports type materials
+
 ## [0.7.6] - 2021-01-04
 
 ### Fixed

@@ -109,6 +109,9 @@ Most settings will enable the automatic loading of related models. Note that thi
         *   - `EVEUNIVERSE_LOAD_STATIONS`
             - When true will automatically load |br| stations be with every solar system
             - `False`
+        *   - `EVEUNIVERSE_LOAD_TYPE_MATERIALS`
+            - When true will automatically load |br| type materials with every type
+            - `False`
         *   - `EVEUNIVERSE_USE_EVESKINSERVER`
             - When True a call to EveType.icon_url for |br| a SKIN type will return a eveskinserver URL |br| else it will return a generic SKIN icon URL
             - `True`

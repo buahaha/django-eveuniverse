@@ -36,6 +36,7 @@ from .managers import (
     EveStargateManager,
     EveStationManager,
     EveEntityManager,
+    EveTypeManager,
     EveTypeMaterialManager,
 )
 from .providers import esi
@@ -1317,6 +1318,8 @@ class EveType(EveUniverseEntityModel):
     published = models.BooleanField()  # TODO: Add index
     volume = models.FloatField(default=None, null=True)
 
+    objects = EveTypeManager()
+
     class EveUniverseMeta:
         esi_pk = "type_id"
         esi_path_list = "Universe.get_universe_types"
@@ -1511,6 +1514,8 @@ class EveUnit(EveUniverseEntityModel):
 
 
 class EveTypeMaterial(models.Model):
+    """Material type for an Eve online type"""
+
     eve_type = models.ForeignKey(
         EveType, on_delete=models.CASCADE, related_name="materials"
     )

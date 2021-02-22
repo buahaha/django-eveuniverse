@@ -14,7 +14,10 @@ from django.utils.timezone import now
 from bravado.exception import HTTPNotFound
 
 from . import __title__
-from .app_settings import EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
+from .app_settings import (
+    EVEUNIVERSE_BULK_METHODS_BATCH_SIZE,
+    EVEUNIVERSE_LOAD_TYPE_MATERIALS,
+)
 from .helpers import EveEntityNameResolver, get_or_create_esi_or_none
 from .providers import esi
 from .utils import chunks, LoggerAddTag, make_logger_prefix
@@ -215,7 +218,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         inline_objects: dict,
         wait_for_children: bool,
     ) -> None:
-        """updates_or_creates eve objects that are returns "inline" from ESI
+        """updates_or_creates eve objects that are returned "inline" from ESI
         for the parent eve objects as defined for this parent model (if any)
         """
         from .tasks import (
@@ -575,6 +578,28 @@ class EveStationManager(EveUniverseEntityModelManager):
                 parent_obj.services.add(*services)
 
 
+class EveTypeManager(EveUniverseEntityModelManager):
+    def update_or_create_esi(
+        self,
+        *,
+        id: int,
+        include_children: bool = False,
+        wait_for_children: bool = True,
+        enabled_sections: Iterable[str] = None,
+    ) -> Tuple[models.Model, bool]:
+        obj, created = super().update_or_create_esi(
+            id=id,
+            include_children=include_children,
+            wait_for_children=wait_for_children,
+            enabled_sections=enabled_sections,
+        )
+        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
+            from .models import EveTypeMaterial
+
+            EveTypeMaterial.objects.update_or_create_api(eve_type=obj)
+        return obj, created
+
+
 class EveEntityQuerySet(models.QuerySet):
     """Custom queryset for EveEntity"""
 
@@ -844,7 +869,7 @@ class EveTypeMaterialManager(models.Manager):
         from .models import EveType
 
         type_material_data_all = self._fetch_sde_data_cached()
-        for type_material_data in type_material_data_all[eve_type.id]:
+        for type_material_data in type_material_data_all.get(eve_type.id, []):
             material_eve_type, _ = EveType.objects.get_or_create_esi(
                 id=type_material_data.get("materialTypeID")
             )
