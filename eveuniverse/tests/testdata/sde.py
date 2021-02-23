@@ -9,3 +9,13 @@ def _load_sde_data() -> dict:
 
 
 sde_data = _load_sde_data()
+
+
+def type_materials_cache_content():
+    type_material_data_all = dict()
+    for row in sde_data["type_materials"]:
+        type_id = row["typeID"]
+        if type_id not in type_material_data_all:
+            type_material_data_all[type_id] = list()
+        type_material_data_all[type_id].append(row)
+    return type_material_data_all

@@ -98,24 +98,27 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             id: Eve Online ID of object
             include_children: if child objects should be updated/created as well (only when a new object is created)
             wait_for_children: when true child objects will be updated/created blocking (if any), else async (only when a new object is created)
-            enabled_sections: Sections to load regardless of current settings, e.g. `EveUniverseEntityModel.LOAD_DOGMAS` will always load dogmas for EveTypes (only when a new object is created)
+            enabled_sections: Sections to load regardless of current settings, e.g. `[EveType.Section.DOGMAS]` will always load dogmas for EveTypes (only when a new object is created)
 
         Returns:
             A tuple consisting of the requested object and a created flag
         """
         id = int(id)
+        enabled_sections = self.model._enabled_sections_union(enabled_sections)
         try:
-            obj = self.get(id=id)
-            created = False
+            my_filter = {
+                "enabled_sections": getattr(self.model.enabled_sections, section)
+                for section in enabled_sections
+            }
+            obj = self.filter(**my_filter).get(id=id)
+            return obj, False
         except self.model.DoesNotExist:
-            obj, created = self.update_or_create_esi(
+            return self.update_or_create_esi(
                 id=id,
                 include_children=include_children,
                 wait_for_children=wait_for_children,
                 enabled_sections=enabled_sections,
             )
-
-        return obj, created
 
     def update_or_create_esi(
         self,
@@ -132,13 +135,13 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             id: Eve Online ID of object
             include_children: if child objects should be updated/created as well (if any)
             wait_for_children: when true child objects will be updated/created blocking (if any), else async
-            enabled_sections: Sections to load regardless of current settings, e.g. `EveUniverseEntityModel.LOAD_DOGMAS` will always load dogmas for EveTypes
+            enabled_sections: Sections to load regardless of current settings, e.g. `[EveType.Section.DOGMAS]` will always load dogmas for EveTypes
 
         Returns:
             A tuple consisting of the requested object and a created flag
         """
         id = int(id)
-        enabled_sections = set(enabled_sections) if enabled_sections else set()
+        enabled_sections = self.model._enabled_sections_union(enabled_sections)
         add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
         try:
             eve_data_obj = self._transform_esi_response_for_list_endpoints(
@@ -147,6 +150,10 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             if eve_data_obj:
                 defaults = self._defaults_from_esi_obj(eve_data_obj)
                 obj, created = self.update_or_create(id=id, defaults=defaults)
+                if enabled_sections and hasattr(obj, "enabled_sections"):
+                    for section in enabled_sections:
+                        setattr(obj.enabled_sections, section, True)
+                    obj.save()
                 inline_objects = self.model._inline_objects(enabled_sections)
                 if inline_objects:
                     self._update_or_create_inline_objects(
@@ -593,10 +600,15 @@ class EveTypeManager(EveUniverseEntityModelManager):
             wait_for_children=wait_for_children,
             enabled_sections=enabled_sections,
         )
-        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
+        if EVEUNIVERSE_LOAD_TYPE_MATERIALS or (
+            enabled_sections and self.model.Section.TYPE_MATERIALS in enabled_sections
+        ):
             from .models import EveTypeMaterial
 
             EveTypeMaterial.objects.update_or_create_api(eve_type=obj)
+            # obj.enabled_sections.type_materials = True
+            # obj.save()
+
         return obj, created
 
 

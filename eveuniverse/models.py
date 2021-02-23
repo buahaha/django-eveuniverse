@@ -4,13 +4,15 @@ import inspect
 import logging
 import math
 import sys
-from typing import Any, Dict, List, Optional, Tuple, Set
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Set
 
 from bravado.exception import HTTPNotFound
 
 from django.db import models
-
 from django.contrib.staticfiles.storage import staticfiles_storage
+from django.utils.functional import classproperty
+
+from bitfield import BitField
 
 from . import __title__
 from .app_settings import (
@@ -23,6 +25,7 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARGATES,
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
+    EVEUNIVERSE_LOAD_TYPE_MATERIALS,
     EVEUNIVERSE_USE_EVESKINSERVER,
 )
 from .constants import EVE_CATEGORY_ID_BLUEPRINT, EVE_CATEGORY_ID_SKIN
@@ -61,6 +64,10 @@ EsiMapping = namedtuple(
         "create_related",
     ],
 )
+
+
+class OptionalSection(models.TextChoices):
+    DOGMA = "dogma"
 
 
 class EveUniverseBaseModel(models.Model):
@@ -151,7 +158,7 @@ class EveUniverseBaseModel(models.Model):
             field
             for field in cls._meta.get_fields()
             if not field.auto_created
-            and field.name != "last_updated"
+            and field.name not in {"last_updated", "enabled_sections"}
             and field.name not in cls._disabled_fields()
             and not field.many_to_many
         ]:
@@ -227,6 +234,9 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
     Entity models are normal Eve entities that have a dedicated ESI endpoint
     """
 
+    class Section(models.TextChoices):
+        pass
+
     # sections
     LOAD_DOGMAS = "dogmas"
     # TODO: Implement other sections
@@ -254,6 +264,13 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 
     def __str__(self) -> str:
         return self.name
+
+    @classmethod
+    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
+        """returns union of global and given enabled sections.
+        Needs to be overloaded by sub class using sections
+        """
+        return set(enabled_sections) if enabled_sections else set()
 
     @classmethod
     def eve_entity_category(cls) -> str:
@@ -1290,6 +1307,18 @@ class EveStationService(models.Model):
 class EveType(EveUniverseEntityModel):
     """An inventory type in Eve Online"""
 
+    class Section(models.TextChoices):
+        """Sections that can be optionally loaded with each instance"""
+
+        DOGMAS = "dogmas"  #:
+        GRAPHICS = "graphics"  #:
+        MARKET_GROUPS = "market_groups"  #
+        TYPE_MATERIALS = "type_materials"  #:
+
+        @classproperty
+        def flags(cls):
+            return tuple(cls.values)
+
     capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey(
         "EveGroup",
@@ -1317,6 +1346,12 @@ class EveType(EveUniverseEntityModel):
     radius = models.FloatField(default=None, null=True)
     published = models.BooleanField()  # TODO: Add index
     volume = models.FloatField(default=None, null=True)
+    enabled_sections = BitField(
+        flags=Section.flags,
+        help_text=(
+            "Flags for loadable sections. True if instance was loaded with section."
+        ),
+    )
 
     objects = EveTypeManager()
 
@@ -1336,6 +1371,7 @@ class EveType(EveUniverseEntityModel):
         load_order = 134
 
     class IconVariant(enum.Enum):
+        """Variant of icon to produce with `icon_url()`"""
 
         REGULAR = enum.auto()
         """anything, except blueprint or skin"""
@@ -1348,6 +1384,15 @@ class EveType(EveUniverseEntityModel):
 
         SKIN = enum.auto()
         """SKIN"""
+
+    @classmethod
+    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
+        enabled_sections = super()._enabled_sections_union(enabled_sections)
+        if EVEUNIVERSE_LOAD_DOGMAS:
+            enabled_sections.add(cls.Section.DOGMAS)
+        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
+            enabled_sections.add(cls.Section.TYPE_MATERIALS)
+        return enabled_sections
 
     def icon_url(
         self,
@@ -1417,9 +1462,7 @@ class EveType(EveUniverseEntityModel):
 
     @classmethod
     def _inline_objects(cls, enabled_sections: Set[str] = None) -> dict:
-        if EVEUNIVERSE_LOAD_DOGMAS or (
-            enabled_sections and cls.LOAD_DOGMAS in enabled_sections
-        ):
+        if enabled_sections and cls.Section.DOGMAS in enabled_sections:
             return super()._inline_objects()
         else:
             return dict()
@@ -1513,7 +1556,7 @@ class EveUnit(EveUniverseEntityModel):
 # SDE models
 
 
-class EveTypeMaterial(models.Model):
+class EveTypeMaterial(EveUniverseBaseModel):
     """Material type for an Eve online type"""
 
     eve_type = models.ForeignKey(
