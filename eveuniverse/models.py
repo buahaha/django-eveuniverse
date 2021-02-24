@@ -312,7 +312,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return path.split(".")
 
     @classmethod
-    def _children(cls) -> dict:
+    def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
         """returns the mapping of children for this class"""
         mappings = cls._eve_universe_meta_attr("children")
         return mappings if mappings else dict()
@@ -977,7 +977,7 @@ class EvePlanet(EveUniverseEntityModel):
         load_order = 205
 
     @classmethod
-    def _children(cls) -> dict:
+    def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
         children = dict()
 
         if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
@@ -1022,6 +1022,14 @@ class EveRegion(EveUniverseEntityModel):
 class EveSolarSystem(EveUniverseEntityModel):
     """A solar system in Eve Online"""
 
+    class Section(_SectionBase):
+        """Sections that can be optionally loaded with each instance"""
+
+        PLANETS = "planets"  #:
+        STARGATES = "stargates"  #:
+        STARS = "stars"  #
+        STATIONS = "stations"  #:
+
     eve_constellation = models.ForeignKey(
         "EveConstellation", on_delete=models.CASCADE, related_name="eve_solarsystems"
     )
@@ -1042,6 +1050,12 @@ class EveSolarSystem(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
     security_status = models.FloatField()
+    enabled_sections = BitField(
+        flags=tuple(Section.values()),
+        help_text=(
+            "Flags for loadable sections. True if instance was loaded with section."
+        ),  # no index, because MySQL does not support it for bitwise operations
+    )
 
     class EveUniverseMeta:
         esi_pk = "system_id"
@@ -1076,28 +1090,6 @@ class EveSolarSystem(EveUniverseEntityModel):
     def is_w_space(self) -> bool:
         """returns True if this solar system is in wormhole space, else False"""
         return 31000000 <= self.id < 32000000
-
-    @classmethod
-    def _children(cls) -> dict:
-        children = dict()
-
-        if EVEUNIVERSE_LOAD_PLANETS:
-            children["planets"] = "EvePlanet"
-
-        if EVEUNIVERSE_LOAD_STARGATES:
-            children["stargates"] = "EveStargate"
-
-        if EVEUNIVERSE_LOAD_STATIONS:
-            children["stations"] = "EveStation"
-
-        return children
-
-    @classmethod
-    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
-        if not EVEUNIVERSE_LOAD_STARS:
-            return {"eve_star"}
-        else:
-            return {}
 
     @classmethod
     def eve_entity_category(cls) -> str:
@@ -1172,6 +1164,45 @@ class EveSolarSystem(EveUniverseEntityModel):
             ).results()
         except HTTPNotFound:
             return None
+
+    @classmethod
+    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
+        enabled_sections = super()._enabled_sections_union(enabled_sections)
+        if EVEUNIVERSE_LOAD_PLANETS:
+            enabled_sections.add(cls.Section.PLANETS)
+        if EVEUNIVERSE_LOAD_STARGATES:
+            enabled_sections.add(cls.Section.STARGATES)
+        if EVEUNIVERSE_LOAD_STARS:
+            enabled_sections.add(cls.Section.STARS)
+        if EVEUNIVERSE_LOAD_STATIONS:
+            enabled_sections.add(cls.Section.STATIONS)
+        return enabled_sections
+
+    @classmethod
+    def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
+        children = {}
+        if cls.Section.PLANETS in enabled_sections:
+            children["planets"] = "EvePlanet"
+        if cls.Section.STARGATES in enabled_sections:
+            children["stargates"] = "EveStargate"
+        if cls.Section.STATIONS in enabled_sections:
+            children["stations"] = "EveStation"
+        return children
+
+    @classmethod
+    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
+        if cls.Section.STARS not in enabled_sections:
+            return {"eve_star"}
+        return {}
+
+    @classmethod
+    def _inline_objects(cls, enabled_sections: Set[str] = None) -> dict:
+        if enabled_sections and cls.Section.PLANETS in enabled_sections:
+            return super()._inline_objects()
+        else:
+            return dict()
 
 
 class EveStar(EveUniverseEntityModel):
@@ -1353,7 +1384,7 @@ class EveType(EveUniverseEntityModel):
         flags=tuple(Section.values()),
         help_text=(
             "Flags for loadable sections. True if instance was loaded with section."
-        ),
+        ),  # no index, because MySQL does not support it for bitwise operations
     )
 
     objects = EveTypeManager()

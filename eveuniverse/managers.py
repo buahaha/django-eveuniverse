@@ -160,6 +160,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                         parent_obj=obj,
                         inline_objects=inline_objects,
                         wait_for_children=wait_for_children,
+                        enabled_sections=enabled_sections,
                     )
                 if include_children:
                     self._update_or_create_children(
@@ -223,6 +224,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         parent_obj: models.Model,
         inline_objects: dict,
         wait_for_children: bool,
+        enabled_sections: Iterable[str],
     ) -> None:
         """updates_or_creates eve objects that are returned "inline" from ESI
         for the parent eve objects as defined for this parent model (if any)
@@ -280,6 +282,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             other_pk_info=other_pk_info,
                             parent2_model_name=parent2_model_name,
                             inline_model_name=model_name,
+                            enabled_sections=enabled_sections,
                         )
                     else:
                         task_update_or_create_inline_object(
@@ -290,6 +293,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             parent2_model_name=parent2_model_name,
                             inline_model_name=model_name,
                             parent_model_name=type(parent_obj).__name__,
+                            enabled_sections=list(enabled_sections),
                         )
 
     def _update_or_create_inline_object(
@@ -300,6 +304,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         other_pk_info: dict,
         parent2_model_name: str,
         inline_model_name: str,
+        enabled_sections: Iterable[str],
     ):
         """Updates or creates a single inline object.
         Will automatically create additional parent objects as needed
@@ -345,9 +350,11 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 % self.model.__name__,
             )
 
-        for key, child_class in self.model._children().items():
+        for key, child_class in self.model._children(enabled_sections).items():
             if key in parent_eve_data_obj and parent_eve_data_obj[key]:
-                for id in parent_eve_data_obj[key]:
+                for obj in parent_eve_data_obj[key]:
+                    # TODO: Refactor this hack
+                    id = obj["planet_id"] if key == "planets" else obj
                     if wait_for_children:
                         ChildClass = self.model.get_model_class(child_class)
                         ChildClass.objects.update_or_create_esi(
@@ -570,6 +577,7 @@ class EveStationManager(EveUniverseEntityModelManager):
         parent_obj: models.Model,
         inline_objects: dict,
         wait_for_children: bool,
+        enabled_sections: Iterable[str],
     ) -> None:
         """updates_or_creates station service objects for EveStations"""
         from .models import EveStationService

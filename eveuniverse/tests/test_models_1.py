@@ -656,6 +656,8 @@ class TestEveRegion(NoSocketsTestCase):
 
 @patch(MANAGERS_PATH + ".esi")
 class TestEveSolarSystem(NoSocketsTestCase):
+    maxDiff = None
+
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
@@ -676,11 +678,15 @@ class TestEveSolarSystem(NoSocketsTestCase):
         self.assertEqual(obj.security_status, 0.3277980387210846)
         self.assertEqual(obj.eve_entity_category(), EveEntity.CATEGORY_SOLAR_SYSTEM)
 
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
     def test_repr(self, mock_esi):
         mock_esi.client = EsiClientStub()
 
         obj, _ = EveSolarSystem.objects.update_or_create_esi(id=30045339)
-        expected = "EveSolarSystem(eve_constellation_id=20000785, eve_star_id=None, id=30045339, name='Enaluri', position_x=-227875173313944580, position_y=104688385699531790, position_z=120279417692650270, security_status=0.3277980387210846)"
+        expected = "EveSolarSystem(enabled_sections=0, eve_constellation_id=20000785, eve_star_id=None, id=30045339, name='Enaluri', position_x=-227875173313944580, position_y=104688385699531790, position_z=120279417692650270, security_status=0.3277980387210846)"
         self.assertEqual(repr(obj), expected)
 
     def test_str(self, mock_esi):

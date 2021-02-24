@@ -93,6 +93,7 @@ def update_or_create_inline_object(
     parent2_model_name: str,
     inline_model_name: str,
     parent_model_name: str,
+    enabled_sections: List[str] = None,
 ) -> None:
     """Task for updating or creating a single inline object from ESI"""
     logger.info(
@@ -109,6 +110,7 @@ def update_or_create_inline_object(
         other_pk_info=other_pk_info,
         parent2_model_name=parent2_model_name,
         inline_model_name=inline_model_name,
+        enabled_sections=enabled_sections,
     )
 
 
