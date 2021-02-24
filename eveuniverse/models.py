@@ -154,18 +154,19 @@ class EveUniverseBaseModel(models.Model):
             raise ValueError("Unknown model_name: %s" % model_name)
 
     @classmethod
-    def _esi_mapping(cls) -> dict:
+    def _esi_mapping(cls, enabled_sections: Set[str] = None) -> dict:
         field_mappings = cls._eve_universe_meta_attr("field_mappings")
         functional_pk = cls._eve_universe_meta_attr("functional_pk")
         parent_fk = cls._eve_universe_meta_attr("parent_fk")
         dont_create_related = cls._eve_universe_meta_attr("dont_create_related")
+        disabled_fields = cls._disabled_fields(enabled_sections)
         mapping = dict()
         for field in [
             field
             for field in cls._meta.get_fields()
             if not field.auto_created
             and field.name not in {"last_updated", "enabled_sections"}
-            and field.name not in cls._disabled_fields()
+            and field.name not in disabled_fields
             and not field.many_to_many
         ]:
             if field_mappings and field.name in field_mappings:
@@ -212,7 +213,7 @@ class EveUniverseBaseModel(models.Model):
         return mapping
 
     @classmethod
-    def _disabled_fields(cls) -> set:
+    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
         """returns name of fields that must not be loaded from ESI"""
         return {}
 
@@ -1092,7 +1093,7 @@ class EveSolarSystem(EveUniverseEntityModel):
         return children
 
     @classmethod
-    def _disabled_fields(cls) -> set:
+    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
         if not EVEUNIVERSE_LOAD_STARS:
             return {"eve_star"}
         else:
@@ -1387,15 +1388,6 @@ class EveType(EveUniverseEntityModel):
         SKIN = enum.auto()
         """SKIN"""
 
-    @classmethod
-    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
-        enabled_sections = super()._enabled_sections_union(enabled_sections)
-        if EVEUNIVERSE_LOAD_DOGMAS:
-            enabled_sections.add(cls.Section.DOGMAS)
-        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
-            enabled_sections.add(cls.Section.TYPE_MATERIALS)
-        return enabled_sections
-
     def icon_url(
         self,
         size: int = EveUniverseEntityModel.DEFAULT_ICON_SIZE,
@@ -1452,14 +1444,26 @@ class EveType(EveUniverseEntityModel):
         return eveimageserver.type_render_url(self.id, size=size)
 
     @classmethod
-    def _disabled_fields(cls) -> set:
+    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
+        enabled_sections = super()._enabled_sections_union(enabled_sections)
+        if EVEUNIVERSE_LOAD_DOGMAS:
+            enabled_sections.add(cls.Section.DOGMAS)
+        if EVEUNIVERSE_LOAD_GRAPHICS:
+            enabled_sections.add(cls.Section.GRAPHICS)
+        if EVEUNIVERSE_LOAD_MARKET_GROUPS:
+            enabled_sections.add(cls.Section.MARKET_GROUPS)
+        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
+            enabled_sections.add(cls.Section.TYPE_MATERIALS)
+        return enabled_sections
+
+    @classmethod
+    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
         disabled_fields = set()
-        if not EVEUNIVERSE_LOAD_GRAPHICS:
+        if cls.Section.GRAPHICS not in enabled_sections:
             disabled_fields.add("eve_graphic")
-
-        if not EVEUNIVERSE_LOAD_MARKET_GROUPS:
+        if cls.Section.MARKET_GROUPS not in enabled_sections:
             disabled_fields.add("eve_market_group")
-
         return disabled_fields
 
     @classmethod

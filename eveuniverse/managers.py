@@ -1,7 +1,7 @@
 from collections import namedtuple
 import datetime as dt
 import logging
-from typing import List, Iterable, Tuple, Optional
+from typing import List, Iterable, Optional, Set, Tuple
 from urllib.parse import urljoin
 
 import requests
@@ -28,10 +28,12 @@ SDE_ZZEVE_URL = "https://sde.zzeve.com"
 
 
 class EveUniverseBaseModelManager(models.Manager):
-    def _defaults_from_esi_obj(self, eve_data_obj: dict) -> dict:
+    def _defaults_from_esi_obj(
+        self, eve_data_obj: dict, enabled_sections: Set[str] = None
+    ) -> dict:
         """compiles defaults from an esi data object for update/creating the model"""
         defaults = dict()
-        for field_name, mapping in self.model._esi_mapping().items():
+        for field_name, mapping in self.model._esi_mapping(enabled_sections).items():
             if not mapping.is_pk:
                 if not isinstance(mapping.esi_name, tuple):
                     if mapping.esi_name in eve_data_obj:
@@ -95,7 +97,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             id: Eve Online ID of object
             include_children: if child objects should be updated/created as well (only when a new object is created)
             wait_for_children: when true child objects will be updated/created blocking (if any), else async (only when a new object is created)
-            enabled_sections: Sections to load regardless of current settings, e.g. `[EveType.Section.DOGMAS]` will always load dogmas for EveTypes (only when a new object is created)
+            enabled_sections: Sections to load regardless of current settings, e.g. `[EveType.Section.DOGMAS]` will always load dogmas for EveTypes
 
         Returns:
             A tuple consisting of the requested object and a created flag
@@ -145,7 +147,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 id, self._fetch_from_esi(id)
             )
             if eve_data_obj:
-                defaults = self._defaults_from_esi_obj(eve_data_obj)
+                defaults = self._defaults_from_esi_obj(eve_data_obj, enabled_sections)
                 obj, created = self.update_or_create(id=id, defaults=defaults)
                 if enabled_sections and hasattr(obj, "enabled_sections"):
                     for section in enabled_sections:

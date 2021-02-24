@@ -167,7 +167,7 @@ class TestEveTypeMaterial(NoSocketsTestCase):
 
 @patch(MANAGERS_PATH + ".cache")
 @patch(MANAGERS_PATH + ".esi")
-class TestEveTypeSections(NoSocketsTestCase):
+class TestEveTypeWithSections(NoSocketsTestCase):
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
@@ -180,7 +180,131 @@ class TestEveTypeSections(NoSocketsTestCase):
         # then
         self.assertEqual(obj.id, 603)
         self.assertEqual(obj.materials.count(), 0)
-        self.assertFalse(obj.enabled_sections.type_materials)
+        self.assertEqual(obj.enabled_sections._value, 0)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", True)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    def test_should_create_type_with_dogmas_global(self, mock_esi, mock_cache):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        obj, _ = EveType.objects.update_or_create_esi(id=603)
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertEqual(
+            set(obj.dogma_attributes.values_list("eve_dogma_attribute_id", flat=True)),
+            {129, 588},
+        )
+        self.assertEqual(
+            set(obj.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
+        self.assertTrue(obj.enabled_sections.dogmas)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    def test_should_create_type_with_dogmas_on_demand(self, mock_esi, mock_cache):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        obj, _ = EveType.objects.update_or_create_esi(
+            id=603, enabled_sections=[EveType.Section.DOGMAS]
+        )
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertEqual(
+            set(obj.dogma_attributes.values_list("eve_dogma_attribute_id", flat=True)),
+            {129, 588},
+        )
+        self.assertEqual(
+            set(obj.dogma_effects.values_list("eve_dogma_effect_id", flat=True)),
+            {1816, 1817},
+        )
+        self.assertTrue(obj.enabled_sections.dogmas)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", True)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    def test_should_create_type_with_graphics_global(self, mock_esi, mock_cache):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        obj, _ = EveType.objects.update_or_create_esi(id=603)
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertEqual(obj.eve_graphic_id, 314)
+        self.assertTrue(obj.enabled_sections.graphics)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    def test_should_create_type_with_graphics_on_demand(self, mock_esi, mock_cache):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        obj, _ = EveType.objects.update_or_create_esi(
+            id=603, enabled_sections=[EveType.Section.GRAPHICS]
+        )
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertEqual(obj.eve_graphic_id, 314)
+        self.assertTrue(obj.enabled_sections.graphics)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", True)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    def test_should_create_type_with_market_groups_global(self, mock_esi, mock_cache):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        obj, _ = EveType.objects.update_or_create_esi(id=603)
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertEqual(obj.eve_market_group_id, 61)
+        self.assertTrue(obj.enabled_sections.market_groups)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    def test_should_create_type_with_market_groups_on_demand(
+        self, mock_esi, mock_cache
+    ):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        obj, _ = EveType.objects.update_or_create_esi(
+            id=603, enabled_sections=[EveType.Section.MARKET_GROUPS]
+        )
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertEqual(obj.eve_market_group_id, 61)
+        self.assertTrue(obj.enabled_sections.market_groups)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", True)
+    def test_should_create_type_with_type_materials_global(self, mock_esi, mock_cache):
+        # given
+        mock_esi.client = EsiClientStub()
+        mock_cache.get.return_value = type_materials_cache_content()
+        # when
+        obj, created = EveType.objects.update_or_create_esi(id=603)
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertEqual(
+            set(obj.materials.values_list("material_eve_type_id", flat=True)),
+            {34, 35, 36, 37, 38, 39, 40},
+        )
+        self.assertTrue(obj.enabled_sections.type_materials)
 
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
@@ -198,22 +322,10 @@ class TestEveTypeSections(NoSocketsTestCase):
         )
         # then
         self.assertEqual(obj.id, 603)
-        self.assertEqual(obj.materials.count(), 7)
-        self.assertTrue(obj.enabled_sections.type_materials)
-
-    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
-    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
-    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", True)
-    def test_should_create_type_with_type_materials_global(self, mock_esi, mock_cache):
-        # given
-        mock_esi.client = EsiClientStub()
-        mock_cache.get.return_value = type_materials_cache_content()
-        # when
-        obj, created = EveType.objects.update_or_create_esi(id=603)
-        # then
-        self.assertEqual(obj.id, 603)
-        self.assertEqual(obj.materials.count(), 7)
+        self.assertEqual(
+            set(obj.materials.values_list("material_eve_type_id", flat=True)),
+            {34, 35, 36, 37, 38, 39, 40},
+        )
         self.assertTrue(obj.enabled_sections.type_materials)
 
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
@@ -229,14 +341,15 @@ class TestEveTypeSections(NoSocketsTestCase):
         # then
         self.assertEqual(obj.id, 603)
         self.assertFalse(created)
-        self.assertEqual(obj.materials.count(), 0)
-        self.assertFalse(obj.enabled_sections.type_materials)
+        self.assertEqual(obj.enabled_sections._value, 0)
 
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
-    def test_should_fetch_type_again_with_section(self, mock_esi, mock_cache):
+    def test_should_fetch_type_again_with_section_on_demand_1(
+        self, mock_esi, mock_cache
+    ):
         # given
         mock_esi.client = EsiClientStub()
         mock_cache.get.return_value = type_materials_cache_content()
@@ -248,7 +361,38 @@ class TestEveTypeSections(NoSocketsTestCase):
         # then
         self.assertEqual(obj.id, 603)
         self.assertFalse(created)
-        self.assertEqual(obj.materials.count(), 7)
+        self.assertEqual(
+            set(obj.materials.values_list("material_eve_type_id", flat=True)),
+            {34, 35, 36, 37, 38, 39, 40},
+        )
+        self.assertTrue(obj.enabled_sections.type_materials)
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    def test_should_fetch_type_again_with_section_on_demand_2(
+        self, mock_esi, mock_cache
+    ):
+        # given
+        mock_esi.client = EsiClientStub()
+        mock_cache.get.return_value = type_materials_cache_content()
+        EveType.objects.update_or_create_esi(
+            id=603, enabled_sections=[EveType.Section.TYPE_MATERIALS]
+        )
+        # when
+        obj, created = EveType.objects.get_or_create_esi(
+            id=603, enabled_sections=[EveType.Section.GRAPHICS]
+        )
+        # then
+        self.assertEqual(obj.id, 603)
+        self.assertFalse(created)
+        self.assertEqual(
+            set(obj.materials.values_list("material_eve_type_id", flat=True)),
+            {34, 35, 36, 37, 38, 39, 40},
+        )
+        self.assertEqual(obj.eve_graphic_id, 314)
+        self.assertTrue(obj.enabled_sections.graphics)
         self.assertTrue(obj.enabled_sections.type_materials)
 
 

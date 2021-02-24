@@ -68,8 +68,8 @@ class TestEveType(NoSocketsTestCase):
         eve_type, created = EveType.objects.get_or_create_esi(id=603)
         self.assertTrue(created)
         self.assertEqual(eve_type.id, 603)
-        self.assertTrue(eve_type.eve_graphic, EveGraphic.objects.get(id=314))
-        self.assertTrue(eve_type.eve_market_group, EveMarketGroup.objects.get(id=61))
+        self.assertEqual(eve_type.eve_graphic, EveGraphic.objects.get(id=314))
+        self.assertEqual(eve_type.eve_market_group, EveMarketGroup.objects.get(id=61))
 
         dogma_attribute_1 = eve_type.dogma_attributes.filter(
             eve_dogma_attribute=EveDogmaAttribute.objects.get(id=588)
