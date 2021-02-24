@@ -26,7 +26,7 @@ class TestEveTypeMaterial(NoSocketsTestCase):
             url="https://sde.zzeve.com/invTypeMaterials.json",
             json=sde_data["type_materials"],
         )
-        with patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
+        with patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
             eve_type, _ = EveType.objects.get_or_create_esi(id=603)
         # when
         EveTypeMaterial.objects.update_or_create_api(eve_type=eve_type)
@@ -66,7 +66,7 @@ class TestEveTypeMaterial(NoSocketsTestCase):
             url="https://sde.zzeve.com/invTypeMaterials.json",
             json=sde_data["type_materials"],
         )
-        with patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
+        with patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
             eve_type, _ = EveType.objects.get_or_create_esi(id=603)
         # when
         EveTypeMaterial.objects.update_or_create_api(eve_type=eve_type)
@@ -94,7 +94,7 @@ class TestEveTypeMaterial(NoSocketsTestCase):
             url="https://sde.zzeve.com/invTypeMaterials.json",
             json=sde_data["type_materials"],
         )
-        with patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
+        with patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
             eve_type, _ = EveType.objects.get_or_create_esi(id=34)
         # when
         EveTypeMaterial.objects.update_or_create_api(eve_type=eve_type)
@@ -123,7 +123,7 @@ class TestEveTypeMaterial(NoSocketsTestCase):
             json=sde_data["type_materials"],
         )
         # when
-        with patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", True):
+        with patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", True):
             eve_type, _ = EveType.objects.update_or_create_esi(id=603)
         # then
         self.assertTrue(requests_mocker.called)
@@ -150,7 +150,7 @@ class TestEveTypeMaterial(NoSocketsTestCase):
             json=sde_data["type_materials"],
         )
         # when
-        with patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
+        with patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False):
             eve_type, _ = EveType.objects.update_or_create_esi(id=603)
         # then
         self.assertFalse(requests_mocker.called)
@@ -171,7 +171,7 @@ class TestEveTypeSections(NoSocketsTestCase):
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
     def test_should_create_type_with_no_enabled_sections(self, mock_esi, mock_cache):
         # given
         mock_esi.client = EsiClientStub()
@@ -185,7 +185,7 @@ class TestEveTypeSections(NoSocketsTestCase):
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
     def test_should_create_type_with_type_materials_on_demand(
         self, mock_esi, mock_cache
     ):
@@ -204,7 +204,6 @@ class TestEveTypeSections(NoSocketsTestCase):
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", True)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", True)
     def test_should_create_type_with_type_materials_global(self, mock_esi, mock_cache):
         # given
@@ -220,7 +219,7 @@ class TestEveTypeSections(NoSocketsTestCase):
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
     def test_should_not_fetch_type_again(self, mock_esi, mock_cache):
         # given
         mock_esi.client = EsiClientStub()
@@ -236,7 +235,7 @@ class TestEveTypeSections(NoSocketsTestCase):
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_GRAPHICS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_DOGMAS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MARKET_GROUPS", False)
-    @patch(MANAGERS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_TYPE_MATERIALS", False)
     def test_should_fetch_type_again_with_section(self, mock_esi, mock_cache):
         # given
         mock_esi.client = EsiClientStub()
@@ -251,3 +250,14 @@ class TestEveTypeSections(NoSocketsTestCase):
         self.assertFalse(created)
         self.assertEqual(obj.materials.count(), 7)
         self.assertTrue(obj.enabled_sections.type_materials)
+
+
+class EveTypeSection(NoSocketsTestCase):
+    def test_should_return_value_as_str(self):
+        self.assertEqual(str(EveType.Section.DOGMAS), "dogmas")
+
+    def test_should_return_values(self):
+        self.assertEqual(
+            list(EveType.Section),
+            ["dogmas", "graphics", "market_groups", "type_materials"],
+        )

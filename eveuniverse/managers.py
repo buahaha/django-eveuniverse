@@ -14,10 +14,7 @@ from django.utils.timezone import now
 from bravado.exception import HTTPNotFound
 
 from . import __title__
-from .app_settings import (
-    EVEUNIVERSE_BULK_METHODS_BATCH_SIZE,
-    EVEUNIVERSE_LOAD_TYPE_MATERIALS,
-)
+from .app_settings import EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
 from .helpers import EveEntityNameResolver, get_or_create_esi_or_none
 from .providers import esi
 from .utils import chunks, LoggerAddTag, make_logger_prefix
@@ -600,14 +597,11 @@ class EveTypeManager(EveUniverseEntityModelManager):
             wait_for_children=wait_for_children,
             enabled_sections=enabled_sections,
         )
-        if EVEUNIVERSE_LOAD_TYPE_MATERIALS or (
-            enabled_sections and self.model.Section.TYPE_MATERIALS in enabled_sections
-        ):
+        enabled_sections = self.model._enabled_sections_union(enabled_sections)
+        if enabled_sections and self.model.Section.TYPE_MATERIALS in enabled_sections:
             from .models import EveTypeMaterial
 
             EveTypeMaterial.objects.update_or_create_api(eve_type=obj)
-            # obj.enabled_sections.type_materials = True
-            # obj.save()
 
         return obj, created
 

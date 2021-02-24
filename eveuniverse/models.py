@@ -10,7 +10,6 @@ from bravado.exception import HTTPNotFound
 
 from django.db import models
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.utils.functional import classproperty
 
 from bitfield import BitField
 
@@ -66,8 +65,15 @@ EsiMapping = namedtuple(
 )
 
 
-class OptionalSection(models.TextChoices):
-    DOGMA = "dogma"
+class _SectionBase(str, enum.Enum):
+    """Base class for all Sections"""
+
+    @classmethod
+    def values(cls) -> list:
+        return list(item.value for item in cls)
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class EveUniverseBaseModel(models.Model):
@@ -234,7 +240,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
     Entity models are normal Eve entities that have a dedicated ESI endpoint
     """
 
-    class Section(models.TextChoices):
+    class Section(_SectionBase):
         pass
 
     # sections
@@ -1307,17 +1313,13 @@ class EveStationService(models.Model):
 class EveType(EveUniverseEntityModel):
     """An inventory type in Eve Online"""
 
-    class Section(models.TextChoices):
+    class Section(_SectionBase):
         """Sections that can be optionally loaded with each instance"""
 
         DOGMAS = "dogmas"  #:
         GRAPHICS = "graphics"  #:
         MARKET_GROUPS = "market_groups"  #
         TYPE_MATERIALS = "type_materials"  #:
-
-        @classproperty
-        def flags(cls):
-            return tuple(cls.values)
 
     capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey(
@@ -1347,7 +1349,7 @@ class EveType(EveUniverseEntityModel):
     published = models.BooleanField()  # TODO: Add index
     volume = models.FloatField(default=None, null=True)
     enabled_sections = BitField(
-        flags=Section.flags,
+        flags=tuple(Section.values()),
         help_text=(
             "Flags for loadable sections. True if instance was loaded with section."
         ),
