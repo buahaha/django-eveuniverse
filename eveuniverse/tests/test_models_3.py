@@ -565,3 +565,28 @@ class TestEveSolarSystemWithSections(NoSocketsTestCase):
         self.assertEqual(
             set(obj.eve_stations.values_list("id", flat=True)), {60015068, 60015069}
         )
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_create_solar_system_with_stargates_on_demand_2(self, mock_esi):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        obj, _ = EveSolarSystem.objects.update_or_create_esi(
+            id=30045339,
+            include_children=True,
+            enabled_sections=[EveSolarSystem.Section.STARGATES, EveType.Section.DOGMAS],
+        )
+        # then
+        self.assertEqual(obj.id, 30045339)
+        self.assertTrue(obj.enabled_sections.stargates)
+        self.assertEqual(
+            set(obj.eve_stargates.values_list("id", flat=True)), {50016284, 50016286}
+        )
+
+
+@patch(MANAGERS_PATH + ".esi")
+class TestEvePlanetWithSections(NoSocketsTestCase):
+    pass

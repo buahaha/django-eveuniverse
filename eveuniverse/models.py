@@ -277,7 +277,24 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         """returns union of global and given enabled sections.
         Needs to be overloaded by sub class using sections
         """
-        return set(enabled_sections) if enabled_sections else set()
+        enabled_sections = set(enabled_sections) if enabled_sections else set()
+        if EVEUNIVERSE_LOAD_PLANETS:
+            enabled_sections.add(EveSolarSystem.Section.PLANETS)
+        if EVEUNIVERSE_LOAD_STARGATES:
+            enabled_sections.add(EveSolarSystem.Section.STARGATES)
+        if EVEUNIVERSE_LOAD_STARS:
+            enabled_sections.add(EveSolarSystem.Section.STARS)
+        if EVEUNIVERSE_LOAD_STATIONS:
+            enabled_sections.add(EveSolarSystem.Section.STATIONS)
+        if EVEUNIVERSE_LOAD_DOGMAS:
+            enabled_sections.add(EveType.Section.DOGMAS)
+        if EVEUNIVERSE_LOAD_GRAPHICS:
+            enabled_sections.add(EveType.Section.GRAPHICS)
+        if EVEUNIVERSE_LOAD_MARKET_GROUPS:
+            enabled_sections.add(EveType.Section.MARKET_GROUPS)
+        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
+            enabled_sections.add(EveType.Section.TYPE_MATERIALS)
+        return enabled_sections
 
     @classmethod
     def eve_entity_category(cls) -> str:
@@ -1166,19 +1183,6 @@ class EveSolarSystem(EveUniverseEntityModel):
             return None
 
     @classmethod
-    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
-        enabled_sections = super()._enabled_sections_union(enabled_sections)
-        if EVEUNIVERSE_LOAD_PLANETS:
-            enabled_sections.add(cls.Section.PLANETS)
-        if EVEUNIVERSE_LOAD_STARGATES:
-            enabled_sections.add(cls.Section.STARGATES)
-        if EVEUNIVERSE_LOAD_STARS:
-            enabled_sections.add(cls.Section.STARS)
-        if EVEUNIVERSE_LOAD_STATIONS:
-            enabled_sections.add(cls.Section.STATIONS)
-        return enabled_sections
-
-    @classmethod
     def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
         enabled_sections = cls._enabled_sections_union(enabled_sections)
         children = {}
@@ -1473,19 +1477,6 @@ class EveType(EveUniverseEntityModel):
     def render_url(self, size=EveUniverseEntityModel.DEFAULT_ICON_SIZE) -> str:
         """return an image URL to this type as render"""
         return eveimageserver.type_render_url(self.id, size=size)
-
-    @classmethod
-    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
-        enabled_sections = super()._enabled_sections_union(enabled_sections)
-        if EVEUNIVERSE_LOAD_DOGMAS:
-            enabled_sections.add(cls.Section.DOGMAS)
-        if EVEUNIVERSE_LOAD_GRAPHICS:
-            enabled_sections.add(cls.Section.GRAPHICS)
-        if EVEUNIVERSE_LOAD_MARKET_GROUPS:
-            enabled_sections.add(cls.Section.MARKET_GROUPS)
-        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
-            enabled_sections.add(cls.Section.TYPE_MATERIALS)
-        return enabled_sections
 
     @classmethod
     def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:

@@ -108,6 +108,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             my_filter = {
                 "enabled_sections": getattr(self.model.enabled_sections, section)
                 for section in enabled_sections
+                if str(section) in self.model.Section.values()
             }
             obj = self.filter(**my_filter).get(id=id)
             return obj, False
@@ -150,9 +151,13 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 defaults = self._defaults_from_esi_obj(eve_data_obj, enabled_sections)
                 obj, created = self.update_or_create(id=id, defaults=defaults)
                 if enabled_sections and hasattr(obj, "enabled_sections"):
+                    updated_sections = False
                     for section in enabled_sections:
-                        setattr(obj.enabled_sections, section, True)
-                    obj.save()
+                        if str(section) in self.model.Section.values():
+                            setattr(obj.enabled_sections, section, True)
+                            updated_sections = True
+                    if updated_sections:
+                        obj.save()
                 inline_objects = self.model._inline_objects(enabled_sections)
                 if inline_objects:
                     self._update_or_create_inline_objects(
