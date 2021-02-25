@@ -1612,13 +1612,13 @@ class EveTypeMaterial(EveUniverseBaseModel):
 
     objects = EveTypeMaterialManager()
 
-    # class Meta:
-    #     constraints = [
-    #         models.UniqueConstraint(
-    #             fields=["eve_type", "material_eve_type"],
-    #             name="fpk_evetypematerial",
-    #         )
-    #     ]
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["eve_type", "material_eve_type"],
+                name="fpk_evetypematerial",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.eve_type}-{self.material_eve_type}"
