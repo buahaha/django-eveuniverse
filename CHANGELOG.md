@@ -11,7 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- Now supports type materials
+- New model for type materials
+- On-demand loading of every section(=related model disabled by default) with all manager methods
+
+### Fixed
+
+- On demand loading of planets does not work probably
 
 ## [0.7.6] - 2021-01-04
 

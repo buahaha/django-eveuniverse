@@ -153,6 +153,11 @@ There are two solutions for loading disabled models incl. their relations:
 - Globally enabling disabled models
 - Enabling disabled models on-demand
 
+```eval_rst
+.. note::
+    Related models that are disabled by default are also called sections.
+```
+
 #### Globally enabling models
 
 One solution here is to offer developers control over which related models are loaded through configuration. Each disabled model therefore as a corresponding setting that can be used to globally enable that model.
@@ -167,15 +172,37 @@ One solution here is to offer developers control over which related models are l
     For an overview of all settings please see :ref:`operations-settings`.
 ```
 
-### Activate disabled models on-demand
+### Load related models on-demand
 
-However, globally enabling models will affect all apps of a Django installation. For instance if you turn on dogmas globally, dogmas will be loaded for each and every type, even if it that extra data is not needed.
+However, globally enabling those related models will affect all apps of a Django installation. For instance if you turn on dogmas globally, dogmas will be loaded for each and every type, even if it that extra data is not needed.
 
-This might not be the option for some use cases and we are therefore offering an alternative solution. You can also activate disabled models on-demand:
+This might not be the best option for some use cases and we are therefore offering an alternative solution. You can also activate disabled models on-demand.
 
-- `get_or_create_esi()` and `update_or_create_esi()` take an extra argument called `enabled_sections`, which allows you to activate disabled models just for that request.
-- `eveuniverse_load_types` management command for preloading types can also include loading dogmas if requested
-- Test tool for creating test data also support the `enabled_sections` argument
+#### Queries
+
+Most manager methods like `get_or_create_esi()` and `update_or_create_esi()` take an extra argument called `enabled_sections`, which allows you to ensure specific sections are loaded with your query.
+
+For example you may want to load planets just for one solar system. Here is how such a request might look like. Note that eveuniverse will automatically load missing planets from ESI for that solar system, even if it already exist in the local database.
+
+```python
+obj, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142, include_children=True, enabled_sections=[EveSolarSystem.Section.PLANETS])
+```
+
+You can also specify multiple sections with one query. Here is how to fetch planets and their respective moons (a section of EvePlanet) on demand:
+
+```python
+obj, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142, include_children=True, enabled_sections=[EveSolarSystem.Section.PLANETS, EvePlant.Section.MOONS])
+```
+
+See also the API for a list of all available sections for each model that supports it, e.g. `EvePlanet`, `EveSolarSystem`, `EveType`.
+
+### Preloading instances
+
+`eveuniverse_load_types` management command for preloading types can also include loading dogmas if requested.
+
+### Test tools
+
+The test tool for creating [test data](#test-data) also support the `enabled_sections` argument.
 
 ### Preloading data
 
