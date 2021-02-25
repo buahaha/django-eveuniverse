@@ -4,7 +4,7 @@ from io import StringIO
 from django.core.management import call_command
 from django.test.utils import override_settings
 
-from .my_test_data import EsiClientStub
+from .testdata.esi import EsiClientStub
 from ..models import EveCategory, EveGroup, EveType
 from ..utils import NoSocketsTestCase
 

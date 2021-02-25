@@ -1,0 +1,184 @@
+{
+    "type_materials": [
+        {
+            "materialTypeID": 34,
+            "quantity": 21111,
+            "typeID": 603
+        },
+        {
+            "materialTypeID": 35,
+            "quantity": 8889,
+            "typeID": 603
+        },
+        {
+            "materialTypeID": 36,
+            "quantity": 3111,
+            "typeID": 603
+        },
+        {
+            "materialTypeID": 37,
+            "quantity": 589,
+            "typeID": 603
+        },
+        {
+            "materialTypeID": 38,
+            "quantity": 2,
+            "typeID": 603
+        },
+        {
+            "materialTypeID": 39,
+            "quantity": 4,
+            "typeID": 603
+        },
+        {
+            "materialTypeID": 40,
+            "quantity": 4,
+            "typeID": 603
+        },
+        {
+            "materialTypeID": 34,
+            "quantity": 20556,
+            "typeID": 608
+        },
+        {
+            "materialTypeID": 35,
+            "quantity": 3889,
+            "typeID": 608
+        },
+        {
+            "materialTypeID": 36,
+            "quantity": 2222,
+            "typeID": 608
+        },
+        {
+            "materialTypeID": 37,
+            "quantity": 278,
+            "typeID": 608
+        },
+        {
+            "materialTypeID": 38,
+            "quantity": 56,
+            "typeID": 608
+        },
+        {
+            "materialTypeID": 39,
+            "quantity": 12,
+            "typeID": 608
+        },
+        {
+            "materialTypeID": 34,
+            "quantity": 544444,
+            "typeID": 621
+        },
+        {
+            "materialTypeID": 35,
+            "quantity": 122222,
+            "typeID": 621
+        },
+        {
+            "materialTypeID": 36,
+            "quantity": 36667,
+            "typeID": 621
+        },
+        {
+            "materialTypeID": 37,
+            "quantity": 10444,
+            "typeID": 621
+        },
+        {
+            "materialTypeID": 38,
+            "quantity": 3333,
+            "typeID": 621
+        },
+        {
+            "materialTypeID": 39,
+            "quantity": 1400,
+            "typeID": 621
+        },
+        {
+            "materialTypeID": 40,
+            "quantity": 556,
+            "typeID": 621
+        },
+        {
+            "materialTypeID": 34,
+            "quantity": 622222,
+            "typeID": 626
+        },
+        {
+            "materialTypeID": 35,
+            "quantity": 133333,
+            "typeID": 626
+        },
+        {
+            "materialTypeID": 36,
+            "quantity": 41111,
+            "typeID": 626
+        },
+        {
+            "materialTypeID": 37,
+            "quantity": 10111,
+            "typeID": 626
+        },
+        {
+            "materialTypeID": 38,
+            "quantity": 2889,
+            "typeID": 626
+        },
+        {
+            "materialTypeID": 39,
+            "quantity": 1312,
+            "typeID": 626
+        },
+        {
+            "materialTypeID": 40,
+            "quantity": 356,
+            "typeID": 626
+        },
+        {
+            "materialTypeID": 21947,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21949,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21951,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21953,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21955,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21957,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21959,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21961,
+            "quantity": 1,
+            "typeID": 35825
+        },
+        {
+            "materialTypeID": 21967,
+            "quantity": 1,
+            "typeID": 35825
+        }
+    ]
+}

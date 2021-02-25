@@ -176,6 +176,11 @@ EveTypeDogmaEffect
 .. autoclass:: eveuniverse.models.EveTypeDogmaEffect
     :members:
 
+EveTypeMaterial
+---------------
+.. autoclass:: eveuniverse.models.EveTypeMaterial
+    :members:
+
 EveUnit
 ---------
 .. autoclass:: eveuniverse.models.EveUnit

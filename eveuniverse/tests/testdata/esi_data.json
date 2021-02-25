@@ -258,6 +258,14 @@
                 "name": "Station",
                 "published": false
             },
+            "4": {
+                "category_id": 4,
+                "groups": [
+                    18
+                ],
+                "name": "Material",
+                "published": true
+            },
             "6": {
                 "category_id": 6,
                 "groups": [
@@ -273,6 +281,14 @@
                     105
                 ],
                 "name": "Blueprint",
+                "published": true
+            },
+            "17": {
+                "category_id": 17,
+                "groups": [
+                    536
+                ],
+                "name": "Commodity",
                 "published": true
             },
             "65": {
@@ -437,6 +453,21 @@
                     3800
                 ]
             },
+            "18": {
+                "category_id": 4,
+                "group_id": 18,
+                "name": "Mineral",
+                "published": true,
+                "types": [
+                    34,
+                    35,
+                    36,
+                    37,
+                    38,
+                    39,
+                    40
+                ]
+            },
             "7": {
                 "category_id": 2,
                 "group_id": 7,
@@ -492,6 +523,23 @@
                 "published": true,
                 "types": [
                     950
+                ]
+            },
+            "536": {
+                "category_id": 17,
+                "group_id": 536,
+                "name": "Structure Components",
+                "published": true,
+                "types": [
+                    21947,
+                    21949,
+                    21951,
+                    21953,
+                    21955,
+                    21957,
+                    21959,
+                    21961,
+                    21967
                 ]
             },
             "1404": {
@@ -832,6 +880,13 @@
                 "type_id": 1529
             }
         },
+        "get_universe_systems": [
+            30000142,
+            30001161,
+            30045339,
+            30045342,
+            31000005
+        ],
         "get_universe_systems_system_id": {
             "30000142": {
                 "constellation_id": 20000020,
@@ -874,10 +929,6 @@
                 "constellation_id": 20000785,
                 "name": "Enaluri",
                 "planets": [
-                    {
-                        "moons": null,
-                        "planet_id": 40009077
-                    },
                     {
                         "moons": [
                             40349468
@@ -973,6 +1024,97 @@
                 "radius": 3532,
                 "type_id": 16,
                 "volume": 10000000
+            },
+            "34": {
+                "capacity": 0.0,
+                "description": "The main building block in space structures. A very hard, yet bendable metal. Cannot be used in human habitats due to its instability at atmospheric temperatures. Very common throughout the central regions of known universe.\r\n\r\nMay be obtained by reprocessing the following ores and their variations available in high security status star systems:\r\n<a href=showinfo:1230>Veldspar</a>, <a href=showinfo:1228>Scordite</a>, <a href=showinfo:18>Plagioclase</a>\r\n\r\nIt is also present in huge amounts in rare ores like <a href=showinfo:19>Spodumain</a>, <a href=showinfo:52316>Bezdnacine</a>, <a href=showinfo:52315>Rakovene</a> and <a href=showinfo:52306>Talassonite</a>.",
+                "group_id": 18,
+                "mass": 0.0,
+                "name": "Tritanium",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 34,
+                "volume": 0.01
+            },
+            "35": {
+                "capacity": 0.0,
+                "description": "A soft crystal-like mineral with a very distinguishing orange glow as if on fire. Used as conduit and in the bio-chemical industry. Commonly found in many asteroid-ore types.\r\n\r\nMay be obtained by reprocessing the following ores and their variations:\r\n\r\nHigh security status star systems:\r\n<a href=showinfo:1228>Scordite</a>, <a href=showinfo:1224>Pyroxeres</a>\r\n\r\nLow security status star systems:\r\n<a href=showinfo:1224>Pyroxeres</a>, <a href=showinfo:1227>Omber</a>, <a href=showinfo:21>Hedbergite</a>, <a href=showinfo:1229>Gneiss</a>, <a href=showinfo:1225>Crokite</a>\r\n\r\nNull security status star systems:\r\n<a href=showinfo:1224>Pyroxeres</a>, <a href=showinfo:1223>Bistot</a>, <a href=showinfo:22>Arkonor</a>\r\n\r\nWormhole systems:\r\n<a href=showinfo:1224>Pyroxeres</a>, <a href=showinfo:1227>Omber</a>, <a href=showinfo:1229>Gneiss</a>, <a href=showinfo:1223>Bistot</a>, <a href=showinfo:22>Arkonor</a>",
+                "group_id": 18,
+                "mass": 0.0,
+                "name": "Pyerite",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 35,
+                "volume": 0.01
+            },
+            "36": {
+                "capacity": 0.0,
+                "description": "Very flexible metallic mineral, dull to bright silvery green in color. Can be mixed with <a href=showinfo:34>Tritanium</a> to make extremely hard alloys or it can be used by itself for various purposes. Fairly common in most regions.\r\n\r\nMay be obtained by reprocessing the following ores and their variations:\r\n\r\nHigh security status star systems:\r\n<a href=showinfo:1224>Pyroxeres</a>, <a href=showinfo:18>Plagioclase</a>\r\n\r\nLow security status star systems:\r\n<a href=showinfo:1224>Pyroxeres</a>, <a href=showinfo:20>Kernite</a>, <a href=showinfo:1226>Jaspet</a>, <a href=showinfo:1229>Gneiss</a>, <a href=showinfo:1232>Dark Ochre</a>, <a href=showinfo:1225>Crokite</a>\r\n\r\nNull security status star systems:\r\n<a href=showinfo:1224>Pyroxeres</a>, <a href=showinfo:20>Kernite</a>, <a href=showinfo:1223>Bistot</a>, <a href=showinfo:22>Arkonor</a>\r\n\r\nWormhole systems:\r\n<a href=showinfo:1224>Pyroxeres</a>, <a href=showinfo:20>Kernite</a>, <a href=showinfo:1229>Gneiss</a>, <a href=showinfo:1223>Bistot</a>, <a href=showinfo:22>Arkonor</a>",
+                "group_id": 18,
+                "mass": 0.0,
+                "name": "Mexallon",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 36,
+                "volume": 0.01
+            },
+            "37": {
+                "capacity": 0.0,
+                "description": "Light-bluish crystal, formed by intense pressure deep within large asteroids and moons. Used in electronic and weapon manufacturing. Only found in abundance in a few areas.\r\n\r\nMay be obtained by reprocessing the following ores and their variations:\r\n\r\nLow security status star systems:\r\n<a href=showinfo:1227>Omber</a>, <a href=showinfo:20>Kernite</a>, <a href=showinfo:1231>Hemorphite</a>, <a href=showinfo:1229>Gneiss</a>, <a href=showinfo:1232>Dark Ochre</a>\r\n\r\nNull security status star systems:\r\n<a href=showinfo:20>Kernite</a>\r\n\r\nWormhole systems:\r\n<a href=showinfo:1227>Omber</a>, <a href=showinfo:20>Kernite</a>, <a href=showinfo:1229>Gneiss</a>\r\n\r\nIt is also present in huge amounts in rare ores like <a href=showinfo:19>Spodumain</a>, <a href=showinfo:52316>Bezdnacine</a> and <a href=showinfo:52315>Rakovene</a>.",
+                "group_id": 18,
+                "mass": 0.0,
+                "name": "Isogen",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 37,
+                "volume": 0.01
+            },
+            "38": {
+                "capacity": 0.0,
+                "description": "A highly volatile mineral only formed during supernovas, thus severely limiting the extent of its distribution. Vital ingredient in capsule production, making it very coveted.\r\n\r\nMay be obtained by reprocessing the following ores and their variations available in low security status star systems:\r\n<a href=showinfo:1226>Jaspet</a>, <a href=showinfo:1231>Hemorphite</a>, <a href=showinfo:21>Hedbergite</a>, <a href=showinfo:1232>Dark Ochre</a>, <a href=showinfo:1225>Crokite</a>\r\n\r\nIt is also present in significant amounts in rare ores like <a href=showinfo:19>Spodumain</a> and <a href=showinfo:52306>Talassonite</a>.",
+                "group_id": 18,
+                "mass": 0.0,
+                "name": "Nocxium",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 38,
+                "volume": 0.01
+            },
+            "39": {
+                "capacity": 0.0,
+                "description": "Only found in huge geodes; rocks on the outside with crystal-like quartz on the inside. The rarest and most precious of these geodes are those that contain the dark green zydrine within. Very rare and very expensive.\r\n\r\nMay be obtained by reprocessing <a href=showinfo:1223>Bistot</a> ore and its variations which are available in null security status and wormhole systems.\r\n\r\nSignificant amounts of Zydrine are also present in rare ores like <a href=showinfo:19>Spodumain</a> and <a href=showinfo:52315>Rakovene</a>.",
+                "group_id": 18,
+                "mass": 0.0,
+                "name": "Zydrine",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 39,
+                "volume": 0.01
+            },
+            "40": {
+                "capacity": 0.0,
+                "description": "An extremely rare mineral found in comets and very occasionally in asteroids that have traveled through gas clouds. Has unique explosive traits that make it very valuable in the armaments industry.\r\n\r\nMay be obtained by reprocessing <a href=showinfo:22>Arkonor</a> ore and its variations which are available in null security status and wormhole systems.\r\n\r\nSignificant amounts of Megacyte are also present in rare ores like <a href=showinfo:19>Spodumain</a>, <a href=showinfo:52316>Bezdnacine</a>, and <a href=showinfo:52306>Talassonite</a>.",
+                "group_id": 18,
+                "mass": 0.0,
+                "name": "Megacyte",
+                "packaged_volume": 0.01,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 40,
+                "volume": 0.01
             },
             "603": {
                 "capacity": 150,
@@ -1172,6 +1314,321 @@
                 "radius": 10000,
                 "type_id": 3800,
                 "volume": 1
+            },
+            "21947": {
+                "capacity": 0.0,
+                "description": "Assorted parts of metal, textiles, composite fabrics and miscellaneous machinery - the basic building blocks for the assembly and operation of a space outpost.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Construction Parts",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21947,
+                "volume": 3000.0
+            },
+            "21949": {
+                "capacity": 0.0,
+                "description": "Components for the construction of individualized ship and module hangars in space outposts.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Hangar Array",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21949,
+                "volume": 3000.0
+            },
+            "21951": {
+                "capacity": 0.0,
+                "description": "One of the myriad construction components required for the building of space outposts.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Storage Bay",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21951,
+                "volume": 3000.0
+            },
+            "21953": {
+                "capacity": 0.0,
+                "description": "Construction materials and research tools for space outpost laboratories.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Laboratory",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21953,
+                "volume": 3000.0
+            },
+            "21955": {
+                "capacity": 0.0,
+                "description": "Materials required for the construction of factory facilities in a space outpost.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Factory",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21955,
+                "volume": 3000.0
+            },
+            "21957": {
+                "capacity": 0.0,
+                "description": "Lathes, grinders, riveting machines, uncoilers, and various other pieces of machinery required for the operation of an outpost repair facility.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Repair Facility",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21957,
+                "volume": 3000.0
+            },
+            "21959": {
+                "capacity": 0.0,
+                "description": "Parts required for the construction of a space outpost materials refinery.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Reprocessing Plant",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21959,
+                "volume": 3000.0
+            },
+            "21961": {
+                "capacity": 0.0,
+                "description": "Mechanical components required for the construction of an outpost docking bay.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Docking Bay",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21961,
+                "volume": 3000.0
+            },
+            "21967": {
+                "capacity": 0.0,
+                "description": "Materials for the construction of dozens of offices, as well as computer systems and supplies needed for their day-to-day running.",
+                "dogma_attributes": [
+                    {
+                        "attribute_id": 161,
+                        "value": 3000.0
+                    },
+                    {
+                        "attribute_id": 162,
+                        "value": 1.0
+                    },
+                    {
+                        "attribute_id": 4,
+                        "value": 10000.0
+                    },
+                    {
+                        "attribute_id": 38,
+                        "value": 0.0
+                    },
+                    {
+                        "attribute_id": 726,
+                        "value": 100.0
+                    }
+                ],
+                "group_id": 536,
+                "mass": 10000.0,
+                "name": "Structure Office Center",
+                "packaged_volume": 3000.0,
+                "portion_size": 1,
+                "published": true,
+                "radius": 1.0,
+                "type_id": 21967,
+                "volume": 3000.0
             },
             "29627": {
                 "capacity": 0,

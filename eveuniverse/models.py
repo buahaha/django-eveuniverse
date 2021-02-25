@@ -4,13 +4,14 @@ import inspect
 import logging
 import math
 import sys
-from typing import Any, Dict, List, Optional, Tuple, Set
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Set
 
 from bravado.exception import HTTPNotFound
 
 from django.db import models
-
 from django.contrib.staticfiles.storage import staticfiles_storage
+
+from bitfield import BitField
 
 from . import __title__
 from .app_settings import (
@@ -23,19 +24,23 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_STARGATES,
     EVEUNIVERSE_LOAD_STARS,
     EVEUNIVERSE_LOAD_STATIONS,
+    EVEUNIVERSE_LOAD_TYPE_MATERIALS,
     EVEUNIVERSE_USE_EVESKINSERVER,
 )
 from .constants import EVE_CATEGORY_ID_BLUEPRINT, EVE_CATEGORY_ID_SKIN
 from .core import eveimageserver, eveskinserver
 from .managers import (
-    EveUniverseBaseModelManager,
-    EveUniverseEntityModelManager,
+    EveAsteroidBeltManager,
     EveMarketPriceManager,
-    EvePlanetChildrenManager,
     EvePlanetManager,
+    EveMoonManager,
     EveStargateManager,
     EveStationManager,
     EveEntityManager,
+    EveTypeManager,
+    EveTypeMaterialManager,
+    EveUniverseBaseModelManager,
+    EveUniverseEntityModelManager,
 )
 from .providers import esi
 from .utils import LoggerAddTag
@@ -59,6 +64,17 @@ EsiMapping = namedtuple(
         "create_related",
     ],
 )
+
+
+class _SectionBase(str, enum.Enum):
+    """Base class for all Sections"""
+
+    @classmethod
+    def values(cls) -> list:
+        return list(item.value for item in cls)
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class EveUniverseBaseModel(models.Model):
@@ -139,18 +155,19 @@ class EveUniverseBaseModel(models.Model):
             raise ValueError("Unknown model_name: %s" % model_name)
 
     @classmethod
-    def _esi_mapping(cls) -> dict:
+    def _esi_mapping(cls, enabled_sections: Set[str] = None) -> dict:
         field_mappings = cls._eve_universe_meta_attr("field_mappings")
         functional_pk = cls._eve_universe_meta_attr("functional_pk")
         parent_fk = cls._eve_universe_meta_attr("parent_fk")
         dont_create_related = cls._eve_universe_meta_attr("dont_create_related")
+        disabled_fields = cls._disabled_fields(enabled_sections)
         mapping = dict()
         for field in [
             field
             for field in cls._meta.get_fields()
             if not field.auto_created
-            and field.name != "last_updated"
-            and field.name not in cls._disabled_fields()
+            and field.name not in {"last_updated", "enabled_sections"}
+            and field.name not in disabled_fields
             and not field.many_to_many
         ]:
             if field_mappings and field.name in field_mappings:
@@ -197,7 +214,7 @@ class EveUniverseBaseModel(models.Model):
         return mapping
 
     @classmethod
-    def _disabled_fields(cls) -> set:
+    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
         """returns name of fields that must not be loaded from ESI"""
         return {}
 
@@ -224,6 +241,9 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 
     Entity models are normal Eve entities that have a dedicated ESI endpoint
     """
+
+    class Section(_SectionBase):
+        pass
 
     # sections
     LOAD_DOGMAS = "dogmas"
@@ -252,6 +272,34 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
 
     def __str__(self) -> str:
         return self.name
+
+    @classmethod
+    def _enabled_sections_union(cls, enabled_sections: Iterable[str] = None) -> set:
+        """returns union of global and given enabled sections.
+        Needs to be overloaded by sub class using sections
+        """
+        enabled_sections = set(enabled_sections) if enabled_sections else set()
+        if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
+            enabled_sections.add(EvePlanet.Section.ASTEROID_BELTS)
+        if EVEUNIVERSE_LOAD_DOGMAS:
+            enabled_sections.add(EveType.Section.DOGMAS)
+        if EVEUNIVERSE_LOAD_GRAPHICS:
+            enabled_sections.add(EveType.Section.GRAPHICS)
+        if EVEUNIVERSE_LOAD_MARKET_GROUPS:
+            enabled_sections.add(EveType.Section.MARKET_GROUPS)
+        if EVEUNIVERSE_LOAD_MOONS:
+            enabled_sections.add(EvePlanet.Section.MOONS)
+        if EVEUNIVERSE_LOAD_PLANETS:
+            enabled_sections.add(EveSolarSystem.Section.PLANETS)
+        if EVEUNIVERSE_LOAD_STARGATES:
+            enabled_sections.add(EveSolarSystem.Section.STARGATES)
+        if EVEUNIVERSE_LOAD_STARS:
+            enabled_sections.add(EveSolarSystem.Section.STARS)
+        if EVEUNIVERSE_LOAD_STATIONS:
+            enabled_sections.add(EveSolarSystem.Section.STATIONS)
+        if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
+            enabled_sections.add(EveType.Section.TYPE_MATERIALS)
+        return enabled_sections
 
     @classmethod
     def eve_entity_category(cls) -> str:
@@ -286,7 +334,7 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         return path.split(".")
 
     @classmethod
-    def _children(cls) -> dict:
+    def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
         """returns the mapping of children for this class"""
         mappings = cls._eve_universe_meta_attr("children")
         return mappings if mappings else dict()
@@ -511,7 +559,7 @@ class EveAsteroidBelt(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
-    objects = EvePlanetChildrenManager("asteroid_belts")
+    objects = EveAsteroidBeltManager()
 
     class EveUniverseMeta:
         esi_pk = "asteroid_belt_id"
@@ -902,7 +950,7 @@ class EveMoon(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
-    objects = EvePlanetChildrenManager("moons")
+    objects = EveMoonManager()
 
     class EveUniverseMeta:
         esi_pk = "moon_id"
@@ -919,6 +967,12 @@ class EveMoon(EveUniverseEntityModel):
 class EvePlanet(EveUniverseEntityModel):
     """A planet in Eve Online"""
 
+    class Section(_SectionBase):
+        """Sections that can be optionally loaded with each instance"""
+
+        ASTEROID_BELTS = "asteroid_belts"  #:
+        MOONS = "moons"  #:
+
     eve_solar_system = models.ForeignKey(
         "EveSolarSystem", on_delete=models.CASCADE, related_name="eve_planets"
     )
@@ -933,6 +987,12 @@ class EvePlanet(EveUniverseEntityModel):
     )
     position_z = models.FloatField(
         null=True, default=None, blank=True, help_text="z position in the solar system"
+    )
+    enabled_sections = BitField(
+        flags=tuple(Section.values()),
+        help_text=(
+            "Flags for loadable sections. True if instance was loaded with section."
+        ),  # no index, because MySQL does not support it for bitwise operations
     )
 
     objects = EvePlanetManager()
@@ -951,15 +1011,13 @@ class EvePlanet(EveUniverseEntityModel):
         load_order = 205
 
     @classmethod
-    def _children(cls) -> dict:
+    def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
         children = dict()
-
-        if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
+        if cls.Section.ASTEROID_BELTS in enabled_sections:
             children["asteroid_belts"] = "EveAsteroidBelt"
-
-        if EVEUNIVERSE_LOAD_MOONS:
+        if cls.Section.MOONS in enabled_sections:
             children["moons"] = "EveMoon"
-
         return children
 
 
@@ -996,6 +1054,14 @@ class EveRegion(EveUniverseEntityModel):
 class EveSolarSystem(EveUniverseEntityModel):
     """A solar system in Eve Online"""
 
+    class Section(_SectionBase):
+        """Sections that can be optionally loaded with each instance"""
+
+        PLANETS = "planets"  #:
+        STARGATES = "stargates"  #:
+        STARS = "stars"  #
+        STATIONS = "stations"  #:
+
     eve_constellation = models.ForeignKey(
         "EveConstellation", on_delete=models.CASCADE, related_name="eve_solarsystems"
     )
@@ -1016,6 +1082,12 @@ class EveSolarSystem(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
     security_status = models.FloatField()
+    enabled_sections = BitField(
+        flags=tuple(Section.values()),
+        help_text=(
+            "Flags for loadable sections. True if instance was loaded with section."
+        ),  # no index, because MySQL does not support it for bitwise operations
+    )
 
     class EveUniverseMeta:
         esi_pk = "system_id"
@@ -1050,28 +1122,6 @@ class EveSolarSystem(EveUniverseEntityModel):
     def is_w_space(self) -> bool:
         """returns True if this solar system is in wormhole space, else False"""
         return 31000000 <= self.id < 32000000
-
-    @classmethod
-    def _children(cls) -> dict:
-        children = dict()
-
-        if EVEUNIVERSE_LOAD_PLANETS:
-            children["planets"] = "EvePlanet"
-
-        if EVEUNIVERSE_LOAD_STARGATES:
-            children["stargates"] = "EveStargate"
-
-        if EVEUNIVERSE_LOAD_STATIONS:
-            children["stations"] = "EveStation"
-
-        return children
-
-    @classmethod
-    def _disabled_fields(cls) -> set:
-        if not EVEUNIVERSE_LOAD_STARS:
-            return {"eve_star"}
-        else:
-            return {}
 
     @classmethod
     def eve_entity_category(cls) -> str:
@@ -1146,6 +1196,32 @@ class EveSolarSystem(EveUniverseEntityModel):
             ).results()
         except HTTPNotFound:
             return None
+
+    @classmethod
+    def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
+        children = dict()
+        if cls.Section.PLANETS in enabled_sections:
+            children["planets"] = "EvePlanet"
+        if cls.Section.STARGATES in enabled_sections:
+            children["stargates"] = "EveStargate"
+        if cls.Section.STATIONS in enabled_sections:
+            children["stations"] = "EveStation"
+        return children
+
+    @classmethod
+    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
+        if cls.Section.STARS not in enabled_sections:
+            return {"eve_star"}
+        return {}
+
+    @classmethod
+    def _inline_objects(cls, enabled_sections: Set[str] = None) -> dict:
+        if enabled_sections and cls.Section.PLANETS in enabled_sections:
+            return super()._inline_objects()
+        else:
+            return dict()
 
 
 class EveStar(EveUniverseEntityModel):
@@ -1288,6 +1364,14 @@ class EveStationService(models.Model):
 class EveType(EveUniverseEntityModel):
     """An inventory type in Eve Online"""
 
+    class Section(_SectionBase):
+        """Sections that can be optionally loaded with each instance"""
+
+        DOGMAS = "dogmas"  #:
+        GRAPHICS = "graphics"  #:
+        MARKET_GROUPS = "market_groups"  #
+        TYPE_MATERIALS = "type_materials"  #:
+
     capacity = models.FloatField(default=None, null=True)
     eve_group = models.ForeignKey(
         "EveGroup",
@@ -1315,6 +1399,14 @@ class EveType(EveUniverseEntityModel):
     radius = models.FloatField(default=None, null=True)
     published = models.BooleanField()  # TODO: Add index
     volume = models.FloatField(default=None, null=True)
+    enabled_sections = BitField(
+        flags=tuple(Section.values()),
+        help_text=(
+            "Flags for loadable sections. True if instance was loaded with section."
+        ),  # no index, because MySQL does not support it for bitwise operations
+    )
+
+    objects = EveTypeManager()
 
     class EveUniverseMeta:
         esi_pk = "type_id"
@@ -1332,6 +1424,7 @@ class EveType(EveUniverseEntityModel):
         load_order = 134
 
     class IconVariant(enum.Enum):
+        """Variant of icon to produce with `icon_url()`"""
 
         REGULAR = enum.auto()
         """anything, except blueprint or skin"""
@@ -1401,21 +1494,18 @@ class EveType(EveUniverseEntityModel):
         return eveimageserver.type_render_url(self.id, size=size)
 
     @classmethod
-    def _disabled_fields(cls) -> set:
+    def _disabled_fields(cls, enabled_sections: Set[str] = None) -> set:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
         disabled_fields = set()
-        if not EVEUNIVERSE_LOAD_GRAPHICS:
+        if cls.Section.GRAPHICS not in enabled_sections:
             disabled_fields.add("eve_graphic")
-
-        if not EVEUNIVERSE_LOAD_MARKET_GROUPS:
+        if cls.Section.MARKET_GROUPS not in enabled_sections:
             disabled_fields.add("eve_market_group")
-
         return disabled_fields
 
     @classmethod
     def _inline_objects(cls, enabled_sections: Set[str] = None) -> dict:
-        if EVEUNIVERSE_LOAD_DOGMAS or (
-            enabled_sections and cls.LOAD_DOGMAS in enabled_sections
-        ):
+        if enabled_sections and cls.Section.DOGMAS in enabled_sections:
             return super()._inline_objects()
         else:
             return dict()
@@ -1503,3 +1593,41 @@ class EveUnit(EveUniverseEntityModel):
             "unit_name": "name",
         }
         load_order = 100
+
+
+#######################
+# SDE models
+
+
+class EveTypeMaterial(EveUniverseBaseModel):
+    """Material type for an Eve online type"""
+
+    eve_type = models.ForeignKey(
+        EveType, on_delete=models.CASCADE, related_name="materials"
+    )
+    material_eve_type = models.ForeignKey(
+        EveType, on_delete=models.CASCADE, related_name="material_types"
+    )
+    quantity = models.PositiveIntegerField()
+
+    objects = EveTypeMaterialManager()
+
+    # class Meta:
+    #     constraints = [
+    #         models.UniqueConstraint(
+    #             fields=["eve_type", "material_eve_type"],
+    #             name="fpk_evetypematerial",
+    #         )
+    #     ]
+
+    def __str__(self) -> str:
+        return f"{self.eve_type}-{self.material_eve_type}"
+
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            f"eve_type={repr(self.eve_type)}, "
+            f"material_eve_type={repr(self.material_eve_type)}, "
+            f"quantity={self.quantity}"
+            ")"
+        )

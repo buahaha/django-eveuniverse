@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+## [0.8.0] - TBD
+
+### Added
+
+- New model for type materials
+- On-demand loading of every section(=related model disabled by default) with all manager methods
+
+### Fixed
+
+- On demand loading of planets does not work probably
+
 ## [0.7.6] - 2021-01-04
 
 ### Fixed

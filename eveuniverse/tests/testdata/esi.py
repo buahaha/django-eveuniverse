@@ -6,7 +6,7 @@ from unittest.mock import Mock
 
 from bravado.exception import HTTPNotFound
 
-from .. import models as eveuniverse_models
+from eveuniverse import models as eveuniverse_models
 
 _currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
@@ -126,6 +126,7 @@ class EsiClientStub:
             ),
             EsiEndpoint("Universe", "get_universe_stars_star_id", "star_id"),
             EsiEndpoint("Universe", "get_universe_stations_station_id", "station_id"),
+            EsiEndpoint("Universe", "get_universe_systems", None),
             EsiEndpoint("Universe", "get_universe_systems_system_id", "system_id"),
             EsiEndpoint("Universe", "get_universe_types_type_id", "type_id"),
             EsiEndpoint("Universe", "post_universe_names", None),

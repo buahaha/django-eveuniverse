@@ -4,7 +4,7 @@ import json
 import os
 from unittest.mock import patch
 
-from .my_test_data import EsiClientStub
+from .testdata.esi import EsiClientStub
 from ..models import EveCategory, EveGroup, EveType, EveRegion
 from ..tools.testdata import create_testdata, load_testdata_from_file, ModelSpec
 from ..utils import NoSocketsTestCase
@@ -33,7 +33,7 @@ class TestTestData(NoSocketsTestCase):
 
         spec = [
             ModelSpec("EveType", ids=[603]),
-            ModelSpec("EveType", ids=[621], enabled_sections=[EveType.LOAD_DOGMAS]),
+            ModelSpec("EveType", ids=[621], enabled_sections=[EveType.Section.DOGMAS]),
             ModelSpec("EveSolarSystem", ids=[30045339], include_children=True),
         ]
         filepath = f"{_currentdir}/{FILENAME_TESTDATA}"

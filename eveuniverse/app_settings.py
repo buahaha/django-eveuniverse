@@ -35,6 +35,11 @@ EVEUNIVERSE_LOAD_STARS = clean_setting("EVEUNIVERSE_LOAD_STARS", False)
 # when true will automatically load stations be with every solar system
 EVEUNIVERSE_LOAD_STATIONS = clean_setting("EVEUNIVERSE_LOAD_STATIONS", False)
 
+# when true will automatically load type materials be with every type
+EVEUNIVERSE_LOAD_TYPE_MATERIALS = clean_setting(
+    "EVEUNIVERSE_LOAD_TYPE_MATERIALS", False
+)
+
 # Global timeout for tasks in seconds to reduce task accumulation during outages
 EVEUNIVERSE_TASKS_TIME_LIMIT = clean_setting("EVEUNIVERSE_TASKS_TIME_LIMIT", 7200)
 
