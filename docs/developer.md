@@ -178,7 +178,7 @@ However, globally enabling those related models will affect all apps of a Django
 
 This might not be the best option for some use cases and we are therefore offering an alternative solution. You can also activate disabled models on-demand.
 
-#### Queries
+#### Manager methods
 
 Most manager methods like `get_or_create_esi()` and `update_or_create_esi()` take an extra argument called `enabled_sections`, which allows you to ensure specific sections are loaded with your query.
 
@@ -188,19 +188,22 @@ For example you may want to load planets just for one solar system. Here is how 
 obj, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142, include_children=True, enabled_sections=[EveSolarSystem.Section.PLANETS])
 ```
 
-You can also specify multiple sections with one query. Here is how to fetch planets and their respective moons (a section of EvePlanet) on demand:
+You can also specify multiple sections with one request. Here is how to fetch planets and their respective moons (a section of EvePlanet) on demand:
 
 ```python
 obj, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142, include_children=True, enabled_sections=[EveSolarSystem.Section.PLANETS, EvePlant.Section.MOONS])
 ```
 
-See also the API for a list of all available sections for each model that supports it, e.g. `EvePlanet`, `EveSolarSystem`, `EveType`.
+```eval_rst
+.. seealso::
+    See also the API for a list of all available sections for each model that supports it: :py:class:`eveuniverse.models.EvePlanet.Section`, :py:class:`eveuniverse.models.EveSolarSystem.Section`, :py:class:`eveuniverse.models.EveType.Section`.
+```
 
-### Preloading instances
+#### Preloading instances
 
 `eveuniverse_load_types` management command for preloading types can also include loading dogmas if requested.
 
-### Test tools
+#### Test tools
 
 The test tool for creating [test data](#test-data) also support the `enabled_sections` argument.
 
