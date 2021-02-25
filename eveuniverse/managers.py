@@ -105,12 +105,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         id = int(id)
         enabled_sections = self.model._enabled_sections_union(enabled_sections)
         try:
-            my_filter = {
-                "enabled_sections": getattr(self.model.enabled_sections, section)
-                for section in enabled_sections
-                if str(section) in self.model.Section.values()
-            }
-            obj = self.filter(**my_filter).get(id=id)
+            enabled_sections_filter = self._enabled_sections_filter(enabled_sections)
+            obj = self.filter(**enabled_sections_filter).get(id=id)
             return obj, False
         except self.model.DoesNotExist:
             return self.update_or_create_esi(
@@ -119,6 +115,13 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                 wait_for_children=wait_for_children,
                 enabled_sections=enabled_sections,
             )
+
+    def _enabled_sections_filter(self, enabled_sections: Iterable[str]) -> dict:
+        return {
+            "enabled_sections": getattr(self.model.enabled_sections, section)
+            for section in enabled_sections
+            if str(section) in self.model.Section.values()
+        }
 
     def update_or_create_esi(
         self,
@@ -141,8 +144,8 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             A tuple consisting of the requested object and a created flag
         """
         id = int(id)
-        enabled_sections = self.model._enabled_sections_union(enabled_sections)
         add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
+        enabled_sections = self.model._enabled_sections_union(enabled_sections)
         try:
             eve_data_obj = self._transform_esi_response_for_list_endpoints(
                 id, self._fetch_from_esi(id=id, enabled_sections=enabled_sections)
@@ -385,6 +388,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         *,
         include_children: bool = False,
         wait_for_children: bool = True,
+        enabled_sections: Iterable[str] = None,
     ) -> None:
         """updates or creates all objects of this class from ESI.
 
@@ -393,16 +397,20 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         Args:
             include_children: if child objects should be updated/created as well (if any)
             wait_for_children: when false all objects will be loaded async, else blocking
+            enabled_sections: Sections to load regardless of current settings
         """
         from .tasks import update_or_create_eve_object
 
         add_prefix = make_logger_prefix(f"{self.model.__name__}")
+        enabled_sections = self.model._enabled_sections_union(enabled_sections)
         if self.model._is_list_only_endpoint():
             try:
                 esi_pk = self.model._esi_pk()
                 for eve_data_obj in self._fetch_from_esi():
                     args = {"id": eve_data_obj[esi_pk]}
-                    args["defaults"] = self._defaults_from_esi_obj(eve_data_obj)
+                    args["defaults"] = self._defaults_from_esi_obj(
+                        eve_data_obj=eve_data_obj, enabled_sections=enabled_sections
+                    )
                     self.update_or_create(**args)
 
             except Exception as ex:
@@ -424,6 +432,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             id=id,
                             include_children=include_children,
                             wait_for_children=wait_for_children,
+                            enabled_sections=enabled_sections,
                         )
                     else:
                         update_or_create_eve_object.delay(
@@ -431,6 +440,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
                             entity_id=id,
                             include_children=include_children,
                             wait_for_children=wait_for_children,
+                            enabled_sections=list(enabled_sections),
                         )
             else:
                 raise TypeError(
@@ -443,6 +453,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         ids: List[int],
         include_children: bool = False,
         wait_for_children: bool = True,
+        enabled_sections: Iterable[str] = None,
     ) -> models.QuerySet:
         """Gets or creates objects in bulk.
 
@@ -453,17 +464,25 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
             ids: List of valid IDs of Eve objects
             include_children: when needed to updated/created if child objects should be updated/created as well (if any)
             wait_for_children: when true child objects will be updated/created blocking (if any), else async
+            enabled_sections: Sections to load regardless of current settings
 
         Returns:
             Queryset with all requested eve objects
         """
         ids = set(ids)
-        existing_ids = set(self.filter(id__in=ids).values_list("id", flat=True))
+        enabled_sections = self.model._enabled_sections_union(enabled_sections)
+        enabled_sections_filter = self._enabled_sections_filter(enabled_sections)
+        existing_ids = set(
+            self.filter(id__in=ids)
+            .filter(**enabled_sections_filter)
+            .values_list("id", flat=True)
+        )
         for id in ids.difference(existing_ids):
             self.update_or_create_esi(
                 id=int(id),
                 include_children=include_children,
                 wait_for_children=wait_for_children,
+                enabled_sections=enabled_sections,
             )
 
         return self.filter(id__in=ids)

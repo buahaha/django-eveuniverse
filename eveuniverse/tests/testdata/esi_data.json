@@ -880,6 +880,13 @@
                 "type_id": 1529
             }
         },
+        "get_universe_systems": [
+            30000142,
+            30001161,
+            30045339,
+            30045342,
+            31000005
+        ],
         "get_universe_systems_system_id": {
             "30000142": {
                 "constellation_id": 20000020,
@@ -922,10 +929,6 @@
                 "constellation_id": 20000785,
                 "name": "Enaluri",
                 "planets": [
-                    {
-                        "moons": null,
-                        "planet_id": 40009077
-                    },
                     {
                         "moons": [
                             40349468

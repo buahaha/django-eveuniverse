@@ -440,6 +440,10 @@ class TestEveSolarSystemWithSections(NoSocketsTestCase):
             set(obj.eve_planets.values_list("id", flat=True)), {40349467, 40349471}
         )
 
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
     def test_should_create_solar_system_with_planets_on_demand(self, mock_esi):
         # given
         mock_esi.client = EsiClientStub()
@@ -585,6 +589,219 @@ class TestEveSolarSystemWithSections(NoSocketsTestCase):
         self.assertEqual(
             set(obj.eve_stargates.values_list("id", flat=True)), {50016284, 50016286}
         )
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_create_solar_system_with_planets_moons_asteroid_belts_on_demand(
+        self, mock_esi
+    ):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        solar_system, _ = EveSolarSystem.objects.update_or_create_esi(
+            id=30045339,
+            include_children=True,
+            enabled_sections=[
+                EveSolarSystem.Section.PLANETS,
+                EvePlanet.Section.ASTEROID_BELTS,
+                EvePlanet.Section.MOONS,
+            ],
+        )
+        # then
+        self.assertEqual(solar_system.id, 30045339)
+        self.assertTrue(solar_system.enabled_sections.planets)
+        self.assertEqual(
+            set(solar_system.eve_planets.values_list("id", flat=True)),
+            {40349467, 40349471},
+        )
+        planet = solar_system.eve_planets.get(id=40349471)
+        self.assertEqual(
+            set(planet.eve_asteroid_belts.values_list("id", flat=True)), {40349487}
+        )
+        self.assertEqual(
+            set(planet.eve_moons.values_list("id", flat=True)), {40349472, 40349473}
+        )
+
+
+@patch(MANAGERS_PATH + ".esi")
+class TestEveSolarSystemBulkWithSection(NoSocketsTestCase):
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", True)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_create_solar_system_with_planets_global(self, mock_esi):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        EveSolarSystem.objects.update_or_create_all_esi(include_children=True)
+        # then
+        self.assertEqual(
+            set(
+                EveSolarSystem.objects.filter(
+                    enabled_sections=EveSolarSystem.enabled_sections.planets
+                ).values_list("id", flat=True)
+            ),
+            {30000142, 30001161, 30045339, 30045342, 31000005},
+        )
+        self.assertEqual(
+            set(EvePlanet.objects.values_list("id", flat=True)),
+            {40009077, 40349467, 40349471},
+        )
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_create_solar_system_with_planets_on_demand(self, mock_esi):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        EveSolarSystem.objects.update_or_create_all_esi(
+            include_children=True, enabled_sections=[EveSolarSystem.Section.PLANETS]
+        )
+        # then
+        self.assertEqual(
+            set(
+                EveSolarSystem.objects.filter(
+                    enabled_sections=EveSolarSystem.enabled_sections.planets
+                ).values_list("id", flat=True)
+            ),
+            {30000142, 30001161, 30045339, 30045342, 31000005},
+        )
+        self.assertEqual(
+            set(EvePlanet.objects.values_list("id", flat=True)),
+            {40009077, 40349467, 40349471},
+        )
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", True)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_get_solar_system_with_planets_global(self, mock_esi):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        EveSolarSystem.objects.bulk_get_or_create_esi(
+            ids=[30000142, 30045339], include_children=True
+        )
+        # then
+        self.assertEqual(
+            set(
+                EveSolarSystem.objects.filter(
+                    enabled_sections=EveSolarSystem.enabled_sections.planets
+                ).values_list("id", flat=True)
+            ),
+            {30000142, 30045339},
+        )
+        self.assertEqual(
+            set(EvePlanet.objects.values_list("id", flat=True)),
+            {40009077, 40349467, 40349471},
+        )
+
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_get_all_solar_system_with_planets_on_demand_from_scratch(
+        self, mock_esi
+    ):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        EveSolarSystem.objects.bulk_get_or_create_esi(
+            ids=[30000142, 30045339],
+            include_children=True,
+            enabled_sections=[EveSolarSystem.Section.PLANETS],
+        )
+        # then
+        self.assertEqual(
+            set(
+                EveSolarSystem.objects.filter(
+                    enabled_sections=EveSolarSystem.enabled_sections.planets
+                ).values_list("id", flat=True)
+            ),
+            {30000142, 30045339},
+        )
+        self.assertEqual(
+            set(EvePlanet.objects.values_list("id", flat=True)),
+            {40009077, 40349467, 40349471},
+        )
+
+    @patch(
+        MODELS_PATH + ".EveSolarSystem.objects.update_or_create_esi",
+        wraps=EveSolarSystem.objects.update_or_create_esi,
+    )
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_get_all_solar_system_with_planets_on_demand(
+        self, spy_manager, mock_esi
+    ):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        EveSolarSystem.objects.get_or_create_esi(id=30000142)
+        EveSolarSystem.objects.bulk_get_or_create_esi(
+            ids=[30000142, 30045339],
+            include_children=True,
+            enabled_sections=[EveSolarSystem.Section.PLANETS],
+        )
+        # then
+        self.assertEqual(
+            set(
+                EveSolarSystem.objects.filter(
+                    enabled_sections=EveSolarSystem.enabled_sections.planets
+                ).values_list("id", flat=True)
+            ),
+            {30000142, 30045339},
+        )
+        self.assertEqual(
+            set(EvePlanet.objects.values_list("id", flat=True)),
+            {40009077, 40349467, 40349471},
+        )
+        self.assertEqual(spy_manager.call_count, 3)
+
+    @patch(
+        MODELS_PATH + ".EveSolarSystem.objects.update_or_create_esi",
+        wraps=EveSolarSystem.objects.update_or_create_esi,
+    )
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_PLANETS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARGATES", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STARS", False)
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_STATIONS", False)
+    def test_should_get_one_and_load_one_solar_system_with_planets(
+        self, spy_manager, mock_esi
+    ):
+        # given
+        mock_esi.client = EsiClientStub()
+        # when
+        EveSolarSystem.objects.get_or_create_esi(
+            id=30000142,
+            include_children=True,
+            enabled_sections=[EveSolarSystem.Section.PLANETS],
+        )
+        EveSolarSystem.objects.bulk_get_or_create_esi(
+            ids=[30000142, 30045339],
+            include_children=True,
+            enabled_sections=[EveSolarSystem.Section.PLANETS],
+        )
+        # then
+        self.assertEqual(
+            set(
+                EveSolarSystem.objects.filter(
+                    enabled_sections=EveSolarSystem.enabled_sections.planets
+                ).values_list("id", flat=True)
+            ),
+            {30000142, 30045339},
+        )
+        self.assertEqual(
+            set(EvePlanet.objects.values_list("id", flat=True)),
+            {40009077, 40349467, 40349471},
+        )
+        self.assertEqual(spy_manager.call_count, 2)
 
 
 @patch(MANAGERS_PATH + ".esi")
