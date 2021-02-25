@@ -145,7 +145,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         add_prefix = make_logger_prefix("%s(id=%s)" % (self.model.__name__, id))
         try:
             eve_data_obj = self._transform_esi_response_for_list_endpoints(
-                id, self._fetch_from_esi(id)
+                id, self._fetch_from_esi(id=id, enabled_sections=enabled_sections)
             )
             if eve_data_obj:
                 defaults = self._defaults_from_esi_obj(eve_data_obj, enabled_sections)
@@ -189,7 +189,9 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
         return obj, created
 
-    def _fetch_from_esi(self, id: int = None) -> object:
+    def _fetch_from_esi(
+        self, id: int = None, enabled_sections: Iterable[str] = None
+    ) -> dict:
         """make request to ESI and return response data.
         Can handle raw ESI response from both list and normal endpoints.
         """
@@ -468,19 +470,19 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
 
 
 class EvePlanetManager(EveUniverseEntityModelManager):
-    def _fetch_from_esi(self, id) -> object:
+    def _fetch_from_esi(self, id: int, enabled_sections: Iterable[str] = None) -> dict:
         from .models import EveSolarSystem
 
-        esi_data = super()._fetch_from_esi(id)
+        esi_data = super()._fetch_from_esi(id=id)
         # no need to proceed if all children have been disabled
-        if not self.model._children():
+        if not self.model._children(enabled_sections):
             return esi_data
 
         if "system_id" not in esi_data:
             raise ValueError("system_id not found in moon response - data error")
 
         system_id = esi_data["system_id"]
-        solar_system_data = EveSolarSystem.objects._fetch_from_esi(system_id)
+        solar_system_data = EveSolarSystem.objects._fetch_from_esi(id=system_id)
         if "planets" not in solar_system_data:
             raise ValueError("planets not found in solar system response - data error")
 
@@ -501,19 +503,22 @@ class EvePlanetManager(EveUniverseEntityModelManager):
 
 
 class EvePlanetChildrenManager(EveUniverseEntityModelManager):
-    def __init__(self, property_name: str) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._my_property_name = property_name
+        self._my_property_name = None
 
-    def _fetch_from_esi(self, id: int) -> object:
+    def _fetch_from_esi(self, id: int, enabled_sections: Iterable[str] = None) -> dict:
         from .models import EveSolarSystem
 
-        esi_data = super()._fetch_from_esi(id)
+        if not self._my_property_name:
+            raise RuntimeWarning("my_property_name not initialzed")
+
+        esi_data = super()._fetch_from_esi(id=id)
         if "system_id" not in esi_data:
             raise ValueError("system_id not found in moon response - data error")
 
         system_id = esi_data["system_id"]
-        solar_system_data = EveSolarSystem.objects._fetch_from_esi(system_id)
+        solar_system_data = EveSolarSystem.objects._fetch_from_esi(id=system_id)
         if "planets" not in solar_system_data:
             raise ValueError("planets not found in solar system response - data error")
 
@@ -532,13 +537,25 @@ class EvePlanetChildrenManager(EveUniverseEntityModelManager):
         )
 
 
+class EveAsteroidBeltManager(EvePlanetChildrenManager):
+    def __init__(self) -> None:
+        super().__init__()
+        self._my_property_name = "asteroid_belts"
+
+
+class EveMoonManager(EvePlanetChildrenManager):
+    def __init__(self) -> None:
+        super().__init__()
+        self._my_property_name = "moons"
+
+
 class EveStargateManager(EveUniverseEntityModelManager):
     """For special handling of relations"""
 
     def update_or_create_esi(
         self,
-        id: int,
         *,
+        id: int,
         include_children: bool = False,
         wait_for_children: bool = True,
         enabled_sections: Iterable[str] = None,

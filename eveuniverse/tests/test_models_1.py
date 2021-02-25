@@ -505,6 +505,7 @@ class TestEvePlanet(NoSocketsTestCase):
         self.assertEqual(obj.eve_type, EveType.objects.get(id=2016))
         self.assertEqual(obj.eve_solar_system, EveSolarSystem.objects.get(id=30045339))
 
+    @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_ASTEROID_BELTS", False)
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_MOONS", True)
     def test_create_from_esi_with_children_1(self, mock_esi):
         mock_esi.client = EsiClientStub()
@@ -521,7 +522,6 @@ class TestEvePlanet(NoSocketsTestCase):
         self.assertEqual(obj.position_z, 48099232021.23506)
         self.assertEqual(obj.eve_type, EveType.objects.get(id=2016))
         self.assertEqual(obj.eve_solar_system, EveSolarSystem.objects.get(id=30045339))
-
         self.assertTrue(EveMoon.objects.filter(id=40349468).exists())
 
     @patch(MODELS_PATH + ".EVEUNIVERSE_LOAD_ASTEROID_BELTS", True)
@@ -530,8 +530,7 @@ class TestEvePlanet(NoSocketsTestCase):
         mock_esi.client = EsiClientStub()
 
         obj, created = EvePlanet.objects.update_or_create_esi(
-            id=40349471,
-            include_children=True,
+            id=40349471, include_children=True
         )
         self.assertTrue(created)
         self.assertEqual(obj.id, 40349471)

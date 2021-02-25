@@ -30,16 +30,17 @@ from .app_settings import (
 from .constants import EVE_CATEGORY_ID_BLUEPRINT, EVE_CATEGORY_ID_SKIN
 from .core import eveimageserver, eveskinserver
 from .managers import (
-    EveUniverseBaseModelManager,
-    EveUniverseEntityModelManager,
+    EveAsteroidBeltManager,
     EveMarketPriceManager,
-    EvePlanetChildrenManager,
     EvePlanetManager,
+    EveMoonManager,
     EveStargateManager,
     EveStationManager,
     EveEntityManager,
     EveTypeManager,
     EveTypeMaterialManager,
+    EveUniverseBaseModelManager,
+    EveUniverseEntityModelManager,
 )
 from .providers import esi
 from .utils import LoggerAddTag
@@ -278,6 +279,16 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
         Needs to be overloaded by sub class using sections
         """
         enabled_sections = set(enabled_sections) if enabled_sections else set()
+        if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
+            enabled_sections.add(EvePlanet.Section.ASTEROID_BELTS)
+        if EVEUNIVERSE_LOAD_DOGMAS:
+            enabled_sections.add(EveType.Section.DOGMAS)
+        if EVEUNIVERSE_LOAD_GRAPHICS:
+            enabled_sections.add(EveType.Section.GRAPHICS)
+        if EVEUNIVERSE_LOAD_MARKET_GROUPS:
+            enabled_sections.add(EveType.Section.MARKET_GROUPS)
+        if EVEUNIVERSE_LOAD_MOONS:
+            enabled_sections.add(EvePlanet.Section.MOONS)
         if EVEUNIVERSE_LOAD_PLANETS:
             enabled_sections.add(EveSolarSystem.Section.PLANETS)
         if EVEUNIVERSE_LOAD_STARGATES:
@@ -286,12 +297,6 @@ class EveUniverseEntityModel(EveUniverseBaseModel):
             enabled_sections.add(EveSolarSystem.Section.STARS)
         if EVEUNIVERSE_LOAD_STATIONS:
             enabled_sections.add(EveSolarSystem.Section.STATIONS)
-        if EVEUNIVERSE_LOAD_DOGMAS:
-            enabled_sections.add(EveType.Section.DOGMAS)
-        if EVEUNIVERSE_LOAD_GRAPHICS:
-            enabled_sections.add(EveType.Section.GRAPHICS)
-        if EVEUNIVERSE_LOAD_MARKET_GROUPS:
-            enabled_sections.add(EveType.Section.MARKET_GROUPS)
         if EVEUNIVERSE_LOAD_TYPE_MATERIALS:
             enabled_sections.add(EveType.Section.TYPE_MATERIALS)
         return enabled_sections
@@ -554,7 +559,7 @@ class EveAsteroidBelt(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
-    objects = EvePlanetChildrenManager("asteroid_belts")
+    objects = EveAsteroidBeltManager()
 
     class EveUniverseMeta:
         esi_pk = "asteroid_belt_id"
@@ -945,7 +950,7 @@ class EveMoon(EveUniverseEntityModel):
         null=True, default=None, blank=True, help_text="z position in the solar system"
     )
 
-    objects = EvePlanetChildrenManager("moons")
+    objects = EveMoonManager()
 
     class EveUniverseMeta:
         esi_pk = "moon_id"
@@ -962,6 +967,12 @@ class EveMoon(EveUniverseEntityModel):
 class EvePlanet(EveUniverseEntityModel):
     """A planet in Eve Online"""
 
+    class Section(_SectionBase):
+        """Sections that can be optionally loaded with each instance"""
+
+        ASTEROID_BELTS = "asteroid_belts"  #:
+        MOONS = "moons"  #:
+
     eve_solar_system = models.ForeignKey(
         "EveSolarSystem", on_delete=models.CASCADE, related_name="eve_planets"
     )
@@ -976,6 +987,12 @@ class EvePlanet(EveUniverseEntityModel):
     )
     position_z = models.FloatField(
         null=True, default=None, blank=True, help_text="z position in the solar system"
+    )
+    enabled_sections = BitField(
+        flags=tuple(Section.values()),
+        help_text=(
+            "Flags for loadable sections. True if instance was loaded with section."
+        ),  # no index, because MySQL does not support it for bitwise operations
     )
 
     objects = EvePlanetManager()
@@ -995,14 +1012,12 @@ class EvePlanet(EveUniverseEntityModel):
 
     @classmethod
     def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
+        enabled_sections = cls._enabled_sections_union(enabled_sections)
         children = dict()
-
-        if EVEUNIVERSE_LOAD_ASTEROID_BELTS:
+        if cls.Section.ASTEROID_BELTS in enabled_sections:
             children["asteroid_belts"] = "EveAsteroidBelt"
-
-        if EVEUNIVERSE_LOAD_MOONS:
+        if cls.Section.MOONS in enabled_sections:
             children["moons"] = "EveMoon"
-
         return children
 
 
@@ -1185,7 +1200,7 @@ class EveSolarSystem(EveUniverseEntityModel):
     @classmethod
     def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
         enabled_sections = cls._enabled_sections_union(enabled_sections)
-        children = {}
+        children = dict()
         if cls.Section.PLANETS in enabled_sections:
             children["planets"] = "EvePlanet"
         if cls.Section.STARGATES in enabled_sections:
