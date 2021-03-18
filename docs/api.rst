@@ -36,6 +36,11 @@ eveskinserver
 .. automodule:: eveuniverse.core.eveskinserver
     :members:
 
+fuzzwork
+----------------
+.. automodule:: eveuniverse.core.fuzzwork
+    :members:
+
 Eve Models
 ==========
 

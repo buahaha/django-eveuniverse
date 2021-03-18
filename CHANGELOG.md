@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
-- New model for type materials
+- New model `EveTypeMaterial` for type materials
 - On-demand loading of every section(=related model disabled by default) with all manager methods
+- Calculate nearest celestials within solar systems with `EveSolarSystem.nearest_celestial()`
 
 ### Fixed
 
