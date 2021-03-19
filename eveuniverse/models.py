@@ -1632,7 +1632,7 @@ class EveUnit(EveUniverseEntityModel):
 # SDE models
 
 
-class EveTypeMaterial(EveUniverseBaseModel):
+class EveTypeMaterial(EveUniverseInlineModel):
     """Material type for an Eve online type"""
 
     eve_type = models.ForeignKey(
@@ -1652,6 +1652,9 @@ class EveTypeMaterial(EveUniverseBaseModel):
                 name="fpk_evetypematerial",
             )
         ]
+
+    class EveUniverseMeta:
+        load_order = 137
 
     def __str__(self) -> str:
         return f"{self.eve_type}-{self.material_eve_type}"

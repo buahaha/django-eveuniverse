@@ -35,6 +35,7 @@ from ..models import (
     EveType,
     EveTypeDogmaAttribute,
     EveTypeDogmaEffect,
+    EveTypeMaterial,
     EveUnit,
     EveEntity,
 )
@@ -66,6 +67,7 @@ class TestEveUniverseBaseModel(NoSocketsTestCase):
                 EveCategory,  # load_order = 130
                 EveGroup,  # load_order = 132
                 EveType,  # load_order = 134
+                EveTypeMaterial,  # load_order = 135
                 EveDogmaAttribute,  # load_order = 140
                 EveDogmaEffect,  # load_order = 142
                 EveDogmaEffectModifier,  # load_order = 144
