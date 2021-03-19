@@ -1,10 +1,12 @@
 from unittest.mock import patch, Mock
 
 from bravado.exception import HTTPInternalServerError
+import requests_mock
 
+from django.core.cache import cache
 from django.test import TestCase
 
-from ..core import eveimageserver, esitools, eveskinserver
+from ..core import eveimageserver, esitools, eveskinserver, fuzzwork
 from .testdata.esi import EsiClientStub
 from ..utils import NoSocketsTestCase
 
@@ -199,3 +201,71 @@ class TestEveSkinServer(TestCase):
         """when called with invalid size, will raise exception"""
         with self.assertRaises(ValueError):
             eveskinserver.type_icon_url(42, size=22)
+
+
+@requests_mock.Mocker()
+class TestFuzzworkNearestCelestial(TestCase):
+    def setUp(self) -> None:
+        cache.clear()
+
+    def test_should_return_item_from_api(self, requests_mocker):
+        # given
+        item = {
+            "itemName": "Colelie VI - Asteroid Belt 1",
+            "typeid": 15,
+            "itemid": 40170698,
+            "distance": 701983768513.2802,
+        }
+        requests_mocker.register_uri(
+            "GET",
+            url="https://www.fuzzwork.co.uk/api/nearestCelestial.php?x=660502472160&y=-130687672800&z=-813545103840&solarsystemid=30002682",
+            json=item,
+        )
+        # when
+        result = fuzzwork.nearest_celestial(
+            x=660502472160, y=-130687672800, z=-813545103840, solar_system_id=30002682
+        )
+        # then
+        self.assertEqual(result.id, 40170698)
+        self.assertEqual(result.name, "Colelie VI - Asteroid Belt 1")
+        self.assertEqual(result.type_id, 15)
+        self.assertEqual(result.distance, 701983768513.2802)
+        self.assertEqual(requests_mocker.call_count, 1)
+
+    def test_should_return_item_from_cache(self, requests_mocker):
+        # given
+        item = {
+            "itemName": "Colelie VI - Asteroid Belt 1",
+            "typeid": 15,
+            "itemid": 40170698,
+            "distance": 701983768513.2802,
+        }
+        requests_mocker.register_uri(
+            "GET",
+            url="https://www.fuzzwork.co.uk/api/nearestCelestial.php?x=1&y=2&z=3&solarsystemid=99",
+            json=item,
+        )
+        fuzzwork.nearest_celestial(x=1, y=2, z=3, solar_system_id=99)
+        # when
+        result = fuzzwork.nearest_celestial(x=1, y=2, z=3, solar_system_id=99)
+        # then
+        self.assertEqual(result.id, 40170698)
+        self.assertEqual(requests_mocker.call_count, 1)
+
+    def test_should_return_none_if_nothing_found(self, requests_mocker):
+        # given
+        item = {
+            "itemName": None,
+            "typeid": 15,
+            "itemid": 40170698,
+            "distance": 701983768513.2802,
+        }
+        requests_mocker.register_uri(
+            "GET",
+            url="https://www.fuzzwork.co.uk/api/nearestCelestial.php?x=1&y=2&z=3&solarsystemid=30002682",
+            json=item,
+        )
+        # when
+        result = fuzzwork.nearest_celestial(x=1, y=2, z=3, solar_system_id=30002682)
+        # then
+        self.assertIsNone(result)

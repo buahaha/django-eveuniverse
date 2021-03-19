@@ -453,6 +453,24 @@
                     3800
                 ]
             },
+            "8": {
+                "category_id": 2,
+                "group_id": 8,
+                "name": "Moon",
+                "published": false,
+                "types": [
+                    14
+                ]
+            },
+            "9": {
+                "category_id": 2,
+                "group_id": 9,
+                "name": "Asteroid Belt",
+                "published": false,
+                "types": [
+                    15
+                ]
+            },
             "18": {
                 "category_id": 4,
                 "group_id": 18,
@@ -1009,6 +1027,35 @@
                 "published": false,
                 "radius": 10000,
                 "type_id": 13,
+                "volume": 1
+            },
+            "14": {
+                "capacity": 0,
+                "description": "",
+                "graphic_id": 10,
+                "group_id": 8,
+                "icon_id": 10141,
+                "mass": 1e+35,
+                "name": "Moon",
+                "packaged_volume": 1,
+                "portion_size": 1,
+                "published": false,
+                "radius": 10000,
+                "type_id": 14,
+                "volume": 1
+            },
+            "15": {
+                "capacity": 0,
+                "description": "",
+                "group_id": 9,
+                "icon_id": 15,
+                "mass": 1e+35,
+                "name": "Asteroid Belt",
+                "packaged_volume": 1,
+                "portion_size": 1,
+                "published": false,
+                "radius": 1,
+                "type_id": 15,
                 "volume": 1
             },
             "16": {

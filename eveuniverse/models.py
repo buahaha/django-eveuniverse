@@ -27,8 +27,8 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_TYPE_MATERIALS,
     EVEUNIVERSE_USE_EVESKINSERVER,
 )
-from .constants import EVE_CATEGORY_ID_BLUEPRINT, EVE_CATEGORY_ID_SKIN
-from .core import eveimageserver, eveskinserver
+from . import constants
+from .core import eveimageserver, eveskinserver, fuzzwork
 from .managers import (
     EveAsteroidBeltManager,
     EveMarketPriceManager,
@@ -1103,6 +1103,11 @@ class EveSolarSystem(EveUniverseEntityModel):
         children = {}
         load_order = 194
 
+    NearestCelestial = namedtuple(
+        "NearestCelestial", ["eve_type", "eve_object", "distance"]
+    )
+    NearestCelestial.__doc__ = "Container for a nearest celestial"
+
     @property
     def is_high_sec(self) -> bool:
         """returns True if this solar system is in high sec, else False"""
@@ -1196,6 +1201,34 @@ class EveSolarSystem(EveUniverseEntityModel):
             ).results()
         except HTTPNotFound:
             return None
+
+    def nearest_celestial(self, x: int, y: int, z: int) -> Optional[NearestCelestial]:
+        """Return nearest celestial to given coordinates as eveuniverse object.
+
+        Will return None if none is found.
+        """
+        item = fuzzwork.nearest_celestial(x, y, z, solar_system_id=self.id)
+        if not item:
+            return None
+
+        eve_type, _ = EveType.objects.get_or_create_esi(id=item.type_id)
+        if eve_type.eve_group_id == constants.EVE_GROUP_ID_ASTEROID_BELT:
+            MyClass = EveAsteroidBelt
+        elif eve_type.eve_group_id == constants.EVE_GROUP_ID_MOON:
+            MyClass = EveMoon
+        elif eve_type.eve_group_id == constants.EVE_GROUP_ID_PLANET:
+            MyClass = EvePlanet
+        elif eve_type.eve_group_id == constants.EVE_GROUP_ID_STARGATE:
+            MyClass = EveStargate
+        elif eve_type.eve_group_id == constants.EVE_GROUP_ID_STATION:
+            MyClass = EveStation
+        else:
+            return None
+
+        obj, _ = MyClass.objects.get_or_create_esi(id=item.id)
+        return self.NearestCelestial(
+            eve_type=eve_type, eve_object=obj, distance=item.distance
+        )
 
     @classmethod
     def _children(cls, enabled_sections: Iterable[str] = None) -> dict:
@@ -1465,10 +1498,10 @@ class EveType(EveUniverseEntityModel):
             if not category_id:
                 category_id = self.eve_group.eve_category_id
 
-            if category_id == EVE_CATEGORY_ID_BLUEPRINT:
+            if category_id == constants.EVE_CATEGORY_ID_BLUEPRINT:
                 variant = self.IconVariant.BPO
 
-            elif category_id == EVE_CATEGORY_ID_SKIN:
+            elif category_id == constants.EVE_CATEGORY_ID_SKIN:
                 variant = self.IconVariant.SKIN
 
         if variant is self.IconVariant.BPO:
@@ -1599,7 +1632,7 @@ class EveUnit(EveUniverseEntityModel):
 # SDE models
 
 
-class EveTypeMaterial(EveUniverseBaseModel):
+class EveTypeMaterial(EveUniverseInlineModel):
     """Material type for an Eve online type"""
 
     eve_type = models.ForeignKey(
@@ -1619,6 +1652,9 @@ class EveTypeMaterial(EveUniverseBaseModel):
                 name="fpk_evetypematerial",
             )
         ]
+
+    class EveUniverseMeta:
+        load_order = 137
 
     def __str__(self) -> str:
         return f"{self.eve_type}-{self.material_eve_type}"
