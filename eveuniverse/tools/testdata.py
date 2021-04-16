@@ -1,17 +1,15 @@
-from copy import deepcopy
-from collections import OrderedDict, namedtuple
-import logging
 import json
-from typing import List, Iterable
+import logging
+from collections import OrderedDict, namedtuple
+from copy import deepcopy
+from typing import Iterable, List
 
 from django.core.serializers.json import DjangoJSONEncoder
-
-from eveuniverse.models import EveUniverseBaseModel, EveSolarSystem, EveStargate
+from eveuniverse.models import EveSolarSystem, EveStargate, EveUniverseBaseModel
 
 from .. import __title__
 from ..core.esitools import is_esi_online
 from ..utils import LoggerAddTag
-
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 

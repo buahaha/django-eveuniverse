@@ -34,10 +34,8 @@ django.setup()
 import logging
 
 from django.core.cache import cache
-
 from eveuniverse.models import *
 from eveuniverse.providers import esi
-
 
 cache.clear()
 logger = logging.getLogger("__name__")

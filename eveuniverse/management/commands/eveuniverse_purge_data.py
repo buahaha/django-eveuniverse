@@ -5,8 +5,8 @@ from django.db import transaction
 
 from ... import __title__
 from ...models import EveUniverseBaseModel
-from . import get_input
 from ...utils import LoggerAddTag
+from . import get_input
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 

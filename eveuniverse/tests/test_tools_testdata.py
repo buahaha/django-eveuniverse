@@ -1,13 +1,13 @@
-from collections import OrderedDict
 import inspect
 import json
 import os
+from collections import OrderedDict
 from unittest.mock import patch
 
-from .testdata.esi import EsiClientStub
-from ..models import EveCategory, EveGroup, EveType, EveRegion
-from ..tools.testdata import create_testdata, load_testdata_from_file, ModelSpec
+from ..models import EveCategory, EveGroup, EveRegion, EveType
+from ..tools.testdata import ModelSpec, create_testdata, load_testdata_from_file
 from ..utils import NoSocketsTestCase
+from .testdata.esi import EsiClientStub
 
 _currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 

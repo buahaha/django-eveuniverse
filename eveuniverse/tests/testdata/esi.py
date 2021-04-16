@@ -1,7 +1,7 @@
-from collections import namedtuple
 import inspect
 import json
 import os
+from collections import namedtuple
 from unittest.mock import Mock
 
 from bravado.exception import HTTPNotFound

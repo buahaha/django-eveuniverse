@@ -1,24 +1,23 @@
-from collections import namedtuple
 import enum
 import inspect
 import logging
 import math
 import sys
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Set
-
-from bravado.exception import HTTPNotFound
-
-from django.db import models
-from django.contrib.staticfiles.storage import staticfiles_storage
+from collections import namedtuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from bitfield import BitField
+from bravado.exception import HTTPNotFound
 
-from . import __title__
+from django.contrib.staticfiles.storage import staticfiles_storage
+from django.db import models
+
+from . import __title__, constants
 from .app_settings import (
-    EVEUNIVERSE_LOAD_DOGMAS,
-    EVEUNIVERSE_LOAD_MARKET_GROUPS,
     EVEUNIVERSE_LOAD_ASTEROID_BELTS,
+    EVEUNIVERSE_LOAD_DOGMAS,
     EVEUNIVERSE_LOAD_GRAPHICS,
+    EVEUNIVERSE_LOAD_MARKET_GROUPS,
     EVEUNIVERSE_LOAD_MOONS,
     EVEUNIVERSE_LOAD_PLANETS,
     EVEUNIVERSE_LOAD_STARGATES,
@@ -27,16 +26,15 @@ from .app_settings import (
     EVEUNIVERSE_LOAD_TYPE_MATERIALS,
     EVEUNIVERSE_USE_EVESKINSERVER,
 )
-from . import constants
 from .core import eveimageserver, eveskinserver, fuzzwork
 from .managers import (
     EveAsteroidBeltManager,
+    EveEntityManager,
     EveMarketPriceManager,
-    EvePlanetManager,
     EveMoonManager,
+    EvePlanetManager,
     EveStargateManager,
     EveStationManager,
-    EveEntityManager,
     EveTypeManager,
     EveTypeMaterialManager,
     EveUniverseBaseModelManager,
@@ -44,7 +42,6 @@ from .managers import (
 )
 from .providers import esi
 from .utils import LoggerAddTag
-
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 

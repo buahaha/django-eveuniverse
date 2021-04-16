@@ -1,24 +1,22 @@
-from collections import namedtuple
 import datetime as dt
 import logging
-from typing import List, Iterable, Optional, Set, Tuple
+from collections import namedtuple
+from typing import Iterable, List, Optional, Set, Tuple
 from urllib.parse import urljoin
 
 import requests
+from bravado.exception import HTTPNotFound
 
 from django.core.cache import cache
 from django.db import models, transaction
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
 
-from bravado.exception import HTTPNotFound
-
 from . import __title__
 from .app_settings import EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
 from .helpers import EveEntityNameResolver, get_or_create_esi_or_none
 from .providers import esi
-from .utils import chunks, LoggerAddTag, make_logger_prefix
-
+from .utils import LoggerAddTag, chunks, make_logger_prefix
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 

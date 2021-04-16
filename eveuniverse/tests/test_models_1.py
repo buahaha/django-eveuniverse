@@ -1,16 +1,13 @@
 import datetime as dt
-
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from bravado.exception import HTTPNotFound
 
 from django.utils.timezone import now
 
-from .testdata.esi import EsiClientStub, BravadoOperationStub
 from ..helpers import meters_to_ly
 from ..models import (
-    EveUniverseBaseModel,
     EveAncestry,
     EveAsteroidBelt,
     EveBloodline,
@@ -19,6 +16,7 @@ from ..models import (
     EveDogmaAttribute,
     EveDogmaEffect,
     EveDogmaEffectModifier,
+    EveEntity,
     EveFaction,
     EveGraphic,
     EveGroup,
@@ -37,9 +35,10 @@ from ..models import (
     EveTypeDogmaEffect,
     EveTypeMaterial,
     EveUnit,
-    EveEntity,
+    EveUniverseBaseModel,
 )
 from ..utils import NoSocketsTestCase
+from .testdata.esi import BravadoOperationStub, EsiClientStub
 
 unittest.util._MAX_LENGTH = 1000
 MODELS_PATH = "eveuniverse.models"

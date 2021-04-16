@@ -1,4 +1,4 @@
-from ..helpers import meters_to_ly, meters_to_au, EveEntityNameResolver
+from ..helpers import EveEntityNameResolver, meters_to_au, meters_to_ly
 from ..utils import NoSocketsTestCase
 
 

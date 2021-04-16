@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from django.test.utils import override_settings
 
-from .testdata.esi import EsiClientStub
 from ..constants import (
     EVE_CATEGORY_ID_BLUEPRINT,
     EVE_CATEGORY_ID_SKIN,
@@ -17,6 +16,7 @@ from ..models import (
     EveConstellation,
     EveDogmaAttribute,
     EveDogmaEffect,
+    EveEntity,
     EveGraphic,
     EveGroup,
     EveMarketGroup,
@@ -24,9 +24,9 @@ from ..models import (
     EveType,
     EveTypeDogmaEffect,
     EveUnit,
-    EveEntity,
 )
 from ..utils import NoSocketsTestCase
+from .testdata.esi import EsiClientStub
 
 unittest.util._MAX_LENGTH = 1000
 MODELS_PATH = "eveuniverse.models"

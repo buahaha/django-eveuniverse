@@ -3,28 +3,28 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.test.utils import override_settings
 
-from .testdata.esi import EsiClientStub
 from ..models import (
     EveCategory,
+    EveConstellation,
     EveDogmaAttribute,
     EveGroup,
     EveRegion,
-    EveConstellation,
     EveSolarSystem,
     EveType,
 )
 from ..tasks import (
+    create_eve_entities,
     load_eve_object,
     load_map,
     load_ship_types,
     load_structure_types,
+    update_market_prices,
     update_or_create_eve_object,
     update_or_create_inline_object,
-    create_eve_entities,
     update_unresolved_eve_entities,
-    update_market_prices,
 )
 from ..utils import NoSocketsTestCase
+from .testdata.esi import EsiClientStub
 
 MODULE_PATH = "eveuniverse.tasks"
 

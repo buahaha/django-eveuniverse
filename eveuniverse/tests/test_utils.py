@@ -8,22 +8,21 @@ from django.utils import translation
 from django.utils.html import mark_safe
 
 from ..utils import (
-    clean_setting,
-    messages_plus,
-    chunks,
-    timeuntil_str,
     NoSocketsTestCase,
     SocketAccessError,
-    app_labels,
+    add_bs_label_html,
     add_no_wrap_html,
-    yesno_str,
+    app_labels,
+    chunks,
+    clean_setting,
     create_bs_button_html,
     create_bs_glyph_html,
     create_link_html,
-    add_bs_label_html,
+    messages_plus,
     set_test_logger,
+    timeuntil_str,
+    yesno_str,
 )
-
 
 MODULE_PATH = "eveuniverse.utils"
 logger = set_test_logger(MODULE_PATH, __file__)

@@ -4,10 +4,12 @@
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import sphinx_rtd_theme  # noqa
-from recommonmark.transform import AutoStructify
 import os
 import sys
+
+import sphinx_rtd_theme  # noqa
+from recommonmark.transform import AutoStructify
+
 import django
 
 sys.path.insert(0, os.path.abspath(".."))

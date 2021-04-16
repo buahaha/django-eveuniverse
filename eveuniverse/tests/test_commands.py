@@ -1,13 +1,12 @@
-from unittest.mock import patch
 from io import StringIO
+from unittest.mock import patch
 
 from django.core.management import call_command
 from django.test.utils import override_settings
 
-from .testdata.esi import EsiClientStub
 from ..models import EveCategory, EveGroup, EveType
 from ..utils import NoSocketsTestCase
-
+from .testdata.esi import EsiClientStub
 
 PACKAGE_PATH = "eveuniverse.management.commands"
 

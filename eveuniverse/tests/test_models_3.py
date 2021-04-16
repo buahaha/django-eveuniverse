@@ -3,20 +3,19 @@ from unittest.mock import patch
 import requests_mock
 
 from ..core import fuzzwork
-from .testdata.esi import EsiClientStub
-from .testdata.sde import sde_data, type_materials_cache_content
 from ..models import (
     EveAsteroidBelt,
     EveMoon,
-    EveStargate,
     EvePlanet,
+    EveSolarSystem,
+    EveStargate,
+    EveStation,
     EveType,
     EveTypeMaterial,
-    EveSolarSystem,
-    EveStation,
 )
 from ..utils import NoSocketsTestCase
-
+from .testdata.esi import EsiClientStub
+from .testdata.sde import sde_data, type_materials_cache_content
 
 MODELS_PATH = "eveuniverse.models"
 MANAGERS_PATH = "eveuniverse.managers"

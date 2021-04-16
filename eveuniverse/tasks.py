@@ -1,16 +1,15 @@
 import logging
-from typing import List, Iterable
-
-from celery import shared_task
+from typing import Iterable, List
 
 from bravado.exception import HTTPBadGateway, HTTPGatewayTimeout, HTTPServiceUnavailable
-from . import __title__
-from . import models
+from celery import shared_task
+
+from . import __title__, models
 from .app_settings import (
-    EVEUNIVERSE_LOAD_DOGMAS,
-    EVEUNIVERSE_LOAD_MARKET_GROUPS,
     EVEUNIVERSE_LOAD_ASTEROID_BELTS,
+    EVEUNIVERSE_LOAD_DOGMAS,
     EVEUNIVERSE_LOAD_GRAPHICS,
+    EVEUNIVERSE_LOAD_MARKET_GROUPS,
     EVEUNIVERSE_LOAD_MOONS,
     EVEUNIVERSE_LOAD_PLANETS,
     EVEUNIVERSE_LOAD_STARGATES,
@@ -19,10 +18,9 @@ from .app_settings import (
     EVEUNIVERSE_TASKS_TIME_LIMIT,
 )
 from .constants import EVE_CATEGORY_ID_SHIP, EVE_CATEGORY_ID_STRUCTURE
-from .models import EveUniverseEntityModel, EveEntity, EveMarketPrice
+from .models import EveEntity, EveMarketPrice, EveUniverseEntityModel
 from .providers import esi
 from .utils import LoggerAddTag
-
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 # logging.getLogger("esi").setLevel(logging.INFO)

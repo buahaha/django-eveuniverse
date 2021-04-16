@@ -1,17 +1,17 @@
 import logging
+
 from django.core.management.base import BaseCommand
 
 from ... import __title__
 from ...core.esitools import is_esi_online
 from ...tasks import (
+    _eve_object_names_to_be_loaded,
     load_map,
     load_ship_types,
     load_structure_types,
-    _eve_object_names_to_be_loaded,
 )
 from ...utils import LoggerAddTag
 from . import get_input
-
 
 logger = LoggerAddTag(logging.getLogger(__name__), __title__)
 

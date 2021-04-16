@@ -1,14 +1,14 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from bravado.exception import HTTPInternalServerError
 import requests_mock
+from bravado.exception import HTTPInternalServerError
 
 from django.core.cache import cache
 from django.test import TestCase
 
-from ..core import eveimageserver, esitools, eveskinserver, fuzzwork
-from .testdata.esi import EsiClientStub
+from ..core import esitools, eveimageserver, eveskinserver, fuzzwork
 from ..utils import NoSocketsTestCase
+from .testdata.esi import EsiClientStub
 
 
 @patch("eveuniverse.core.esitools.esi")
