@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - New model `EveTypeMaterial` for type materials
 - On-demand loading of every section(=related model disabled by default) with all manager methods
 - Calculate nearest celestials within solar systems with `EveSolarSystem.nearest_celestial()`
+- Added isort to CI
+- Migrate to codecov
+
+### Changed
+
+- Removed tests for Django 3.0
 
 ### Fixed
 
