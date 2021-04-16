@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
-## [0.8.0] - TBD
+## [0.8.0] - 2021-04-16
 
 ### Added
 
@@ -15,11 +15,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - On-demand loading of every section(=related model disabled by default) with all manager methods
 - Calculate nearest celestials within solar systems with `EveSolarSystem.nearest_celestial()`
 - Added isort to CI
-- Migrate to codecov
+- Migrated to codecov
 
 ### Changed
 
-- Removed tests for Django 3.0
+- Removed CI tests for Django 3.0
 
 ### Fixed
 
