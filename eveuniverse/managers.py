@@ -467,7 +467,7 @@ class EveUniverseEntityModelManager(EveUniverseBaseModelManager):
         Returns:
             Queryset with all requested eve objects
         """
-        ids = set(ids)
+        ids = set(map(int, ids))
         enabled_sections = self.model._enabled_sections_union(enabled_sections)
         enabled_sections_filter = self._enabled_sections_filter(enabled_sections)
         existing_ids = set(
@@ -852,7 +852,7 @@ class EveEntityManager(EveUniverseEntityModelManager):
             EveEntityNameResolver object helpful for quick resolving a large amount
             of IDs
         """
-        ids = set(ids)
+        ids = set(map(int, ids))
         self.bulk_create_esi(ids)
         return EveEntityNameResolver(
             {
@@ -877,7 +877,7 @@ class EveMarketPriceManager(models.Manager):
         if minutes_until_stale is None:
             minutes_until_stale = self.model.DEFAULT_MINUTES_UNTIL_STALE
 
-        logger.info("Fetching market prices from ESI")
+        logger.info("Fetching market prices from ESI...")
         entries = esi.client.Market.get_markets_prices().results()
         if not entries:
             return 0
@@ -897,7 +897,9 @@ class EveMarketPriceManager(models.Manager):
                 logger.info("Market prices are up to date")
                 return 0
 
-            logger.info("Updating market prices for %s types", len(need_updating_ids))
+            logger.info(
+                "Updating market prices for %s types...", len(need_updating_ids)
+            )
             self.filter(eve_type_id__in=need_updating_ids).delete()
             market_prices = [
                 self.model(
@@ -910,6 +912,9 @@ class EveMarketPriceManager(models.Manager):
             ]
             self.bulk_create(
                 market_prices, batch_size=EVEUNIVERSE_BULK_METHODS_BATCH_SIZE
+            )
+            logger.info(
+                "Completed updating market prices for %s types.", len(need_updating_ids)
             )
             return len(market_prices)
 
