@@ -6,7 +6,7 @@ Complete set of Eve Online Universe models in Django with on-demand loading from
 [![python](https://img.shields.io/pypi/pyversions/django-eveuniverse)](https://pypi.org/project/django-eveuniverse/)
 [![django](https://img.shields.io/pypi/djversions/django-eveuniverse?label=django)](https://pypi.org/project/django-eveuniverse/)
 [![pipeline](https://gitlab.com/ErikKalkoken/django-eveuniverse/badges/master/pipeline.svg)](https://gitlab.com/ErikKalkoken/django-eveuniverse/-/pipelines)
-[!![coverage](https://gitlab.com/ErikKalkoken/django-eveuniverse/badges/master/coverage.svg)](https://gitlab.com/ErikKalkoken/django-eveuniverse/-/pipelines)
+[![codecov](https://codecov.io/gl/ErikKalkoken/django-eveuniverse/branch/master/graph/badge.svg?token=YZF6RVSK0P)](https://codecov.io/gl/ErikKalkoken/django-eveuniverse)
 [![license](https://img.shields.io/badge/license-MIT-green)](https://gitlab.com/ErikKalkoken/django-eveuniverse/-/blob/master/LICENSE)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)

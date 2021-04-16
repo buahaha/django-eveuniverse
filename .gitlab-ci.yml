@@ -72,7 +72,7 @@ test-38-django22:
 test-38-django31:
   extends: .test-py38
   script:
-  - tox -e py38-
+  - tox -e py38-django31
   - bash <(curl -s https://codecov.io/bash)
 
 deploy-pypi:
