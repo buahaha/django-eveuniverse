@@ -8,7 +8,6 @@ import os
 import sys
 
 import sphinx_rtd_theme  # noqa
-from recommonmark.transform import AutoStructify
 
 import django
 
@@ -41,10 +40,11 @@ author = "Erik Kalkoken"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "recommonmark",
-    "sphinx_rtd_theme",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "myst_parser",
+    "sphinx_rtd_theme",
     "sphinxcontrib_django",
 ]
 
@@ -70,15 +70,5 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = []
 
-# Common
-
-
-def setup(app):
-    app.add_config_value(
-        "recommonmark_config",
-        {
-            "auto_toc_tree_section": "Contents",
-        },
-        True,
-    )
-    app.add_transform(AutoStructify)
+# autodoc
+add_module_names = False

@@ -24,7 +24,7 @@ By default only the core models are automatically loaded on-demand. If you want 
 
 This app uses [Celery](https://docs.celeryproject.org/en/stable/index.html) for loading large sets of data, e.g. with the load commands. Please make sure celery is setup and working for your Django project.
 
-```eval_rst
+```{eval-rst}
 .. note::
     **Note on celery worker setup**
 
@@ -43,7 +43,7 @@ Finally restart your Django instance so your changes become effective.
 
 ## Updating
 
-```eval_rst
+```{eval-rst}
 .. hint::
     Before updating please always check the `Change Log <https://gitlab.com/ErikKalkoken/django-eveuniverse/-/blob/master/CHANGELOG.md>`_ for any special instructions on updating or important changes that might affect your project.
 ```
@@ -62,7 +62,7 @@ python manage.py migrate
 
 And finally restart your Django instance so your changes become effective.
 
-```eval_rst
+```{eval-rst}
 .. _operations-settings:
 ```
 
@@ -72,7 +72,7 @@ Here is a list of available settings for this app. They can be configured by add
 
 Most settings will enable the automatic loading of related models. Note that this will exponentially increase load times of objects, so we recommend to only enable additional models that are functionally needed. For example: if you enable Planets, all related planet object are automatically loaded when updating a solar system.
 
-```eval_rst
+```{eval-rst}
     .. |br| raw:: html
 
         <br>
@@ -119,7 +119,7 @@ Most settings will enable the automatic loading of related models. Note that thi
 
 Note that all settings are optional and the app will use the documented default settings if they are not used.
 
-```eval_rst
+```{eval-rst}
 .. _operations-management-commands:
 ```
 

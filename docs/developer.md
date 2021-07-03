@@ -6,14 +6,14 @@ The developer guide describes how to develop apps with *django-eveuniverse*.
 
 *django-eveuniverse* provides you with ready-made Django models for all Eve Universe classes. These models can be used like any other Django model in queries or included as related models in your app's own models.
 
-```eval_rst
+```{eval-rst}
 .. note::
     The "Eve Universe" classes are the classes from the Universe category in ESI plus the related classes for dogma and market groups. The objects of those classes change rarely and most changes are just adding new objects (e.g. new types). They are therefore well suited to be stored and cached locally for a longer period of time.
 
     The Eve Universe classes consist mostly of the same objects as the `Static Data Export <https://wiki.eveuniversity.org/Static_Data_Export>`_ (SDE).
 ```
 
-```eval_rst
+```{eval-rst}
 .. seealso::
     Please see :ref:`api-eve-models` for the full documentation of all available models.
 ```
@@ -22,7 +22,7 @@ The developer guide describes how to develop apps with *django-eveuniverse*.
 
 The following graph shows all models and how they are interrelated:
 
-```eval_rst
+```{eval-rst}
     .. image::  _static/images/aa-eveuniverse_models.png
         :target: _static/images/aa-eveuniverse_models.png
 ```
@@ -97,7 +97,7 @@ Our example for Jita would then look like this:
 (EveSolarSystem(eve_constellation_id=20000020, eve_star_id=None, id=30000142, name='Jita', position_x=-1.2906486173487826e+17, position_y=6.075530690996363e+16, position_z=1.1746922706009029e+17, security_status=0.9459131360054016), False)
 ```
 
-```eval_rst
+```{eval-rst}
 .. hint::
     Please see :ref:`api-manager-methods` for an overview of all available methods.
 ```
@@ -143,7 +143,7 @@ Therefore the following eve models are not loaded through relations By default a
 - EveStar
 - EveStation
 
-```eval_rst
+```{eval-rst}
 .. Hint::
     You can still load objects from disabled models directly - e.g. with ``get_or_create_esi()`` - but be mindful that relations will not be created automatically, which can lead to inconsistencies in your database.
 ```
@@ -153,7 +153,7 @@ There are two solutions for loading disabled models incl. their relations:
 - Globally enabling disabled models
 - Enabling disabled models on-demand
 
-```eval_rst
+```{eval-rst}
 .. note::
     Related models that are disabled by default are also called sections.
 ```
@@ -162,12 +162,12 @@ There are two solutions for loading disabled models incl. their relations:
 
 One solution here is to offer developers control over which related models are loaded through configuration. Each disabled model therefore as a corresponding setting that can be used to globally enable that model.
 
-```eval_rst
+```{eval-rst}
 .. hint::
     When turning on loading of related models you usually want to reload related eve objects that already exist in the database to make sure all relations are created correctly. e.g. after turning on ``EveStargate`` you want to reload all solar systems.
 ```
 
-```eval_rst
+```{eval-rst}
 .. seealso::
     For an overview of all settings please see :ref:`operations-settings`.
 ```
@@ -194,7 +194,7 @@ You can also specify multiple sections with one request. Here is how to fetch pl
 obj, _ = EveSolarSystem.objects.get_or_create_esi(id=30000142, include_children=True, enabled_sections=[EveSolarSystem.Section.PLANETS, EvePlant.Section.MOONS])
 ```
 
-```eval_rst
+```{eval-rst}
 .. seealso::
     See also the API for a list of all available sections for each model that supports it: :py:class:`eveuniverse.models.EvePlanet.Section`, :py:class:`eveuniverse.models.EveSolarSystem.Section`, :py:class:`eveuniverse.models.EveType.Section`.
 ```
@@ -238,7 +238,7 @@ class Command(BaseCommand):
 
 For more details on how to use `eveuniverse_load_types` just call it with `--help` from a console.
 
-```eval_rst
+```{eval-rst}
 .. seealso::
     For an overview of all management commands please see :ref:`operations-management-commands`.
 ```
@@ -254,7 +254,7 @@ Here is a simple example for resolving the ID of the Jita solar system:
 'Jita'
 ```
 
-```eval_rst
+```{eval-rst}
 .. note::
     Eve IDs have unique ranged for the supported categories, which means they can be safely resolved without having to specify a category.
 ```
@@ -275,7 +275,7 @@ This examples show how to resolve a list of IDs in bulk and using a resolver obj
 
 Another approach is to bulk create EveEntity objects with the ID only and then resolve all "new" objects with `EveEntity.objects.bulk_update_new_esi()`. This approach works well when using EveEntity objects as property in you app's models.
 
-```eval_rst
+```{eval-rst}
 .. hint::
     If you need to test that an ID is valid you can use ``get_or_create_esi()`` or ``update_or_create_esi()``. Both will return  ``None`` instead of an ``EveEntity`` object if the given ID was not valid. You can also use ``resolve_name()``, which will return an empty string for invalid IDs.
 
@@ -283,13 +283,13 @@ Another approach is to bulk create EveEntity objects with the ID only and then r
 
 ```
 
-```eval_rst
+```{eval-rst}
 .. seealso::
     For more features and details please see :ref:`api-managers-eve-entity`.
 
 ```
 
-```eval_rst
+```{eval-rst}
 .. _developer-testdata:
 ```
 
