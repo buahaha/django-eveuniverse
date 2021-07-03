@@ -172,6 +172,7 @@ One solution here is to offer developers control over which related models are l
     For an overview of all settings please see :ref:`operations-settings`.
 ```
 
+(load_related_models_on_demand)=
 ### Load related models on-demand
 
 However, globally enabling those related models will affect all apps of a Django installation. For instance if you turn on dogmas globally, dogmas will be loaded for each and every type, even if it that extra data is not needed.
